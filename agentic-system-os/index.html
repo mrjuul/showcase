@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic System OS — Project Status</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --bg-card: #111114;
+  --bg-elevated: #18181c;
+  --border: #2a2a30;
+  --text: #e8e6e3;
+  --text-dim: #8a8a95;
+  --text-faint: #55555f;
+  --accent: #d4a853;
+  --accent-dim: #b8923a;
+  --green: #4a9e6d;
+  --green-dim: #2d6b45;
+  --red: #c45c5c;
+  --red-dim: #8b3a3a;
+  --blue: #5b8fd4;
+  --purple: #9b7ec8;
+  --orange: #d4853a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* --- Hero --- */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 6vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 80vw;
+  height: 80vw;
+  background: radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+.hero-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 2rem;
+}
+
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3rem, 7vw, 6rem);
+  font-weight: 400;
+  line-height: 1.05;
+  max-width: 900px;
+  margin-bottom: 2rem;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 640px;
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  margin-top: 4rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2.5rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 0.5rem;
+}
+
+/* --- Sections --- */
+section {
+  padding: 6rem 6vw;
+  position: relative;
+}
+
+section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 6vw;
+  right: 6vw;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  margin-bottom: 1rem;
+  max-width: 700px;
+}
+
+.section-desc {
+  color: var(--text-dim);
+  max-width: 620px;
+  margin-bottom: 3rem;
+  line-height: 1.7;
+}
+
+/* --- Architecture Layers --- */
+.arch-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0;
+  max-width: 1100px;
+}
+
+.arch-layer {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+}
+
+.arch-layer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+
+.arch-layer.telegram::before { background: var(--blue); }
+.arch-layer.relay::before { background: var(--accent); }
+.arch-layer.claude::before { background: var(--green); }
+.arch-layer.mcp::before { background: var(--purple); }
+
+.arch-layer-title {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 1rem;
+}
+
+.arch-layer.telegram .arch-layer-title { color: var(--blue); }
+.arch-layer.relay .arch-layer-title { color: var(--accent); }
+.arch-layer.claude .arch-layer-title { color: var(--green); }
+.arch-layer.mcp .arch-layer-title { color: var(--purple); }
+
+.arch-nodes {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.arch-node {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+
+.arch-node.active {
+  border-color: var(--accent-dim);
+  color: var(--accent);
+}
+
+.arch-detail {
+  color: var(--text-dim);
+  font-size: 0.9rem;
+  margin-top: 1rem;
+  line-height: 1.7;
+}
+
+.arch-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0;
+}
+
+.arch-arrow {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.85rem;
+  color: var(--text-faint);
+  letter-spacing: 0.2em;
+}
+
+/* --- Flow Diagram --- */
+.flow-diagram {
+  max-width: 1100px;
+  margin-top: 2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 2.5rem 2rem;
+  overflow-x: auto;
+}
+
+.flow-row {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  justify-content: center;
+  flex-wrap: nowrap;
+}
+
+.flow-row.return {
+  margin-top: 1.5rem;
+  opacity: 0.6;
+}
+
+.flow-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.flow-node-box {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 0.75rem 1.25rem;
+  text-align: center;
+  position: relative;
+  transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.flow-node-box:hover {
+  border-color: var(--accent-dim);
+  box-shadow: 0 0 20px rgba(212,168,83,0.06);
+}
+
+.flow-node-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.flow-node-detail {
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  margin-top: 0.15rem;
+}
+
+.flow-node.interface .flow-node-box { border-color: rgba(91,143,212,0.35); }
+.flow-node.interface .flow-node-label { color: var(--blue); }
+
+.flow-node.relay .flow-node-box { border-color: rgba(212,168,83,0.35); }
+.flow-node.relay .flow-node-label { color: var(--accent); }
+
+.flow-node.cli .flow-node-box { border-color: rgba(74,158,109,0.35); }
+.flow-node.cli .flow-node-label { color: var(--green); }
+
+.flow-node.mcp .flow-node-box { border-color: rgba(155,126,200,0.35); }
+.flow-node.mcp .flow-node-label { color: var(--purple); }
+
+.flow-arrow {
+  display: flex;
+  align-items: center;
+  padding: 0 0.5rem;
+  flex-shrink: 0;
+}
+
+.flow-arrow-line {
+  width: 40px;
+  height: 2px;
+  position: relative;
+}
+
+.flow-arrow-line::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  top: -4px;
+  width: 0;
+  height: 0;
+  border-left: 6px solid;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+}
+
+.flow-arrow.forward .flow-arrow-line { background: linear-gradient(90deg, var(--text-faint), var(--accent-dim)); }
+.flow-arrow.forward .flow-arrow-line::after { border-left-color: var(--accent-dim); }
+
+.flow-arrow.back .flow-arrow-line {
+  background: linear-gradient(90deg, var(--accent-dim), var(--text-faint));
+  transform: scaleX(-1);
+}
+
+.flow-arrow-text {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.flow-branch {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 170px;
+  flex-shrink: 0;
+}
+
+.flow-branch-item {
+  background: var(--bg-elevated);
+  border: 1px solid rgba(155,126,200,0.25);
+  border-radius: 8px;
+  padding: 0.4rem 0.9rem;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--purple);
+  position: relative;
+  padding-left: 1.6rem;
+}
+
+.flow-branch-item::before {
+  content: '';
+  position: absolute;
+  left: 0.7rem;
+  top: 50%;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--purple);
+  transform: translateY(-50%);
+  opacity: 0.6;
+}
+
+.flow-branch-connector {
+  position: relative;
+  width: 30px;
+  flex-shrink: 0;
+}
+
+.flow-branch-connector::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg, rgba(155,126,200,0.4), rgba(155,126,200,0.15));
+}
+
+.flow-branch-connector::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: rgba(155,126,200,0.3);
+}
+
+@media (max-width: 900px) {
+  .flow-row { flex-wrap: wrap; justify-content: center; gap: 1rem; }
+  .flow-arrow { display: none; }
+  .flow-branch { flex-direction: row; flex-wrap: wrap; }
+}
+
+/* --- Privilege Levels --- */
+.levels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  max-width: 1100px;
+}
+
+.level-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  transition: border-color 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.level-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.level-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.7rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  width: fit-content;
+}
+
+.level-badge.l1 {
+  background: rgba(74,158,109,0.15);
+  color: var(--green);
+  border: 1px solid rgba(74,158,109,0.3);
+}
+
+.level-badge.l2 {
+  background: rgba(91,143,212,0.15);
+  color: var(--blue);
+  border: 1px solid rgba(91,143,212,0.3);
+}
+
+.level-badge.l3 {
+  background: rgba(155,126,200,0.15);
+  color: var(--purple);
+  border: 1px solid rgba(155,126,200,0.3);
+}
+
+.level-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.level-phase {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.75rem;
+}
+
+.level-desc {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+  margin-bottom: 1rem;
+  flex: 1;
+}
+
+.level-stat {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border);
+}
+
+.level-stat strong {
+  color: var(--text-dim);
+  font-weight: 500;
+}
+
+/* --- Red Team Table --- */
+.redteam-wrapper {
+  max-width: 1100px;
+  margin-top: 2.5rem;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.redteam-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  font-size: 0.85rem;
+}
+
+.redteam-table th {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+  white-space: nowrap;
+}
+
+.redteam-table td {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(42,42,48,0.5);
+  color: var(--text-dim);
+}
+
+.redteam-table tr:last-child td {
+  border-bottom: none;
+}
+
+.redteam-table .scenario-cell {
+  font-weight: 500;
+  color: var(--text);
+  min-width: 220px;
+}
+
+.status-pill {
+  display: inline-block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.status-pill.blocked {
+  background: rgba(74,158,109,0.15);
+  color: var(--green);
+  border: 1px solid rgba(74,158,109,0.3);
+}
+
+.status-pill.mitigated {
+  background: rgba(212,168,83,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(212,168,83,0.3);
+}
+
+.status-pill.exposed {
+  background: rgba(196,92,92,0.15);
+  color: var(--red);
+  border: 1px solid rgba(196,92,92,0.3);
+}
+
+/* --- Agent Roster --- */
+.roster-section {
+  margin-bottom: 3rem;
+}
+
+.roster-section:last-child {
+  margin-bottom: 0;
+}
+
+.roster-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.roster-team-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+.roster-count {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.roster-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  max-width: 1100px;
+}
+
+.agent-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+
+.agent-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.agent-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-bottom: 0.4rem;
+}
+
+.agent-desc {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+.agent-card.org { border-left: 3px solid var(--green); }
+.agent-card.personal { border-left: 3px solid var(--blue); }
+.agent-card.tech { border-left: 3px solid var(--purple); }
+
+/* --- Expert Panel --- */
+.expert-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+  max-width: 1100px;
+}
+
+.expert-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.75rem;
+  transition: border-color 0.2s;
+}
+
+.expert-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.expert-number {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2rem;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 0.75rem;
+}
+
+.expert-role {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 0.75rem;
+}
+
+.expert-finding {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.expert-highlight {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* --- Dashboard Vision --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.25rem;
+  max-width: 1100px;
+}
+
+.dash-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.75rem;
+  transition: border-color 0.2s;
+}
+
+.dash-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.dash-icon {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+}
+
+.dash-icon.obs { background: rgba(74,158,109,0.15); color: var(--green); border: 1px solid rgba(74,158,109,0.3); }
+.dash-icon.task { background: rgba(212,168,83,0.15); color: var(--accent); border: 1px solid rgba(212,168,83,0.3); }
+.dash-icon.approve { background: rgba(91,143,212,0.15); color: var(--blue); border: 1px solid rgba(91,143,212,0.3); }
+.dash-icon.rollout { background: rgba(155,126,200,0.15); color: var(--purple); border: 1px solid rgba(155,126,200,0.3); }
+
+.dash-title {
+  font-weight: 500;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.dash-desc {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.55;
+}
+
+/* --- Benchmark Table --- */
+.benchmark-wrapper {
+  max-width: 1100px;
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+}
+
+.benchmark-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  font-size: 0.85rem;
+}
+
+.benchmark-table th {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  text-align: left;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+  white-space: nowrap;
+}
+
+.benchmark-table td {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid rgba(42,42,48,0.5);
+  color: var(--text-dim);
+  font-size: 0.84rem;
+}
+
+.benchmark-table tr:last-child td {
+  border-bottom: none;
+}
+
+.benchmark-table .fw-name {
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.benchmark-table tr.this-system td {
+  background: rgba(212,168,83,0.04);
+}
+
+.benchmark-table tr.this-system .fw-name {
+  color: var(--accent);
+}
+
+.cap-check { color: var(--green); font-weight: 500; }
+.cap-partial { color: var(--accent); }
+.cap-none { color: var(--text-faint); }
+
+/* --- Footer --- */
+.footer {
+  padding: 5rem 6vw 3rem;
+  text-align: center;
+}
+
+.footer-line {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.72rem;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+}
+
+.footer-line + .footer-line {
+  margin-top: 0.5rem;
+}
+
+/* --- Scroll Animations --- */
+.fade-in {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.fade-in.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* stagger children inside a group */
+.fade-in-group > * {
+  opacity: 0;
+  transform: translateY(16px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.fade-in-group.visible > * {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.fade-in-group.visible > *:nth-child(1) { transition-delay: 0s; }
+.fade-in-group.visible > *:nth-child(2) { transition-delay: 0.08s; }
+.fade-in-group.visible > *:nth-child(3) { transition-delay: 0.16s; }
+.fade-in-group.visible > *:nth-child(4) { transition-delay: 0.24s; }
+.fade-in-group.visible > *:nth-child(5) { transition-delay: 0.32s; }
+.fade-in-group.visible > *:nth-child(6) { transition-delay: 0.40s; }
+
+/* --- Responsive --- */
+@media (max-width: 900px) {
+  .levels-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  section { padding: 4rem 5vw; }
+  .hero { padding: 3rem 5vw; }
+  .hero-stats { gap: 2rem; }
+  .expert-grid { grid-template-columns: 1fr; }
+  .roster-grid { grid-template-columns: 1fr; }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .redteam-table { font-size: 0.78rem; }
+  .redteam-table th,
+  .redteam-table td { padding: 0.65rem 0.85rem; }
+  .benchmark-table { font-size: 0.78rem; }
+  .benchmark-table th,
+  .benchmark-table td { padding: 0.65rem 0.85rem; }
+}
+
+/* --- Print --- */
+@media print {
+  :root {
+    --bg: #fff;
+    --bg-card: #f8f8f8;
+    --bg-elevated: #f0f0f0;
+    --border: #ddd;
+    --text: #111;
+    --text-dim: #444;
+    --text-faint: #777;
+    --accent: #8b6d28;
+    --green: #2d6b45;
+    --blue: #3a6ba8;
+    --purple: #6a4fb3;
+    --red: #993333;
+  }
+
+  .hero { min-height: auto; padding: 2rem 1rem; }
+  section { padding: 2rem 1rem; }
+
+  .fade-in, .fade-in-group > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+
+  .hero::before { display: none; }
+
+  .level-card:hover, .agent-card:hover,
+  .expert-card:hover, .dash-card:hover { border-color: var(--border); }
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HERO                                                          -->
+<!-- ============================================================ -->
+<div class="hero">
+  <div class="hero-label">Project Status &mdash; April 2026</div>
+  <h1>Agentic <em>System OS</em></h1>
+  <p class="hero-sub">Personal AI infrastructure &mdash; from reactive relay to autonomous agent teams. Graduated privilege separation, structured inter-agent protocol, and defense-in-depth security architecture.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-value">5</div>
+      <div class="stat-label">Phases Planned</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">15<span style="font-size:1.2rem;color:var(--text-faint)">+</span></div>
+      <div class="stat-label">Agents Designed</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">6</div>
+      <div class="stat-label">Expert Reviews</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Architecture Levels</div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- 01 — ARCHITECTURE OVERVIEW                                    -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-label fade-in">01 &mdash; Architecture Overview</div>
+  <h2 class="section-title fade-in">Single binary, multi-agent, defense in depth</h2>
+  <p class="section-desc fade-in">A Go relay connects messaging interfaces to Claude CLI, which accesses organizational tools through a Docker MCP Gateway. Graduated security architecture with per-tier tool isolation.</p>
+
+  <div class="arch-grid fade-in">
+    <div class="arch-layer telegram">
+      <div class="arch-layer-title">Telegram</div>
+      <div class="arch-nodes">
+        <div class="arch-node active">Bot API</div>
+        <div class="arch-node">Long-poll</div>
+        <div class="arch-node">Rate limiter</div>
+      </div>
+      <div class="arch-detail">Incoming messages from authorized users. Backpressure on concurrent requests. Outgoing responses chunked for Telegram's message size limits.</div>
+    </div>
+
+    <div class="arch-flow"><span class="arch-arrow">&darr;</span></div>
+
+    <div class="arch-layer relay">
+      <div class="arch-layer-title">Go Relay Binary</div>
+      <div class="arch-nodes">
+        <div class="arch-node active">Message router</div>
+        <div class="arch-node active">Agent configs</div>
+        <div class="arch-node">Scheduler (Phase 2d)</div>
+        <div class="arch-node">SQLite</div>
+      </div>
+      <div class="arch-detail">Routes by agent config. Sequential queue with mutex per agent. YAML-driven agent definitions with per-agent system prompts and tool whitelists.</div>
+    </div>
+
+    <div class="arch-flow"><span class="arch-arrow">&darr;</span></div>
+
+    <div class="arch-layer claude">
+      <div class="arch-layer-title">Claude CLI</div>
+      <div class="arch-nodes">
+        <div class="arch-node active">--allowedTools</div>
+        <div class="arch-node">System prompt</div>
+        <div class="arch-node">Nonce fencing</div>
+      </div>
+      <div class="arch-detail">Invoked via stdin with structured prompts. Whitelist model (fails closed). Data boundary markers isolate untrusted MCP output from instructions.</div>
+    </div>
+
+    <div class="arch-flow"><span class="arch-arrow">&darr;</span></div>
+
+    <div class="arch-layer mcp">
+      <div class="arch-layer-title">MCP Gateway &rarr; Google Workspace &times;4</div>
+      <div class="arch-nodes">
+        <div class="arch-node active">Org 1 Workspace</div>
+        <div class="arch-node active">Org 2 Workspace</div>
+        <div class="arch-node active">Org 3 Workspace</div>
+        <div class="arch-node active">Personal Workspace</div>
+      </div>
+      <div class="arch-detail">Docker MCP Gateway routes to per-org Google Workspace containers. Each has its own OAuth credentials, scoped APIs, and isolated network. No cross-org access possible at the container level.</div>
+    </div>
+  </div>
+
+  <div class="flow-diagram fade-in">
+    <div class="flow-row">
+      <div class="flow-node interface">
+        <div class="flow-node-box">
+          <div class="flow-node-label">Interface</div>
+          <div class="flow-node-detail">User message</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow forward">
+        <div class="flow-arrow-line" style="position:relative;">
+          <span class="flow-arrow-text">route</span>
+        </div>
+      </div>
+
+      <div class="flow-node relay">
+        <div class="flow-node-box">
+          <div class="flow-node-label">Go Relay</div>
+          <div class="flow-node-detail">Agent config &middot; Queue</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow forward">
+        <div class="flow-arrow-line" style="position:relative;">
+          <span class="flow-arrow-text">stdin</span>
+        </div>
+      </div>
+
+      <div class="flow-node cli">
+        <div class="flow-node-box">
+          <div class="flow-node-label">Claude CLI</div>
+          <div class="flow-node-detail">Whitelist &middot; Fencing</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow forward">
+        <div class="flow-arrow-line" style="position:relative;">
+          <span class="flow-arrow-text">tools</span>
+        </div>
+      </div>
+
+      <div class="flow-branch">
+        <div class="flow-branch-item">Workspace Org 1</div>
+        <div class="flow-branch-item">Workspace Org 2</div>
+        <div class="flow-branch-item">Workspace Org 3</div>
+        <div class="flow-branch-item">Workspace Personal</div>
+      </div>
+    </div>
+
+    <div class="flow-row return">
+      <div class="flow-node interface">
+        <div class="flow-node-box">
+          <div class="flow-node-label" style="opacity:0.7;">Response</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow back">
+        <div class="flow-arrow-line"></div>
+      </div>
+
+      <div class="flow-node relay">
+        <div class="flow-node-box">
+          <div class="flow-node-label" style="opacity:0.7;">Chunk &rarr; Send</div>
+        </div>
+      </div>
+
+      <div class="flow-arrow back">
+        <div class="flow-arrow-line"></div>
+      </div>
+
+      <div class="flow-node cli">
+        <div class="flow-node-box">
+          <div class="flow-node-label" style="opacity:0.7;">stdout</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 02 — PRIVILEGE SEPARATION (ADR-001)                           -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-label fade-in">02 &mdash; Privilege Separation</div>
+  <h2 class="section-title fade-in">ADR-001: Graduated three-level architecture</h2>
+  <p class="section-desc fade-in">Security scales with capability. Each level adds isolation without requiring the next. Level 1 ships with the scheduler, Level 2 with multi-agent routing, Level 3 when write actions span orgs.</p>
+
+  <div class="levels-grid fade-in-group">
+    <div class="level-card">
+      <div class="level-badge l1">Level 1</div>
+      <div class="level-title">Single-Agent Validation</div>
+      <div class="level-phase">Phase 2d &mdash; Scheduler Foundation</div>
+      <div class="level-desc">Go-side validation layer before Claude CLI invocation. Recipient allowlists, injection regex on outputs, action type enum. The relay checks every outbound action against a static policy before execution.</div>
+      <div class="level-stat"><strong>~130 LOC</strong> &middot; Zero extra cost &middot; Fails closed</div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-badge l2">Level 2</div>
+      <div class="level-title">Planning / Action Split</div>
+      <div class="level-phase">Phase 3a &mdash; Multi-Agent Routing</div>
+      <div class="level-desc">Planning agents are read-only: they analyze data and produce structured TaskRequest JSON. Action agents are write-capable but blind to raw source data. Per-tier tool whitelists enforce the boundary.</div>
+      <div class="level-stat"><strong>Per-tier whitelists</strong> &middot; ~$0.05 per write-action</div>
+    </div>
+
+    <div class="level-card">
+      <div class="level-badge l3">Level 3</div>
+      <div class="level-title">Security Auditor</div>
+      <div class="level-phase">Phase 3b &mdash; Org Agent Watchers</div>
+      <div class="level-desc">A dedicated security agent intercepts TaskRequest JSONs between planning and action tiers. Compares raw inputs against proposed outputs. Builds self-improving threat intelligence from flagged patterns.</div>
+      <div class="level-stat"><strong>Dedicated auditor</strong> &middot; Self-improving threat DB</div>
+    </div>
+  </div>
+
+  <!-- Red Team Results -->
+  <div class="redteam-wrapper fade-in" style="margin-top: 2.5rem;">
+    <table class="redteam-table">
+      <thead>
+        <tr>
+          <th>Attack Scenario</th>
+          <th>Level 1</th>
+          <th>Level 2</th>
+          <th>Level 3</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="scenario-cell">Direct action injection</td>
+          <td><span class="status-pill mitigated">Mitigated</span></td>
+          <td><span class="status-pill blocked">Blocked</span></td>
+          <td><span class="status-pill blocked">Blocked</span></td>
+        </tr>
+        <tr>
+          <td class="scenario-cell">Slow-burn multi-email exfiltration</td>
+          <td><span class="status-pill exposed">Exposed</span></td>
+          <td><span class="status-pill exposed">Exposed</span></td>
+          <td><span class="status-pill mitigated">Mitigated</span></td>
+        </tr>
+        <tr>
+          <td class="scenario-cell">Sender display name spoofing</td>
+          <td><span class="status-pill mitigated">Mitigated</span></td>
+          <td><span class="status-pill blocked">Blocked</span></td>
+          <td><span class="status-pill blocked">Blocked</span></td>
+        </tr>
+        <tr>
+          <td class="scenario-cell">Cross-org data exfiltration</td>
+          <td><span class="status-pill exposed">Exposed</span></td>
+          <td><span class="status-pill blocked">Blocked</span></td>
+          <td><span class="status-pill mitigated">Mitigated</span></td>
+        </tr>
+        <tr>
+          <td class="scenario-cell">Template parameter poisoning</td>
+          <td><span class="status-pill exposed">Exposed</span></td>
+          <td><span class="status-pill exposed">Exposed</span></td>
+          <td><span class="status-pill mitigated">Mitigated</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 03 — AGENT ROSTER                                             -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-label fade-in">03 &mdash; Agent Roster</div>
+  <h2 class="section-title fade-in">Three domain teams, fifteen specialists</h2>
+  <p class="section-desc fade-in">Each agent has a defined role, scoped tool access, and designated responsibilities. Organization agents replicate across three orgs. Personal and tech agents are singletons.</p>
+
+  <!-- Org Teams -->
+  <div class="roster-section fade-in">
+    <div class="roster-header">
+      <h3 class="roster-team-name">Organization Teams</h3>
+      <span class="roster-count">&times;3 orgs &middot; 9 agents</span>
+    </div>
+    <div class="roster-grid">
+      <div class="agent-card org">
+        <div class="agent-name">Strategic Expert</div>
+        <div class="agent-desc">Yearly calendar awareness, board composition tracking, organizational competence mapping, deadline monitoring.</div>
+      </div>
+      <div class="agent-card org">
+        <div class="agent-name">Financial Agent</div>
+        <div class="agent-desc">Financial reporting, budget tracking, bookkeeping reconciliation, invoice management, audit preparation.</div>
+      </div>
+      <div class="agent-card org">
+        <div class="agent-name">Employee Expert</div>
+        <div class="agent-desc">Labor law compliance, employee satisfaction monitoring, HR policy reference, contract tracking.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Personal Team -->
+  <div class="roster-section fade-in">
+    <div class="roster-header">
+      <h3 class="roster-team-name">Personal Team</h3>
+      <span class="roster-count">5 agents</span>
+    </div>
+    <div class="roster-grid fade-in-group">
+      <div class="agent-card personal">
+        <div class="agent-name">Investment Strategist</div>
+        <div class="agent-desc">Portfolio analysis, market monitoring, strategy development, risk assessment.</div>
+      </div>
+      <div class="agent-card personal">
+        <div class="agent-name">Family Assistant</div>
+        <div class="agent-desc">Family outings, birthday tracking, holiday planning, household logistics coordination.</div>
+      </div>
+      <div class="agent-card personal">
+        <div class="agent-name">Career Agent</div>
+        <div class="agent-desc">CV development, job search automation, opportunity matching, professional network tracking.</div>
+      </div>
+      <div class="agent-card personal">
+        <div class="agent-name">Health Expert</div>
+        <div class="agent-desc">Fitness planning, wellness tracking, appointment scheduling, health goal monitoring.</div>
+      </div>
+      <div class="agent-card personal">
+        <div class="agent-name">Personal Assistant</div>
+        <div class="agent-desc">Research tasks, booking management, bill tracking, invoice processing, general administration.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tech Team -->
+  <div class="roster-section fade-in">
+    <div class="roster-header">
+      <h3 class="roster-team-name">Tech Team</h3>
+      <span class="roster-count">3 agents &middot; read-only</span>
+    </div>
+    <div class="roster-grid">
+      <div class="agent-card tech">
+        <div class="agent-name">NAS Monitor</div>
+        <div class="agent-desc">Infrastructure health checks, Docker container status, disk space monitoring, backup verification.</div>
+      </div>
+      <div class="agent-card tech">
+        <div class="agent-name">Security Agent</div>
+        <div class="agent-desc">Continuous vulnerability assessment, threat intelligence monitoring, audit log analysis, anomaly detection.</div>
+      </div>
+      <div class="agent-card tech">
+        <div class="agent-name">Dev Assistant</div>
+        <div class="agent-desc">Development environment support, MCP architecture, skill development, configuration management.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 04 — EXPERT PANEL RESULTS                                     -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-label fade-in">04 &mdash; Expert Panel Results</div>
+  <h2 class="section-title fade-in">Six reviews shaped the architecture</h2>
+  <p class="section-desc fade-in">Before implementation, the design was stress-tested by domain expert agents. Each reviewed the architecture from their specialty and produced concrete recommendations.</p>
+
+  <div class="expert-grid fade-in-group">
+    <div class="expert-card">
+      <div class="expert-number">1</div>
+      <div class="expert-role">Agentic Systems Architect</div>
+      <div class="expert-finding">Surveyed 7 frameworks and 4 academic papers. <span class="expert-highlight">Pattern is validated: OpenClaw shows 323&times; attack resistance from isolation alone.</span> No existing framework has built-in privilege separation at this level.</div>
+    </div>
+
+    <div class="expert-card">
+      <div class="expert-number">2</div>
+      <div class="expert-role">AI Security Architect</div>
+      <div class="expert-finding">Air gap strength depends on handoff format: <span class="expert-highlight">freeform = WEAK, structured JSON = STRONG.</span> Designed 6-rule minimum viable security protocol. P0: structured JSON schema + per-tier tool whitelists.</div>
+    </div>
+
+    <div class="expert-card">
+      <div class="expert-number">3</div>
+      <div class="expert-role">Distributed Systems Engineer</div>
+      <div class="expert-finding">Graduated 3-level path from single-agent validation to full tier separation. <span class="expert-highlight">TaskRequest JSON schema with typed fields.</span> Level 1 adds $0 cost; Level 2 adds ~$0.05 per write-action.</div>
+    </div>
+
+    <div class="expert-card">
+      <div class="expert-number">4</div>
+      <div class="expert-role">Adversarial Red Teamer</div>
+      <div class="expert-finding">Produced 5 concrete attack scenarios. <span class="expert-highlight">Level 1 &rarr; 2 is the biggest security jump</span> (2 scenarios EXPOSED &rarr; BLOCKED). No scenario is ONLY caught by Level 3. Two attack classes require human judgment regardless.</div>
+    </div>
+
+    <div class="expert-card">
+      <div class="expert-number">5</div>
+      <div class="expert-role">Product Engineer</div>
+      <div class="expert-finding">Designed a <span class="expert-highlight">4-tier notification model: Silent, Notify, Approve, Timed.</span> Per-org autonomy dial. Quiet hours batching. Phase 2d ships Tier 1 only with an extensible foundation for escalation.</div>
+    </div>
+
+    <div class="expert-card">
+      <div class="expert-number">6</div>
+      <div class="expert-role">Adversarial Reviewer</div>
+      <div class="expert-finding">Cross-validated all expert findings for internal consistency and blind spots. <span class="expert-highlight">Corrected 1 finding, confirmed 54 coded observations.</span> Quality gate: 3 of 4 divergence metrics passed.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 05 — DASHBOARD VISION                                         -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-label fade-in">05 &mdash; Dashboard Vision</div>
+  <h2 class="section-title fade-in">Observability and control, not just chat</h2>
+  <p class="section-desc fade-in">The Telegram interface handles real-time interaction. A future dashboard adds structured oversight: job logs, approval queues, cross-team dependency tracking, and initiative management.</p>
+
+  <div class="dashboard-grid fade-in-group">
+    <div class="dash-card">
+      <div class="dash-icon obs">Observability</div>
+      <div class="dash-title">System Health</div>
+      <div class="dash-desc">Agent status indicators, job execution logs, error feed with stack traces, resource utilization metrics, uptime tracking.</div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-icon task">Task Center</div>
+      <div class="dash-title">Initiative Tracking</div>
+      <div class="dash-desc">Cross-org initiative management, task assignment and delegation, feedback loops between agents and user, priority queuing.</div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-icon approve">Plan Approval</div>
+      <div class="dash-title">Structured Proposals</div>
+      <div class="dash-desc">TaskRequest JSON queue for review, approve / modify / reject controls, audit trail for every decision, notification escalation rules.</div>
+    </div>
+
+    <div class="dash-card">
+      <div class="dash-icon rollout">Work Rollout</div>
+      <div class="dash-title">Timeline View</div>
+      <div class="dash-desc">Milestone tracking across phases, cross-team dependency visualization, schedule views per org, progress reporting.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- 06 — BENCHMARK COMPARISON                                     -->
+<!-- ============================================================ -->
+<section>
+  <div class="section-label fade-in">06 &mdash; Framework Comparison</div>
+  <h2 class="section-title fade-in">How this compares to existing approaches</h2>
+  <p class="section-desc fade-in">Surveyed the major multi-agent frameworks for structural security patterns. None implement graduated privilege separation or a dedicated auditor agent as a first-class architectural pattern.</p>
+
+  <div class="benchmark-wrapper fade-in">
+    <table class="benchmark-table">
+      <thead>
+        <tr>
+          <th>Framework</th>
+          <th>Planning / Exec Split</th>
+          <th>Tool Isolation</th>
+          <th>Auditor Pattern</th>
+          <th>Injection Defense</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fw-name">CrewAI</td>
+          <td>Manager / worker</td>
+          <td>Per-agent allowlists</td>
+          <td class="cap-none">None</td>
+          <td class="cap-none">None structural</td>
+        </tr>
+        <tr>
+          <td class="fw-name">AutoGen</td>
+          <td>Sequential chat</td>
+          <td>Governance Toolkit</td>
+          <td class="cap-none">None</td>
+          <td class="cap-partial">Policy intercept</td>
+        </tr>
+        <tr>
+          <td class="fw-name">LangGraph</td>
+          <td>Graph nodes</td>
+          <td>Per-node scoping</td>
+          <td class="cap-partial">Custom node</td>
+          <td class="cap-none">None structural</td>
+        </tr>
+        <tr>
+          <td class="fw-name">OpenAI Agents SDK</td>
+          <td>Handoff-based</td>
+          <td>Per-agent functions</td>
+          <td class="cap-partial">Guardrails</td>
+          <td class="cap-partial">Parallel guardrails</td>
+        </tr>
+        <tr class="this-system">
+          <td class="fw-name">This System</td>
+          <td class="cap-check">Graduated 3-level</td>
+          <td class="cap-check">Per-tier whitelists</td>
+          <td class="cap-check">Dedicated auditor</td>
+          <td class="cap-check">0% ASR structural</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================================================ -->
+<!-- FOOTER                                                        -->
+<!-- ============================================================ -->
+<div class="footer">
+  <div class="footer-line">Design spike produced April 2026</div>
+  <div class="footer-line">Architecture: ADR-001 Two-Tier Privilege Separation</div>
+  <div class="footer-line" style="margin-top: 0.75rem; color: var(--accent-dim);">Built with Claude Code</div>
+</div>
+
+<!-- ============================================================ -->
+<!-- Scroll Animation (minimal JS)                                 -->
+<!-- ============================================================ -->
+<script>
+(function() {
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.08, rootMargin: '0px 0px -30px 0px' });
+
+  document.querySelectorAll('.fade-in, .fade-in-group').forEach(function(el) {
+    observer.observe(el);
+  });
+})();
+</script>
+
+</body>
+</html>
