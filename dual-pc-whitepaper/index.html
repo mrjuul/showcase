@@ -1,0 +1,806 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dual-PC Claude Code — One Brain, Two Machines</title>
+<meta property="og:title" content="One Brain, Two Machines">
+<meta property="og:description" content="How to run Claude Code across two PCs with full memory continuity — git-synced brain, per-machine body.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/dual-pc-whitepaper/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/dual-pc-whitepaper/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#06d6a0">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0e17;
+    --bg-card: #111827;
+    --bg-card-hover: #1a2332;
+    --text: #e2e8f0;
+    --text-dim: #94a3b8;
+    --accent-cyan: #06d6a0;
+    --accent-purple: #8b5cf6;
+    --accent-orange: #f97316;
+    --accent-pink: #ec4899;
+    --accent-blue: #3b82f6;
+    --accent-yellow: #eab308;
+    --border: #1e293b;
+    --glow-cyan: rgba(6, 214, 160, 0.15);
+    --glow-purple: rgba(139, 92, 246, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* Background grid */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(139, 92, 246, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(139, 92, 246, 0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ─── Hero ─── */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    top: 20%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba(139, 92, 246, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .ascii-art {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.55rem;
+    line-height: 1.15;
+    color: var(--accent-cyan);
+    white-space: pre;
+    margin-bottom: 2rem;
+    text-shadow: 0 0 20px rgba(6, 214, 160, 0.3);
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 3.5rem;
+    font-weight: 400;
+    letter-spacing: -0.02em;
+    margin-bottom: 1rem;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero .tagline {
+    font-size: 1.4rem;
+    color: var(--text-dim);
+    font-weight: 400;
+    position: relative;
+    z-index: 1;
+  }
+
+  .scroll-hint {
+    position: absolute;
+    bottom: 3rem;
+    left: 50%;
+    transform: translateX(-50%);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+    opacity: 0.5;
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: translateX(-50%) translateY(0); }
+    50% { opacity: 0.7; transform: translateX(-50%) translateY(5px); }
+  }
+
+  /* ─── Sections ─── */
+  section {
+    padding: 6rem 0;
+    border-top: 1px solid var(--border);
+  }
+
+  section h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.4rem;
+    font-weight: 400;
+    margin-bottom: 0.5rem;
+  }
+
+  section h3 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.5rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+  }
+
+  section p {
+    color: var(--text-dim);
+    font-size: 1.05rem;
+    max-width: 700px;
+    margin-bottom: 1.5rem;
+  }
+
+  .highlight {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* ─── Cards ─── */
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+    margin: 2rem 0;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.8rem;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .card:hover {
+    background: var(--bg-card-hover);
+    border-color: rgba(139, 92, 246, 0.3);
+    transform: translateY(-2px);
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 12px 12px 0 0;
+  }
+
+  .card.cyan::before { background: var(--accent-cyan); }
+  .card.purple::before { background: var(--accent-purple); }
+  .card.orange::before { background: var(--accent-orange); }
+  .card.pink::before { background: var(--accent-pink); }
+  .card.blue::before { background: var(--accent-blue); }
+  .card.yellow::before { background: var(--accent-yellow); }
+
+  .card .icon {
+    font-size: 1.8rem;
+    margin-bottom: 0.8rem;
+    display: block;
+  }
+
+  .card h4 {
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+  }
+
+  .card p {
+    font-size: 0.9rem;
+    color: var(--text-dim);
+    margin: 0;
+    line-height: 1.6;
+  }
+
+  .card .badge {
+    display: inline-block;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    padding: 0.2em 0.6em;
+    border-radius: 4px;
+    margin-top: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .badge.shared { background: rgba(6, 214, 160, 0.15); color: var(--accent-cyan); }
+  .badge.local { background: rgba(249, 115, 22, 0.15); color: var(--accent-orange); }
+  .badge.bridge { background: rgba(139, 92, 246, 0.15); color: var(--accent-purple); }
+
+  /* ─── Flow diagram ─── */
+  .flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 2.5rem 0;
+    position: relative;
+  }
+
+  .flow-step {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.2rem 0;
+    position: relative;
+  }
+
+  .flow-step::before {
+    content: '';
+    position: absolute;
+    left: 22px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .flow-step:first-child::before { top: 50%; }
+  .flow-step:last-child::before { bottom: 50%; }
+
+  .flow-dot {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    position: relative;
+    z-index: 1;
+    border: 2px solid var(--border);
+    background: var(--bg);
+  }
+
+  .flow-dot.cyan { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(6, 214, 160, 0.2); }
+  .flow-dot.purple { border-color: var(--accent-purple); box-shadow: 0 0 15px rgba(139, 92, 246, 0.2); }
+  .flow-dot.orange { border-color: var(--accent-orange); box-shadow: 0 0 15px rgba(249, 115, 22, 0.2); }
+  .flow-dot.blue { border-color: var(--accent-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+
+  .flow-content h4 {
+    font-size: 1rem;
+    margin-bottom: 0.2rem;
+  }
+
+  .flow-content p {
+    font-size: 0.85rem;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  .flow-content code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--accent-cyan);
+    background: rgba(6, 214, 160, 0.08);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+  }
+
+  /* ─── Architecture diagram ─── */
+  .arch-diagram {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2.5rem;
+    margin: 2.5rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .arch-diagram::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(6, 214, 160, 0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .arch-row {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-bottom: 2rem;
+    position: relative;
+  }
+
+  .arch-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem 2rem;
+    text-align: center;
+    min-width: 200px;
+    position: relative;
+  }
+
+  .arch-box h5 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--accent-cyan);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.3rem;
+  }
+
+  .arch-box .emoji { font-size: 1.5rem; margin-bottom: 0.5rem; display: block; }
+  .arch-box p { font-size: 0.8rem; color: var(--text-dim); margin: 0; }
+
+  .arch-connector {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 1.5rem;
+    margin: -0.5rem 0;
+    opacity: 0.4;
+  }
+
+  /* ─── Code blocks ─── */
+  .code-block {
+    background: #0d1117;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1.5rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+    line-height: 1.8;
+    overflow-x: auto;
+    position: relative;
+  }
+
+  .code-block .label {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.8rem;
+    font-size: 0.6rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    opacity: 0.5;
+  }
+
+  .code-block .comment { color: #6a737d; }
+  .code-block .keyword { color: var(--accent-purple); }
+  .code-block .string { color: var(--accent-cyan); }
+  .code-block .fn { color: var(--accent-orange); }
+
+  /* ─── Stats row ─── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1.5rem;
+    margin: 3rem 0;
+  }
+
+  .stat {
+    text-align: center;
+    padding: 1.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+  }
+
+  .stat .number {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.5rem;
+    background: linear-gradient(135deg, var(--accent-cyan), var(--accent-purple));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: block;
+    line-height: 1.2;
+  }
+
+  .stat .label {
+    font-size: 0.75rem;
+    color: var(--text-dim);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-top: 0.3rem;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* ─── Table ─── */
+  .styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 2rem 0;
+    font-size: 0.9rem;
+  }
+
+  .styled-table th {
+    text-align: left;
+    padding: 0.8rem 1rem;
+    border-bottom: 2px solid var(--accent-purple);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent-purple);
+  }
+
+  .styled-table td {
+    padding: 0.7rem 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-dim);
+  }
+
+  .styled-table td:first-child { color: var(--text); font-weight: 500; }
+
+  .check { color: var(--accent-cyan); }
+  .cross { color: var(--accent-orange); }
+
+  /* ─── Footer ─── */
+  footer {
+    padding: 4rem 0;
+    text-align: center;
+    border-top: 1px solid var(--border);
+    color: var(--text-dim);
+    font-size: 0.85rem;
+  }
+
+  footer a {
+    color: var(--accent-cyan);
+    text-decoration: none;
+  }
+
+  @media (max-width: 700px) {
+    .card-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: repeat(2, 1fr); }
+    .hero h1 { font-size: 2.2rem; }
+    .ascii-art { font-size: 0.35rem; }
+    .arch-row { flex-direction: column; align-items: center; gap: 1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════ HERO ═══════════════════ -->
+<div class="hero">
+  <pre class="ascii-art">
+    ____              __      ____  ______
+   / __ \__  ______ _/ /     / __ \/ ____/
+  / / / / / / / __ `/ /_____/ /_/ / /
+ / /_/ / /_/ / /_/ / /_____/ ____/ /___
+/_____/\__,_/\__,_/_/     /_/    \____/
+
+   _____ __                __   ______          __
+  / ___// /_  ____ ______/ /  / ____/___  ____/ /__
+  \__ \/ __ \/ __ `/ ___/ _ \/ /   / __ \/ __  / _ \
+ ___/ / / / / /_/ / /  /  __/ /___/ /_/ / /_/ /  __/
+/____/_/ /_/\__,_/_/   \___/\____/\____/\__,_/\___/
+  </pre>
+  <h1>One Brain, Two Machines</h1>
+  <p class="tagline">How to run Claude Code across two PCs with full memory continuity</p>
+  <div class="scroll-hint">scroll</div>
+</div>
+
+<!-- ═══════════════════ THE PROBLEM ═══════════════════ -->
+<section>
+  <div class="container">
+    <h3>// The Problem</h3>
+    <h2>Dev environments don't travel well</h2>
+    <p>
+      You have a laptop and a desktop. Same repos, same tools, same brain. But your AI coding assistant
+      doesn't know what you did on the other machine. <span class="highlight">Skills, conventions, memory,
+      MCP servers, secrets</span> &mdash; all locked to one device.
+    </p>
+    <p>
+      Claude Code stores per-project memory using <span class="highlight">path-encoded directories</span>.
+      <code>C:\Users\chris\ClaudeHub</code> becomes a different slug than <code>C:\Users\Juul\ClaudeHub</code>.
+      Different username = different memory = different brain.
+    </p>
+
+    <div class="stats">
+      <div class="stat">
+        <span class="number">15</span>
+        <span class="label">Skills</span>
+      </div>
+      <div class="stat">
+        <span class="number">4</span>
+        <span class="label">Memory Layers</span>
+      </div>
+      <div class="stat">
+        <span class="number">471</span>
+        <span class="label">Observations</span>
+      </div>
+      <div class="stat">
+        <span class="number">0</span>
+        <span class="label">Hardcoded Paths</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ ARCHITECTURE ═══════════════════ -->
+<section>
+  <div class="container">
+    <h3>// Architecture</h3>
+    <h2>Git-synced brain, per-machine body</h2>
+    <p>
+      Everything shareable lives in a single git repo (<span class="highlight">ClaudeHub</span>).
+      Machine-specific state stays local. Junctions and hardlinks make it seamless &mdash;
+      Claude Code sees <code>~/.claude/skills/</code> but it's actually reading from ClaudeHub.
+    </p>
+
+    <div class="arch-diagram">
+      <div class="arch-row">
+        <div class="arch-box">
+          <span class="emoji">&#x1F4BB;</span>
+          <h5>Laptop (chris)</h5>
+          <p>Razer Blade 15</p>
+        </div>
+        <div class="arch-box">
+          <span class="emoji">&#x1F5A5;</span>
+          <h5>Desktop (Juul)</h5>
+          <p>X870E Carbon WiFi</p>
+        </div>
+      </div>
+      <div class="arch-connector">&darr;&ensp;&ensp;&ensp;&ensp;&darr;</div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color: var(--accent-cyan); min-width: 460px;">
+          <h5 style="color: var(--accent-cyan);">ClaudeHub (git)</h5>
+          <p>Skills &bull; CLAUDE.md &bull; Hooks &bull; Rules &bull; MCP template &bull; SPEC files</p>
+        </div>
+      </div>
+      <div class="arch-connector">&darr;</div>
+      <div class="arch-row">
+        <div class="arch-box" style="border-color: var(--accent-purple); min-width: 460px;">
+          <h5 style="color: var(--accent-purple);">Vault (git)</h5>
+          <p>Knowledge entries &bull; Memory &bull; Claude-mem JSONL bridge</p>
+        </div>
+      </div>
+    </div>
+
+    <table class="styled-table">
+      <thead>
+        <tr>
+          <th>Component</th>
+          <th>Shared?</th>
+          <th>How</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Skills (15)</td>
+          <td><span class="check">&#10003; Yes</span></td>
+          <td>Junction: <code>~/.claude/skills/</code> &rarr; ClaudeHub</td>
+        </tr>
+        <tr>
+          <td>CLAUDE.md</td>
+          <td><span class="check">&#10003; Yes</span></td>
+          <td>Hardlink into ClaudeHub</td>
+        </tr>
+        <tr>
+          <td>Hooks &amp; Rules</td>
+          <td><span class="check">&#10003; Yes</span></td>
+          <td>Live in ClaudeHub/.claude/</td>
+        </tr>
+        <tr>
+          <td>MCP Config</td>
+          <td><span class="cross">&#10007; Per-machine</span></td>
+          <td>Template with ${ENV_VAR} placeholders</td>
+        </tr>
+        <tr>
+          <td>Secrets</td>
+          <td><span class="check">&#10003; Yes</span></td>
+          <td>Proton Pass CLI &mdash; same URIs both machines</td>
+        </tr>
+        <tr>
+          <td>Claude-mem DB</td>
+          <td><span class="check">&#10003; Via bridge</span></td>
+          <td>JSONL export/import through vault</td>
+        </tr>
+        <tr>
+          <td>OAuth Tokens</td>
+          <td><span class="cross">&#10007; Per-machine</span></td>
+          <td>~/.claude.json stays local</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ═══════════════════ MEMORY SYSTEM ═══════════════════ -->
+<section>
+  <div class="container">
+    <h3>// Memory System</h3>
+    <h2>Four layers, working together</h2>
+    <p>
+      Claude Code's memory isn't one thing &mdash; it's four independent systems with different
+      retrieval patterns. The architecture ensures <span class="highlight">100% of critical context
+      loads every session</span>, with deeper history available on demand.
+    </p>
+
+    <div class="card-grid">
+      <div class="card cyan">
+        <span class="icon">&#x1F9E0;</span>
+        <h4>Native Auto-Memory</h4>
+        <p>Feedback, project state, user preferences. Written by Claude automatically. Loaded every session &mdash; zero cost.</p>
+        <span class="badge shared">100% retrieval</span>
+      </div>
+      <div class="card purple">
+        <span class="icon">&#x1F4D1;</span>
+        <h4>CLAUDE.md + SPEC.md</h4>
+        <p>Conventions, project status, changelogs. The SPEC.md changelog is the cross-PC context bridge &mdash; written by /reflect.</p>
+        <span class="badge shared">100% retrieval</span>
+      </div>
+      <div class="card orange">
+        <span class="icon">&#x26A1;</span>
+        <h4>Claude-mem</h4>
+        <p>Cross-session observation history in SQLite. Haiku analyzes each Edit/Write/Bash call. Injected at session start.</p>
+        <span class="badge bridge">~80% &bull; JSONL bridge</span>
+      </div>
+      <div class="card pink">
+        <span class="icon">&#x1F4DA;</span>
+        <h4>Vault (Obsidian)</h4>
+        <p>Curated knowledge entries, reference docs, decision records. Searchable via Graphthulhu MCP graph queries.</p>
+        <span class="badge shared">On-demand</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ JSONL BRIDGE ═══════════════════ -->
+<section>
+  <div class="container">
+    <h3>// The Bridge</h3>
+    <h2>How memories cross machines</h2>
+    <p>
+      SQLite can't be git-synced (binary, no merge). The solution:
+      <span class="highlight">export observations to append-only JSONL</span>, sync via vault,
+      import on the other machine. Git handles concurrent appends cleanly &mdash;
+      each line is independent.
+    </p>
+
+    <div class="code-block">
+      <span class="label">Session lifecycle</span>
+<span class="comment"># Laptop session ends</span>
+<span class="fn">/reflect</span>  <span class="comment">&rarr; exports 16 observations to vault/claude-mem/observations.jsonl</span>
+<span class="fn">/ship</span>     <span class="comment">&rarr; commits + pushes ClaudeHub + vault (including JSONL)</span>
+
+<span class="comment"># Desktop session starts</span>
+<span class="keyword">.bashrc</span>         <span class="comment">&rarr; auto-pulls ClaudeHub + vault</span>
+<span class="keyword">vault-pull.js</span>   <span class="comment">&rarr; git pull + claude-mem-import.py</span>
+<span class="keyword">claude-mem</span>      <span class="comment">&rarr; reads local SQLite (now has laptop's observations)</span>
+<span class="string">"Last session you completed Phase 1 of the dual-PC setup..."</span>
+    </div>
+
+    <div class="card-grid">
+      <div class="card blue">
+        <h4>Export (claude-mem-export.py)</h4>
+        <p>Reads new observations from local SQLite. Appends to vault JSONL. Uses a watermark file to track what's already exported. Idempotent.</p>
+      </div>
+      <div class="card yellow">
+        <h4>Import (claude-mem-import.py)</h4>
+        <p>Reads JSONL from vault. Checks content_hash for deduplication. Inserts new records into local SQLite. Rebuilds FTS index.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ WORKFLOW ═══════════════════ -->
+<section>
+  <div class="container">
+    <h3>// Session Lifecycle</h3>
+    <h2>Start. Work. Reflect. Ship.</h2>
+    <p>
+      The entire workflow is two explicit commands at the end of a session. Everything else
+      is automatic &mdash; hooks handle pulling, importing, and capturing observations silently.
+    </p>
+
+    <div class="flow">
+      <div class="flow-step">
+        <div class="flow-dot cyan">&#x25B6;</div>
+        <div class="flow-content">
+          <h4>Session Start</h4>
+          <p><code>.bashrc</code> auto-pulls repos &rarr; <code>vault-pull.js</code> imports claude-mem JSONL &rarr; context injected</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot blue">&#x2699;</div>
+        <div class="flow-content">
+          <h4>You Work</h4>
+          <p>Claude-mem captures observations on Edit / Write / Bash / MCP calls. Native auto-memory updates. Everything local.</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot purple">&#x1F50D;</div>
+        <div class="flow-content">
+          <h4><code>/reflect</code></h4>
+          <p>Reconciles SPEC.md &rarr; detects knowledge &rarr; exports claude-mem to JSONL &rarr; checks CLAUDE.md</p>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="flow-dot orange">&#x1F680;</div>
+        <div class="flow-content">
+          <h4><code>/ship</code></h4>
+          <p>Commits ClaudeHub + vault &rarr; pushes both to GitHub &rarr; other machine sees everything on next start</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ RESULTS ═══════════════════ -->
+<section>
+  <div class="container">
+    <h3>// Results</h3>
+    <h2>What you get</h2>
+
+    <div class="card-grid">
+      <div class="card cyan">
+        <h4>Seamless switching</h4>
+        <p>Walk from laptop to desktop. Open a terminal. Claude knows where you left off &mdash; SPEC.md changelogs + imported observations provide full context.</p>
+      </div>
+      <div class="card purple">
+        <h4>Zero manual sync</h4>
+        <p>Auto-pull on terminal open. Auto-import on session start. The only explicit steps are /reflect and /ship &mdash; which you'd do anyway.</p>
+      </div>
+      <div class="card orange">
+        <h4>Clean git history</h4>
+        <p>No more auto-save noise. Every vault commit is intentional, with a descriptive message. Session-end Stop hook retired.</p>
+      </div>
+      <div class="card pink">
+        <h4>Portable by design</h4>
+        <p>Zero hardcoded paths. Junctions for dirs, hardlinks for files. Every reference uses ~, $HOME, or env vars. Works on any Windows username.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════ FOOTER ═══════════════════ -->
+<footer>
+  <div class="container">
+    <p style="margin-bottom: 0.5rem;">
+      Built with <a href="https://claude.ai/code">Claude Code</a> (Opus 4.6, 1M context)
+    </p>
+    <p style="font-size: 0.75rem; opacity: 0.5;">
+      ClaudeHub/tech/dual-pc &mdash; April 2026
+    </p>
+  </div>
+</footer>
+
+</body>
+</html>

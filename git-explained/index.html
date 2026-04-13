@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Git Explained</title>
+<meta property="og:title" content="Git Explained">
+<meta property="og:description" content="A practical guide for humans — 11 chapters from 'What is Git?' to mental models, with visual diagrams and essential commands.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/git-explained/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/git-explained/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#00f0ff">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap');
+
+  :root {
+    --bg: #0a0a12;
+    --surface: #12121e;
+    --surface2: #1a1a2e;
+    --border: #2a2a4a;
+    --text: #e0e0f0;
+    --text-dim: #8888aa;
+    --cyan: #00f0ff;
+    --magenta: #ff00aa;
+    --purple: #aa66ff;
+    --green: #00ff88;
+    --orange: #ff8844;
+    --yellow: #ffdd44;
+    --red: #ff4466;
+    --blue: #4488ff;
+    --glow-cyan: 0 0 20px rgba(0, 240, 255, 0.3);
+    --glow-magenta: 0 0 20px rgba(255, 0, 170, 0.3);
+    --glow-purple: 0 0 20px rgba(170, 102, 255, 0.3);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.7;
+    padding: 2rem 1rem;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 0%, rgba(0, 240, 255, 0.05) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 100%, rgba(255, 0, 170, 0.05) 0%, transparent 50%);
+  }
+
+  .container {
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── ASCII Hero ── */
+  .ascii-hero {
+    text-align: center;
+    padding: 2rem 0 1rem;
+    position: relative;
+  }
+
+  .ascii-art {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.65rem;
+    line-height: 1.2;
+    white-space: pre;
+    display: inline-block;
+    background: linear-gradient(180deg, var(--cyan), var(--purple), var(--magenta));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 12px rgba(0, 240, 255, 0.4));
+  }
+
+  .subtitle {
+    font-family: 'Inter', sans-serif;
+    font-size: 1.1rem;
+    color: var(--text-dim);
+    margin-top: 1rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+
+  /* ── Sections ── */
+  section {
+    margin: 3rem 0;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid var(--border);
+    position: relative;
+  }
+
+  h2 .num {
+    color: var(--cyan);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+    margin-right: 0.5rem;
+  }
+
+  h2.cyan { border-image: linear-gradient(90deg, var(--cyan), transparent) 1; }
+  h2.magenta { border-image: linear-gradient(90deg, var(--magenta), transparent) 1; }
+  h2.purple { border-image: linear-gradient(90deg, var(--purple), transparent) 1; }
+  h2.green { border-image: linear-gradient(90deg, var(--green), transparent) 1; }
+  h2.orange { border-image: linear-gradient(90deg, var(--orange), transparent) 1; }
+  h2.yellow { border-image: linear-gradient(90deg, var(--yellow), transparent) 1; }
+  h2.red { border-image: linear-gradient(90deg, var(--red), transparent) 1; }
+  h2.blue { border-image: linear-gradient(90deg, var(--blue), transparent) 1; }
+
+  h3 {
+    font-size: 1.15rem;
+    color: var(--purple);
+    margin: 1.5rem 0 0.5rem;
+  }
+
+  p { margin: 0.75rem 0; }
+
+  strong { color: var(--cyan); font-weight: 600; }
+  em { color: var(--yellow); font-style: normal; }
+
+  /* ── Code Blocks ── */
+  pre {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.2rem 1.5rem;
+    margin: 1rem 0;
+    overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    position: relative;
+  }
+
+  pre::before {
+    content: attr(data-label);
+    position: absolute;
+    top: -0.6rem;
+    left: 1rem;
+    background: var(--surface2);
+    color: var(--text-dim);
+    font-size: 0.7rem;
+    padding: 0.1rem 0.6rem;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  code {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85em;
+    background: var(--surface2);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    color: var(--green);
+  }
+
+  pre code {
+    background: none;
+    padding: 0;
+    color: var(--text);
+  }
+
+  .cmd { color: var(--green); }
+  .flag { color: var(--orange); }
+  .comment { color: var(--text-dim); }
+  .arg { color: var(--cyan); }
+  .str { color: var(--yellow); }
+
+  /* ── Diagram blocks ── */
+  .diagram {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 1.5rem 2rem;
+    margin: 1rem 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+    text-align: center;
+    white-space: pre;
+  }
+
+  .diagram .zone1 { color: var(--orange); }
+  .diagram .zone2 { color: var(--yellow); }
+  .diagram .zone3 { color: var(--green); }
+  .diagram .arrow { color: var(--text-dim); }
+  .diagram .label { color: var(--cyan); }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 1.5rem;
+    margin: 1rem 0;
+    transition: border-color 0.3s;
+  }
+  .card:hover { border-color: var(--purple); }
+
+  .card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+  }
+
+  .card-grid .card {
+    text-align: center;
+  }
+
+  .card .icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+    display: block;
+  }
+
+  .card h4 {
+    color: var(--cyan);
+    margin-bottom: 0.3rem;
+    font-size: 1rem;
+  }
+
+  .card p {
+    color: var(--text-dim);
+    font-size: 0.9rem;
+    margin: 0;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+  }
+
+  th {
+    background: var(--surface2);
+    color: var(--cyan);
+    font-weight: 600;
+    text-align: left;
+    padding: 0.75rem 1rem;
+    border-bottom: 2px solid var(--cyan);
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  td {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  tr:hover td { background: rgba(170, 102, 255, 0.05); }
+
+  td code { font-size: 0.8rem; }
+
+  .danger { color: var(--red); }
+  .safe { color: var(--green); }
+
+  /* ── Callout ── */
+  .callout {
+    border-left: 3px solid var(--magenta);
+    background: rgba(255, 0, 170, 0.05);
+    padding: 1rem 1.2rem;
+    margin: 1.5rem 0;
+    border-radius: 0 8px 8px 0;
+  }
+
+  .callout.warn {
+    border-left-color: var(--orange);
+    background: rgba(255, 136, 68, 0.05);
+  }
+
+  .callout.tip {
+    border-left-color: var(--green);
+    background: rgba(0, 255, 136, 0.05);
+  }
+
+  .callout-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.3rem;
+  }
+
+  .callout-title.warn { color: var(--orange); }
+  .callout-title.tip { color: var(--green); }
+  .callout-title.important { color: var(--magenta); }
+
+  /* ── Glow Separators ── */
+  .sep {
+    height: 1px;
+    margin: 3rem 0;
+    border: none;
+    background: linear-gradient(90deg, transparent, var(--purple), var(--cyan), var(--magenta), transparent);
+    opacity: 0.4;
+  }
+
+  /* ── File Tree ── */
+  .tree {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+    line-height: 1.7;
+    padding: 1.2rem 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin: 1rem 0;
+  }
+
+  .tree .dir { color: var(--cyan); }
+  .tree .git { color: var(--green); }
+  .tree .no { color: var(--text-dim); }
+  .tree .note { color: var(--text-dim); font-style: italic; }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    color: var(--text-dim);
+    font-size: 0.8rem;
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border);
+  }
+
+  footer .hearts { color: var(--magenta); }
+
+  /* ── Responsive ── */
+  @media (max-width: 600px) {
+    .ascii-art { font-size: 0.4rem; }
+    body { padding: 1rem 0.5rem; }
+    pre { padding: 1rem; font-size: 0.78rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+<!-- ══════════════════ HERO ══════════════════ -->
+<div class="ascii-hero">
+<div class="ascii-art">
+      ██████╗ ██╗████████╗
+     ██╔════╝ ██║╚══██╔══╝
+     ██║  ███╗██║   ██║
+     ██║   ██║██║   ██║
+     ╚██████╔╝██║   ██║
+      ╚═════╝ ╚═╝   ╚═╝
+
+  ┌─────────────────────────────────────┐
+  │  ╭──╮    ╭──╮    ╭──╮    ╭──╮      │
+  │  │A │◄───│B │◄───│C │◄───│D │      │
+  │  ╰──╯    ╰──╯    ╰──╯    ╰──╯      │
+  │                     ▲               │
+  │                   ╭──╮    ╭──╮      │
+  │                   │E │◄───│F │      │
+  │                   ╰──╯    ╰──╯      │
+  └─────────────────────────────────────┘
+</div>
+<div class="subtitle">A Practical Guide for Humans</div>
+</div>
+
+<hr class="sep">
+
+<!-- ══════════════════ WHAT IS GIT ══════════════════ -->
+<section>
+<h2 class="cyan"><span class="num">01</span> What Is Git?</h2>
+
+<p>Git is a <strong>time machine for folders</strong>. It tracks every change you save, lets you undo mistakes, and syncs your files to a server (like GitHub) so they're accessible from anywhere.</p>
+
+<p>A folder becomes a git repo when you run <code>git init</code> inside it. This creates a hidden <code>.git/</code> directory that stores the entire history. Without <code>.git/</code>, it's just a normal folder — no memory, no undo, no remote access.</p>
+
+<div class="card-grid">
+  <div class="card">
+    <span class="icon">📸</span>
+    <h4>Snapshots, Not Diffs</h4>
+    <p>Every commit is a full picture of all your files — not a list of changes</p>
+  </div>
+  <div class="card">
+    <span class="icon">🔑</span>
+    <h4>Content-Addressed</h4>
+    <p>Every object gets a SHA-1 hash fingerprint — same content = same hash = stored once</p>
+  </div>
+  <div class="card">
+    <span class="icon">🌍</span>
+    <h4>Distributed</h4>
+    <p>Every clone is a full copy with complete history — no server dependency</p>
+  </div>
+</div>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ WHY FILES ON MOBILE ══════════════════ -->
+<section>
+<h2 class="magenta"><span class="num">02</span> Why Your Files Are Everywhere</h2>
+
+<p>When you <code>git push</code>, your commits travel to GitHub. From there, anything with internet access can reach them — Claude.ai, your phone, another PC, a cloud sandbox.</p>
+
+<div class="diagram">
+<span class="zone1">Your PC</span> <span class="arrow">──git push──▶</span> <span class="label">GitHub</span> <span class="arrow">◀──</span> <span class="zone3">Claude.ai / Mobile / Anywhere</span>
+</div>
+
+<p>Without git, your files would live only on the one machine they were created on.</p>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ ROOT DIR ══════════════════ -->
+<section>
+<h2 class="red"><span class="num">03</span> Your Root Directory Is NOT a Git Repo</h2>
+
+<p>And <strong>that's correct</strong>. Your home folder contains system files, downloads, caches, and secrets. Making it a git repo would mean:</p>
+
+<div class="callout warn">
+  <div class="callout-title warn">⚠ What happens if you git init in ~</div>
+  <p><code>git status</code> shows thousands of irrelevant files. You risk accidentally committing credentials, browser data, or multi-gigabyte binaries. The repo becomes unusable noise.</p>
+</div>
+
+<p>Instead, <strong>each project is its own repo</strong>:</p>
+
+<div class="tree">
+<span class="dir">C:\Users\yourname\</span>
+├── <span class="dir">YourFileTree/</span>      <span class="git">← git repo</span> <span class="note">(conventions, projects, config)</span>
+├── <span class="dir">vault/</span>             <span class="git">← git repo</span> <span class="note">(Obsidian knowledge base)</span>
+├── <span class="dir">Documents/</span>         <span class="no">← not a repo</span> <span class="note">(org documents)</span>
+├── <span class="dir">Downloads/</span>         <span class="no">← not a repo</span> <span class="note">(throwaway files)</span>
+└── <span class="dir">Desktop/</span>           <span class="no">← not a repo</span>
+</div>
+
+<p>Each repo is independently versioned and pushed to its own GitHub repository.</p>
+
+<div class="callout tip">
+  <div class="callout-title tip">💡 Accidentally ran git init in ~?</div>
+  <p>Just delete the <code>.git</code> folder: <code>rm -rf ~/.git</code> — your files are untouched, only the empty git history is removed.</p>
+</div>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ THREE ZONES ══════════════════ -->
+<section>
+<h2 class="purple"><span class="num">04</span> The Three Zones</h2>
+
+<p>Files in a git repo exist in three states. Understanding this is the key to everything.</p>
+
+<div class="diagram">
+<span class="zone1">┌─────────────────┐</span>         <span class="zone2">┌───────────────┐</span>         <span class="zone3">┌──────────────┐</span>
+<span class="zone1">│ Working         │</span> <span class="arrow">git add</span> <span class="zone2">│ Staging Area  │</span> <span class="arrow">git commit</span> <span class="zone3">│ Repository   │</span>
+<span class="zone1">│ Directory       │</span> <span class="arrow">──────▶</span> <span class="zone2">│ (Index)       │</span> <span class="arrow">─────────▶</span> <span class="zone3">│ (.git/)      │</span>
+<span class="zone1">│                 │</span>         <span class="zone2">│               │</span>         <span class="zone3">│              │</span>
+<span class="zone1">│ Your actual     │</span>         <span class="zone2">│ What your     │</span>         <span class="zone3">│ Saved        │</span>
+<span class="zone1">│ files on disk   │</span>         <span class="zone2">│ next commit   │</span>         <span class="zone3">│ history      │</span>
+<span class="zone1">│                 │</span>         <span class="zone2">│ will contain  │</span>         <span class="zone3">│ forever      │</span>
+<span class="zone1">└─────────────────┘</span>         <span class="zone2">└───────────────┘</span>         <span class="zone3">└──────────────┘</span>
+</div>
+
+<p>The staging area lets you commit <em>some</em> changes while keeping others as work in progress. This is why <code>git add</code> and <code>git commit</code> are separate steps.</p>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ CORE CONCEPTS ══════════════════ -->
+<section>
+<h2 class="green"><span class="num">05</span> Core Concepts</h2>
+
+<h3>Commits = Save Points</h3>
+<p>Each commit is a snapshot of your entire project. Like a save point in a game — you can always load any previous one.</p>
+
+<pre data-label="commits"><code><span class="cmd">git add</span> <span class="arg">file.md</span>            <span class="comment"># stage a file for the next save</span>
+<span class="cmd">git commit</span> <span class="flag">-m</span> <span class="str">"Add notes"</span>  <span class="comment"># save the snapshot</span></code></pre>
+
+<h3>Branches = Parallel Timelines</h3>
+<p>A branch is a separate line of work. The default is <code>main</code>. Branches are just labels pointing to commits — they're free to create.</p>
+
+<pre data-label="branches"><code><span class="cmd">git branch</span> <span class="arg">experiment</span>       <span class="comment"># create a branch</span>
+<span class="cmd">git checkout</span> <span class="arg">experiment</span>    <span class="comment"># switch to it</span>
+<span class="comment"># ... make changes, commit ...</span>
+<span class="cmd">git checkout</span> <span class="arg">main</span>          <span class="comment"># switch back</span>
+<span class="cmd">git merge</span> <span class="arg">experiment</span>       <span class="comment"># bring changes into main</span></code></pre>
+
+<h3>SHA-1 Hashes = Fingerprints</h3>
+<p>Every object in git gets a unique 40-character ID based on its content:</p>
+<pre data-label="hash"><code><span class="str">"hello"</span> → <span class="arg">aaf4c61ddcc5e8a2dabede0f3b482cd9aea9434d</span>
+</code></pre>
+<p>Change one byte and the hash is completely different. Same content anywhere in history = same hash = stored only once. This is how git is fast and efficient despite storing full snapshots. You see these as commit IDs like <code>a3f8b21</code>.</p>
+
+<h3>Remotes = Server Copy</h3>
+<p>A remote (usually <code>origin</code>) is your repo on GitHub. Push uploads. Pull downloads.</p>
+
+<pre data-label="remotes"><code><span class="cmd">git push</span> <span class="arg">origin main</span>       <span class="comment"># upload commits to GitHub</span>
+<span class="cmd">git pull</span> <span class="arg">origin main</span>       <span class="comment"># download new commits</span></code></pre>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ ESSENTIAL COMMANDS ══════════════════ -->
+<section>
+<h2 class="yellow"><span class="num">06</span> Essential Commands</h2>
+
+<h3>Daily Use</h3>
+<pre data-label="daily"><code><span class="cmd">git status</span>                 <span class="comment"># what's changed? what's staged?</span>
+<span class="cmd">git diff</span>                   <span class="comment"># see unstaged changes line by line</span>
+<span class="cmd">git add</span> <span class="arg">&lt;file&gt;</span>             <span class="comment"># stage specific file</span>
+<span class="cmd">git commit</span> <span class="flag">-m</span> <span class="str">"message"</span>   <span class="comment"># save a snapshot</span>
+<span class="cmd">git push</span>                   <span class="comment"># upload to GitHub</span>
+<span class="cmd">git pull</span>                   <span class="comment"># download from GitHub</span></code></pre>
+
+<h3>Seeing History</h3>
+<pre data-label="history"><code><span class="cmd">git log</span> <span class="flag">--oneline</span>          <span class="comment"># compact commit list</span>
+<span class="cmd">git log</span> <span class="flag">--oneline --graph</span>  <span class="comment"># visual branch diagram</span>
+<span class="cmd">git show</span> <span class="arg">&lt;commit-id&gt;</span>       <span class="comment"># what a specific commit changed</span>
+<span class="cmd">git blame</span> <span class="arg">&lt;file&gt;</span>           <span class="comment"># who changed each line and when</span></code></pre>
+
+<h3>Undoing Things</h3>
+<pre data-label="undo"><code><span class="cmd">git restore</span> <span class="arg">&lt;file&gt;</span>         <span class="comment"># discard uncommitted changes</span>
+<span class="cmd">git restore</span> <span class="flag">--staged</span> <span class="arg">&lt;file&gt;</span> <span class="comment"># unstage (keep the changes)</span>
+<span class="cmd">git revert</span> <span class="arg">&lt;commit-id&gt;</span>     <span class="comment"># undo a commit (safe for shared history)</span>
+<span class="cmd">git stash</span>                  <span class="comment"># shelve all changes temporarily</span>
+<span class="cmd">git stash pop</span>              <span class="comment"># bring them back</span></code></pre>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ SAFETY NET ══════════════════ -->
+<section>
+<h2 class="blue"><span class="num">07</span> Safety Net: Reflog</h2>
+
+<p>Git records <em>every action</em> you take. Even after a terrible mistake, your work is recoverable for about 30 days:</p>
+
+<pre data-label="reflog"><code><span class="cmd">git reflog</span>                 <span class="comment"># see every HEAD movement</span>
+<span class="cmd">git reset</span> <span class="flag">--hard</span> <span class="arg">&lt;hash&gt;</span>    <span class="comment"># go back to a specific point</span></code></pre>
+
+<div class="callout tip">
+  <div class="callout-title tip">💡 The golden rule of recovery</div>
+  <p>If you committed it, it's almost certainly still there. Check <code>git reflog</code>, find the hash, and reset back to it.</p>
+</div>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ THINGS TO AVOID ══════════════════ -->
+<section>
+<h2 class="orange"><span class="num">08</span> Things to Avoid</h2>
+
+<table>
+  <thead>
+    <tr><th>Don't</th><th>Why</th><th>Do Instead</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code class="danger">git init</code> in home dir</td>
+      <td>Tracks system files, creates unusable noise</td>
+      <td class="safe">Init inside project folders only</td>
+    </tr>
+    <tr>
+      <td><code class="danger">git add .</code> blindly</td>
+      <td>May stage secrets, binaries, system files</td>
+      <td class="safe"><code>git add &lt;specific files&gt;</code></td>
+    </tr>
+    <tr>
+      <td>Commit <code class="danger">.env</code> or API keys</td>
+      <td>They live in history forever, even if deleted later</td>
+      <td class="safe">Use <code>.gitignore</code></td>
+    </tr>
+    <tr>
+      <td><code class="danger">git push --force</code></td>
+      <td>Overwrites others' work on shared branches</td>
+      <td class="safe">Regular <code>git push</code></td>
+    </tr>
+    <tr>
+      <td><code class="danger">git reset --hard</code></td>
+      <td>Destroys uncommitted work instantly</td>
+      <td class="safe"><code>git stash</code> first</td>
+    </tr>
+  </tbody>
+</table>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ .GITIGNORE ══════════════════ -->
+<section>
+<h2 class="cyan"><span class="num">09</span> The .gitignore File</h2>
+
+<p>Tells git which files to <strong>never track</strong>. Put it in the root of your repo. Files listed here won't appear in <code>git status</code> and can't be accidentally committed.</p>
+
+<pre data-label=".gitignore"><code><span class="comment"># Secrets</span>
+<span class="str">.env</span>
+<span class="str">*.keys.json</span>
+<span class="str">credentials/</span>
+
+<span class="comment"># OS junk</span>
+<span class="str">Thumbs.db</span>
+<span class="str">.DS_Store</span>
+
+<span class="comment"># Dependencies</span>
+<span class="str">node_modules/</span>
+
+<span class="comment"># Large files</span>
+<span class="str">*.zip</span>
+<span class="str">*.exe</span></code></pre>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ GIT + OBSIDIAN ══════════════════ -->
+<section>
+<h2 class="magenta"><span class="num">10</span> Git + Obsidian Vault</h2>
+
+<p>An Obsidian vault is a folder of markdown files — a perfect fit for git.</p>
+
+<div class="tree">
+<span class="dir">vault/</span>
+├── <span class="git">.git/</span>              <span class="note">git tracks the vault</span>
+├── <span class="git">.gitignore</span>         <span class="note">exclude workspace settings</span>
+├── <span class="dir">knowledge/</span>         <span class="note">your notes</span>
+├── <span class="dir">sessions/</span>          <span class="note">session logs</span>
+└── ...
+</div>
+
+<div class="callout">
+  <div class="callout-title important">Obsidian + Git Tips</div>
+  <p>Add <code>.obsidian/workspace.json</code> to <code>.gitignore</code> — it changes every time you open a pane.</p>
+  <p>Commit often. Each commit is a snapshot of your entire knowledge base.</p>
+  <p>Push to GitHub for backup and remote access (Claude.ai, mobile).</p>
+  <p>For large images/PDFs, consider <strong>git-lfs</strong> to keep the repo lean.</p>
+</div>
+</section>
+
+<hr class="sep">
+
+<!-- ══════════════════ MENTAL MODEL ══════════════════ -->
+<section>
+<h2 class="green"><span class="num">11</span> Mental Model</h2>
+
+<div class="diagram" style="text-align: left; padding: 2rem;">
+<span class="label">Folder</span> + <span class="zone3">.git/</span> = <span class="zone3">time machine</span>
+
+    <span class="arrow">├──</span> <span class="zone2">commit</span>  = save point
+    <span class="arrow">├──</span> <span class="zone2">branch</span>  = parallel timeline
+    <span class="arrow">├──</span> <span class="zone2">push</span>    = upload to server (GitHub)
+    <span class="arrow">└──</span> <span class="zone2">pull</span>    = download from server
+
+<span class="label">No .git/</span> = just files on disk — no history, no remote access
+</div>
+
+<p>Git is the reason your files show up on Claude.ai, on your phone, and survive mistakes. Keep it in your project folders, keep it out of your home directory, and commit often.</p>
+</section>
+
+<footer>
+  Made with <span class="hearts">♥</span> — April 2026
+</footer>
+
+</div>
+</body>
+</html>
