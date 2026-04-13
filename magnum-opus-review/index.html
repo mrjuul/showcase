@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Magnum Opus Review — Peer Feedback</title>
+<meta property="og:title" content="Magnum Opus Review — Peer Feedback">
+<meta property="og:description" content="Honest peer review of Jonas's Magnum Opus — vendor-agnostic AI context modules, cloud-first architecture, and the path from vibecoder to agentic engineer. By mrjuul.">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/magnum-opus-review/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#d4a853">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist+Mono:wght@300;400;500;600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0c;
+  --bg-card: #111114;
+  --bg-elevated: #18181c;
+  --border: #2a2a30;
+  --text: #e8e6e3;
+  --text-dim: #8a8a95;
+  --text-faint: #55555f;
+  --accent: #d4a853;
+  --accent-dim: #b8923a;
+  --green: #4a9e6d;
+  --green-dim: #2d6b45;
+  --red: #c45c5c;
+  --red-dim: #8b3a3a;
+  --blue: #5b8fd4;
+  --purple: #9b7ec8;
+  --orange: #d4853a;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  background: var(--bg);
+  color: var(--text);
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  line-height: 1.6;
+  overflow-x: hidden;
+}
+
+/* --- Hero --- */
+.hero {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 6vw;
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -40%;
+  right: -20%;
+  width: 80vw;
+  height: 80vw;
+  background: radial-gradient(circle, rgba(212,168,83,0.06) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+.hero-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 2rem;
+}
+
+.hero h1 {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(3rem, 7vw, 6rem);
+  font-weight: 400;
+  line-height: 1.05;
+  max-width: 900px;
+  margin-bottom: 2rem;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-sub {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 640px;
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: flex;
+  gap: 3rem;
+  margin-top: 4rem;
+  flex-wrap: wrap;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2.5rem;
+  color: var(--accent);
+  line-height: 1;
+}
+
+.stat-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-top: 0.5rem;
+}
+
+/* --- Sections --- */
+section {
+  padding: 6rem 6vw;
+  position: relative;
+}
+
+section::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 6vw;
+  right: 6vw;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-label {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 1rem;
+}
+
+.section-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 400;
+  margin-bottom: 1rem;
+  max-width: 700px;
+}
+
+.section-desc {
+  color: var(--text-dim);
+  max-width: 620px;
+  margin-bottom: 3rem;
+  line-height: 1.7;
+}
+
+/* --- Review Cards --- */
+.review-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  max-width: 1100px;
+}
+
+.review-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 2rem;
+  position: relative;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+
+.review-card:hover {
+  border-color: var(--accent-dim);
+}
+
+.review-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+}
+
+.review-card.good::before { background: var(--green); }
+.review-card.bad::before { background: var(--red); }
+.review-card.path::before { background: var(--blue); }
+.review-card.warn::before { background: var(--orange); }
+
+.review-card-title {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-bottom: 0.75rem;
+}
+
+.review-card.good .review-card-title { color: var(--green); }
+.review-card.bad .review-card-title { color: var(--red); }
+.review-card.path .review-card-title { color: var(--blue); }
+.review-card.warn .review-card-title { color: var(--orange); }
+
+.review-card-body {
+  font-size: 0.9rem;
+  color: var(--text-dim);
+  line-height: 1.7;
+}
+
+.review-card-body strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* --- Comparison Table --- */
+.compare-wrapper {
+  max-width: 1100px;
+  overflow-x: auto;
+  margin-top: 2rem;
+}
+
+.compare-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.compare-table th {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+  text-align: left;
+  padding: 1rem 1.25rem;
+  border-bottom: 2px solid var(--border);
+  white-space: nowrap;
+}
+
+.compare-table td {
+  padding: 0.85rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  vertical-align: top;
+}
+
+.compare-table td:first-child {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.78rem;
+  color: var(--text-faint);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.compare-table tr:hover td {
+  background: rgba(212,168,83,0.03);
+}
+
+.badge {
+  display: inline-block;
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.15rem 0.55rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.badge.strong {
+  background: rgba(74,158,109,0.15);
+  color: var(--green);
+  border: 1px solid rgba(74,158,109,0.3);
+}
+
+.badge.partial {
+  background: rgba(212,168,83,0.15);
+  color: var(--accent);
+  border: 1px solid rgba(212,168,83,0.3);
+}
+
+.badge.gap {
+  background: rgba(196,92,92,0.15);
+  color: var(--red);
+  border: 1px solid rgba(196,92,92,0.3);
+}
+
+/* --- Verdict --- */
+.verdict {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 3rem;
+  max-width: 800px;
+  position: relative;
+  overflow: hidden;
+}
+
+.verdict::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--accent), var(--green), var(--blue));
+}
+
+.verdict-text {
+  font-family: 'Instrument Serif', serif;
+  font-size: 1.35rem;
+  line-height: 1.65;
+  color: var(--text);
+}
+
+.verdict-text em {
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* --- Footer --- */
+.footer {
+  padding: 4rem 6vw;
+  text-align: center;
+}
+
+.footer-links {
+  display: flex;
+  gap: 2rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.footer-links a {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.75rem;
+  color: var(--accent);
+  text-decoration: none;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+}
+
+.footer-links a:hover { color: var(--text); }
+
+.footer-credit {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+/* --- Step Cards --- */
+.steps {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+  max-width: 800px;
+  counter-reset: step;
+}
+
+.step {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.5rem 2rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  transition: border-color 0.2s;
+  counter-increment: step;
+}
+
+.step:hover { border-color: var(--blue); }
+
+.step-num {
+  font-family: 'Instrument Serif', serif;
+  font-size: 2rem;
+  color: var(--blue);
+  line-height: 1;
+  min-width: 2rem;
+}
+
+.step-num::before {
+  content: counter(step);
+}
+
+.step-content { flex: 1; }
+
+.step-title {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text);
+  margin-bottom: 0.4rem;
+}
+
+.step-body {
+  font-size: 0.88rem;
+  color: var(--text-dim);
+  line-height: 1.65;
+}
+
+.step-effort {
+  font-family: 'Geist Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--text-faint);
+  margin-top: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+/* --- Responsive --- */
+@media (max-width: 768px) {
+  .hero { padding: 3rem 5vw; min-height: auto; padding-top: 6rem; }
+  section { padding: 4rem 5vw; }
+  .hero-stats { gap: 2rem; }
+  .review-grid { grid-template-columns: 1fr; }
+  .verdict { padding: 2rem; }
+  .step { flex-direction: column; gap: 0.5rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- Hero -->
+<div class="hero">
+  <div class="hero-label">Peer Review &mdash; April 2026</div>
+  <h1>Magnum <em>Opus</em></h1>
+  <p class="hero-sub">En aerlig gennemgang af Jonas' AI-kontekstsystem &mdash; hvad der virker, hvad der mangler, og vejen fremad. Fra vibecoder til agentic engineer.</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-value">683</div>
+      <div class="stat-label">Lines of context</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">10</div>
+      <div class="stat-label">Modules</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">3</div>
+      <div class="stat-label">Architecture layers</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value">4</div>
+      <div class="stat-label">Issues filed</div>
+    </div>
+  </div>
+</div>
+
+<!-- What Works -->
+<section>
+  <div class="section-label">01 &mdash; Strengths</div>
+  <h2 class="section-title">What works</h2>
+  <p class="section-desc">The foundation is solid. The modules are the best part of this project &mdash; genuinely portable, well-structured, and honest about gaps.</p>
+
+  <div class="review-grid">
+    <div class="review-card good">
+      <div class="review-card-title">The Human Is the Constant</div>
+      <div class="review-card-body">This isn't just a slogan. The modules are truly vendor-agnostic &mdash; paste <strong>00-jonas-core.md</strong> into GPT, Gemini, or a local model and it works immediately. That's real portability, not marketing.</div>
+    </div>
+    <div class="review-card good">
+      <div class="review-card-title">Module Structure</div>
+      <div class="review-card-body">Each file is self-contained, ADHD-friendly (short, scannable), and maps to a clear domain. The <strong>domain-switch prompt</strong> is a practical pattern for context switching without infrastructure.</div>
+    </div>
+    <div class="review-card good">
+      <div class="review-card-title">Honest Gap Tracking</div>
+      <div class="review-card-body"><strong>06-gaps.md</strong> lists what's unknown. Most people skip this. Knowing your blind spots is underrated &mdash; it's the foundation for systematic improvement.</div>
+    </div>
+    <div class="review-card good">
+      <div class="review-card-title">Clean Reorganization</div>
+      <div class="review-card-body">Going from 66 scattered Google Drive files to 6 organized top-level folders is real progress. The mapping between modules and Drive folders is intentional and clear.</div>
+    </div>
+  </div>
+</section>
+
+<!-- What's Missing -->
+<section>
+  <div class="section-label">02 &mdash; Problems</div>
+  <h2 class="section-title">What's missing</h2>
+  <p class="section-desc">The modules describe who Jonas IS. They don't describe what the system is DOING. There's no state, no memory, no engine.</p>
+
+  <div class="review-grid">
+    <div class="review-card bad">
+      <div class="review-card-title">No Agent State</div>
+      <div class="review-card-body">No SPEC.md, no changelog, no cross-session memory. Every Claude session starts from zero &mdash; reads modules, knows who Jonas is, but has <strong>no idea what was discussed yesterday</strong>. Session 2 can't continue Session 1's work.</div>
+    </div>
+    <div class="review-card bad">
+      <div class="review-card-title">Google Drive Lock-in</div>
+      <div class="review-card-body">Despite "vendor-agnostic" principle, ADR-001 makes Google the truth layer. Claude Code <strong>can't natively read G:\My Drive</strong> &mdash; it needs API + OAuth. The modules already live in git. That's the more agentic pattern.</div>
+    </div>
+    <div class="review-card bad">
+      <div class="review-card-title">Wiki Without an Engine</div>
+      <div class="review-card-body">The Karpathy wiki vision is solid. But <strong>/wiki-ingest, /wiki-query, /wiki-status don't exist</strong>. A wiki nobody maintains dies within weeks. The engine needs to be built before the knowledge graph.</div>
+    </div>
+    <div class="review-card warn">
+      <div class="review-card-title">Security Gaps</div>
+      <div class="review-card-body"><strong>cv-oplysninger.pdf</strong> committed to git (personal data in version history). <strong>settings.local.json</strong> exposes full filesystem layout with 120+ path entries. No .gitignore at all.</div>
+    </div>
+  </div>
+</section>
+
+<!-- Comparison -->
+<section>
+  <div class="section-label">03 &mdash; Comparison</div>
+  <h2 class="section-title">Architecture side-by-side</h2>
+  <p class="section-desc">Same problem space, different maturity stages. Jonas is at week 1 with great modules. The agentic infrastructure is where the real engineering begins.</p>
+
+  <div class="compare-wrapper">
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Dimension</th>
+          <th>Magnum Opus</th>
+          <th>ClaudeHub</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Truth layer</td>
+          <td>Google Drive (100 TB) <span class="badge partial">lock-in</span></td>
+          <td>Git + SQLite <span class="badge strong">local</span></td>
+        </tr>
+        <tr>
+          <td>Knowledge</td>
+          <td>Obsidian (planned, not built) <span class="badge gap">planned</span></td>
+          <td>Obsidian + Graphthulhu <span class="badge strong">live</span></td>
+        </tr>
+        <tr>
+          <td>Cross-session memory</td>
+          <td>None (chat is ephemeral) <span class="badge gap">none</span></td>
+          <td>claude-mem SQLite + auto-memory <span class="badge strong">live</span></td>
+        </tr>
+        <tr>
+          <td>Agent infrastructure</td>
+          <td>Bansen (Discord bot) <span class="badge partial">single</span></td>
+          <td>Go relay + scheduler + 9 agents designed <span class="badge strong">designed</span></td>
+        </tr>
+        <tr>
+          <td>State tracking</td>
+          <td>06-gaps.md (manual list) <span class="badge gap">manual</span></td>
+          <td>SPEC.md + ADRs + changelogs <span class="badge strong">systematic</span></td>
+        </tr>
+        <tr>
+          <td>Portability</td>
+          <td>Multi-device via Drive streaming <span class="badge strong">strong</span></td>
+          <td>Dual-PC via git push/pull <span class="badge strong">strong</span></td>
+        </tr>
+        <tr>
+          <td>Context modules</td>
+          <td>10 flat files (683 lines) <span class="badge strong">portable</span></td>
+          <td>CLAUDE.md hierarchy (auto-loaded) <span class="badge strong">automatic</span></td>
+        </tr>
+        <tr>
+          <td>Security</td>
+          <td>No .gitignore, CV in repo <span class="badge gap">exposed</span></td>
+          <td>Pre-tool hooks, secret scanning <span class="badge strong">hardened</span></td>
+        </tr>
+        <tr>
+          <td>Maturity</td>
+          <td>Week 1 &mdash; modules done <span class="badge partial">early</span></td>
+          <td>Month 2 &mdash; 4 ADRs, 1,170 LOC <span class="badge strong">building</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- Path Forward -->
+<section>
+  <div class="section-label">04 &mdash; Roadmap</div>
+  <h2 class="section-title">The path forward</h2>
+  <p class="section-desc">Five concrete steps, ordered by impact and effort. Start with security, end with architecture.</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <div class="step-title">Add .gitignore + remove CV from tracking</div>
+        <div class="step-body">git rm --cached cv-oplysninger.pdf, add .claude/ and *.pdf to .gitignore. Stops leaking personal data and filesystem layout.</div>
+        <div class="step-effort">~30 min &bull; fixes security</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <div class="step-title">Add SPEC.md with changelog</div>
+        <div class="step-body">A single file that tracks what's done, what's in progress, and what's next. Gives Claude cross-session state without building any infrastructure.</div>
+        <div class="step-effort">~1 hour &bull; enables state tracking</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <div class="step-title">Separate filing from agent state</div>
+        <div class="step-body">Google Drive = filing cabinet for PDFs, contracts, shared Palmehaven docs. Git repos = agent state for decisions, project status, module evolution. Stop treating them as the same problem.</div>
+        <div class="step-effort">~2 hours &bull; clarifies architecture</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <div class="step-title">Build the wiki engine before the wiki</div>
+        <div class="step-body">The /wiki-ingest and /wiki-status skills need to exist before the Karpathy wiki can work. Or &mdash; consider whether the modules ARE the knowledge layer already, and skip the wiki entirely for now.</div>
+        <div class="step-effort">~1-2 days &bull; or skip it</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num"></div>
+      <div class="step-content">
+        <div class="step-title">Knowledge graph over modules</div>
+        <div class="step-body">Graphify / Graphthulhu over existing modules might give you the visual overview and cross-domain connections you want &mdash; without maintaining wiki pages.</div>
+        <div class="step-effort">~1 day &bull; alternative to wiki</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Verdict -->
+<section>
+  <div class="section-label">05 &mdash; Bottom Line</div>
+  <h2 class="section-title">The verdict</h2>
+
+  <div class="verdict">
+    <p class="verdict-text">The modules are genuinely good. <em>THE HUMAN IS THE CONSTANT</em> is the right principle. But the system around the modules &mdash; state tracking, memory, automation, security &mdash; is where the real work begins.<br><br>Jonas is at the <em>"I have context"</em> stage. The next stage is <em>"I have an agent that uses context to do work autonomously."</em> That's a different engineering problem, and Google Drive won't solve it.<br><br>The good news: he's already using git without fully realizing it's the better foundation. The modules are portable. The reorganization is done. The path forward is about building the engine, not redesigning the context.</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<div class="footer">
+  <div class="footer-links">
+    <a href="https://github.com/larsen-max/magnum-opus/issues" target="_blank">Issues #1&ndash;#4 on larsen-max/magnum-opus</a>
+    <a href="https://github.com/larsen-max/magnum-opus" target="_blank">github.com/larsen-max/magnum-opus</a>
+  </div>
+  <div class="footer-credit">Review by mrjuul &mdash; April 2026</div>
+</div>
+
+</body>
+</html>
