@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chip Huyen -- The Production Engineering Lens on Agent Memory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #0d1220;
+            --border: #1a2235;
+            --text: #dde2ec;
+            --dim: #7a8599;
+            --faint: #3d4a5c;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --accent-glow: rgba(0, 212, 170, 0.08);
+            --serif: 'DM Serif Display', serif;
+            --sans: 'DM Sans', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 16px;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--dim);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .back-link::before {
+            content: '\2190';
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: var(--serif);
+            font-size: 2.8rem;
+            color: var(--text);
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header .subtitle {
+            font-family: var(--sans);
+            font-size: 1.15rem;
+            color: var(--dim);
+            font-weight: 400;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-number {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        .prose {
+            font-size: 0.92rem;
+            color: var(--dim);
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        .prose strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.85rem;
+        }
+
+        /* Table wrapper */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .table-wrapper:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        /* Three-Tier Memory Table */
+        .tier-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tier-table th,
+        .tier-table td {
+            padding: 0.85rem 1.15rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .tier-table th {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: var(--bg);
+        }
+
+        .tier-table .tier-name {
+            font-family: var(--mono);
+            font-weight: 600;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .tier-table .tier-desc {
+            color: var(--text);
+            font-size: 0.88rem;
+        }
+
+        .tier-table .tier-impl {
+            color: var(--dim);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .tier-table .tier-scope {
+            color: var(--dim);
+            font-size: 0.82rem;
+            font-family: var(--mono);
+        }
+
+        .tier-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .tier-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .tier-table tbody tr:hover {
+            background: var(--accent-glow);
+        }
+
+        /* RAG vs Fine-Tuning Decision Matrix */
+        .decision-matrix {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .decision-matrix th,
+        .decision-matrix td {
+            padding: 0.85rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+            font-size: 0.85rem;
+        }
+
+        .decision-matrix th {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: var(--bg);
+            white-space: nowrap;
+        }
+
+        .decision-matrix .option-name {
+            font-family: var(--mono);
+            font-weight: 600;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .decision-matrix .cell-text {
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        .decision-matrix .pro {
+            color: var(--accent);
+            font-size: 0.82rem;
+        }
+
+        .decision-matrix .con {
+            color: #e57373;
+            font-size: 0.82rem;
+        }
+
+        .decision-matrix tr:last-child td {
+            border-bottom: none;
+        }
+
+        .decision-matrix tbody tr {
+            transition: background 0.2s;
+        }
+
+        .decision-matrix tbody tr:hover {
+            background: var(--accent-glow);
+        }
+
+        /* Memory Management Strategy Cards */
+        .strategy-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+
+        .strategy-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .strategy-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .strategy-card h3 {
+            font-family: var(--serif);
+            font-size: 1.1rem;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        .strategy-tag {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: 0.7rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 0.75rem;
+        }
+
+        .strategy-card p {
+            font-size: 0.85rem;
+            color: var(--dim);
+            line-height: 1.6;
+        }
+
+        .strategy-card .mechanism {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-top: 0.75rem;
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+        }
+
+        .strategy-card .tradeoff {
+            margin-top: 0.75rem;
+            font-size: 0.82rem;
+            color: var(--faint);
+            border-top: 1px solid var(--border);
+            padding-top: 0.75rem;
+        }
+
+        .strategy-card .tradeoff strong {
+            color: var(--dim);
+        }
+
+        /* Production Engineering Section */
+        .prod-section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .prod-section:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .prod-subsection {
+            margin-bottom: 2rem;
+        }
+
+        .prod-subsection:last-child {
+            margin-bottom: 0;
+        }
+
+        .prod-subsection h3 {
+            font-family: var(--serif);
+            font-size: 1.15rem;
+            color: var(--text);
+            margin-bottom: 1rem;
+        }
+
+        .prod-subsection h4 {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Caching Card */
+        .caching-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .caching-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .caching-layers {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .caching-layer {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.85rem;
+            text-align: center;
+            transition: border-color 0.2s;
+        }
+
+        .caching-layer:hover {
+            border-color: var(--accent);
+        }
+
+        .caching-layer .layer-name {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+        }
+
+        .caching-layer .layer-what {
+            font-size: 0.78rem;
+            color: var(--dim);
+        }
+
+        /* Latency Metrics */
+        .latency-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .latency-metric {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .latency-metric:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .latency-metric .metric-abbrev {
+            font-family: var(--mono);
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 0.4rem;
+        }
+
+        .latency-metric .metric-name {
+            font-family: var(--sans);
+            font-size: 0.82rem;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+
+        .latency-metric .metric-desc {
+            font-size: 0.78rem;
+            color: var(--dim);
+            line-height: 1.4;
+        }
+
+        /* Reliability Arithmetic */
+        .reliability-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-top: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .reliability-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .reliability-formula {
+            text-align: center;
+            margin: 1.25rem 0;
+            padding: 1rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .reliability-formula .formula-main {
+            font-family: var(--mono);
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .reliability-formula .formula-result {
+            font-family: var(--serif);
+            font-size: 2rem;
+            color: #e57373;
+            margin-top: 0.3rem;
+        }
+
+        .reliability-formula .formula-label {
+            font-size: 0.82rem;
+            color: var(--dim);
+            margin-top: 0.3rem;
+        }
+
+        .reliability-examples {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .reliability-example {
+            text-align: center;
+            padding: 0.75rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+        }
+
+        .reliability-example .steps {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--dim);
+        }
+
+        .reliability-example .result {
+            font-family: var(--mono);
+            font-size: 1rem;
+            font-weight: 600;
+            margin-top: 0.2rem;
+        }
+
+        .reliability-example .result.good {
+            color: var(--accent);
+        }
+
+        .reliability-example .result.warn {
+            color: #ffd54f;
+        }
+
+        .reliability-example .result.bad {
+            color: #e57373;
+        }
+
+        /* Key Facts */
+        .key-facts {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .key-facts:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .key-facts ul {
+            list-style: none;
+        }
+
+        .key-facts li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--dim);
+            display: flex;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .key-facts li:last-child {
+            border-bottom: none;
+        }
+
+        .key-facts .fact-marker {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .key-facts .fact-label {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .page-footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .page-footer a {
+            color: var(--dim);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .page-footer a:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .strategy-cards {
+                grid-template-columns: 1fr;
+            }
+
+            .caching-layers {
+                grid-template-columns: 1fr;
+            }
+
+            .latency-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .reliability-examples {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1.25rem 1rem 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .section-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../" class="back-link">Agentic Memory Landscape</a>
+
+        <header class="page-header">
+            <h1>Chip Huyen</h1>
+            <p class="subtitle">The production engineering lens on agent memory</p>
+        </header>
+
+        <!-- Section 1: Three-Tier Memory Framework -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">01</span>
+                Three-Tier Memory Framework
+            </h2>
+
+            <p class="prose">
+                Huyen's contribution to the agent memory discourse comes from an <strong>engineering-first</strong>
+                perspective. Where Weng maps cognitive psychology and Ng defines architectural patterns, Huyen asks
+                the production question: <strong>how do you actually build and operate memory systems at scale?</strong>
+                Her three-tier framework, presented in <em>AI Engineering</em> (O'Reilly, 2025), organizes memory
+                by the system's relationship to the knowledge -- whether it is baked-in, session-scoped, or
+                externally persisted.
+            </p>
+
+            <div class="table-wrapper">
+                <table class="tier-table">
+                    <thead>
+                        <tr>
+                            <th>Tier</th>
+                            <th>Description</th>
+                            <th>Implementation</th>
+                            <th>Scope</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="tier-name">Internal Knowledge</td>
+                            <td class="tier-desc">Knowledge encoded in model weights during pretraining and fine-tuning. The model "knows" this without any retrieval step.</td>
+                            <td class="tier-impl">Pretraining data, RLHF, supervised fine-tuning, continued pretraining on domain data. Updated only through retraining -- expensive and infrequent.</td>
+                            <td class="tier-scope">Static</td>
+                        </tr>
+                        <tr>
+                            <td class="tier-name">Short-Term Memory</td>
+                            <td class="tier-desc">Information available within the current context window. Includes the system prompt, conversation history, and any retrieved documents injected into the prompt.</td>
+                            <td class="tier-impl">Context window management, prompt engineering, in-context learning. Limited by token budget -- typically 4K-200K tokens depending on model.</td>
+                            <td class="tier-scope">Session</td>
+                        </tr>
+                        <tr>
+                            <td class="tier-name">Long-Term Memory</td>
+                            <td class="tier-desc">Persistent external storage that the model reads from and writes to across sessions. This is the tier where RAG, vector databases, and structured knowledge stores live.</td>
+                            <td class="tier-impl">Vector databases (Pinecone, Chroma, Weaviate), relational databases, document stores, knowledge graphs. Requires indexing, retrieval, and update pipelines.</td>
+                            <td class="tier-scope">Persistent</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="prose" style="margin-top: 1.25rem;">
+                The engineering insight is that each tier has <strong>different update mechanisms, latency profiles,
+                and failure modes</strong>. Internal knowledge is high-quality but frozen. Short-term memory is
+                flexible but ephemeral. Long-term memory is persistent but requires retrieval infrastructure that
+                can fail, return irrelevant results, or introduce stale information. Production systems must
+                handle all three tiers and their interactions gracefully.
+            </p>
+        </section>
+
+        <!-- Section 2: RAG vs Fine-Tuning Decision Matrix -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">02</span>
+                RAG vs Fine-Tuning Decision Matrix
+            </h2>
+
+            <p class="prose">
+                One of Huyen's most practical contributions is a clear decision framework for choosing between
+                the four main approaches to giving an LLM access to new knowledge. The choice depends on
+                <strong>how dynamic the knowledge is</strong>, <strong>how much control you need over outputs</strong>,
+                and <strong>what infrastructure you can afford to operate</strong>. There is no single best approach --
+                production systems often combine multiple options.
+            </p>
+
+            <div class="table-wrapper">
+                <table class="decision-matrix">
+                    <thead>
+                        <tr>
+                            <th>Option</th>
+                            <th>Best For</th>
+                            <th>Latency</th>
+                            <th>Update Speed</th>
+                            <th>Tradeoff</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="option-name">RAG</td>
+                            <td class="cell-text">Large, frequently-updated knowledge bases. Documents that change daily or weekly. When you need citations and source attribution.</td>
+                            <td class="cell-text">Higher -- retrieval adds 50-200ms per query. Embedding + search + reranking pipeline.</td>
+                            <td class="pro">Minutes to hours. Re-index changed documents without touching the model.</td>
+                            <td class="cell-text">Retrieval quality is the bottleneck. Bad retrieval means bad answers regardless of model quality. Requires vector DB infra.</td>
+                        </tr>
+                        <tr>
+                            <td class="option-name">Fine-Tuning</td>
+                            <td class="cell-text">Specialized domains, consistent output formatting, behavioral alignment. When the knowledge is stable and the model needs to "act differently" not just "know more."</td>
+                            <td class="cell-text">No retrieval overhead -- knowledge is in the weights. Inference latency unchanged.</td>
+                            <td class="con">Days to weeks. Requires dataset curation, training run, evaluation, deployment.</td>
+                            <td class="cell-text">Catastrophic forgetting risk. Expensive to iterate. Hard to debug -- knowledge is opaque in weights. Cannot cite sources.</td>
+                        </tr>
+                        <tr>
+                            <td class="option-name">Long Context</td>
+                            <td class="cell-text">Small-to-medium knowledge bases (under ~500 pages). When retrieval quality is too unreliable. When you want the model to "see everything."</td>
+                            <td class="cell-text">Higher first-token latency due to processing full context. But no retrieval pipeline needed.</td>
+                            <td class="pro">Instant -- just swap the context payload. No indexing or training required.</td>
+                            <td class="cell-text">Cost scales linearly with context size. "Lost in the middle" attention degradation. Token limits still apply. Expensive at scale.</td>
+                        </tr>
+                        <tr>
+                            <td class="option-name">Prompting</td>
+                            <td class="cell-text">Small, critical information. User preferences, formatting rules, a few key facts. When the knowledge fits comfortably in the system prompt.</td>
+                            <td class="cell-text">Minimal overhead -- just a longer prompt. No infrastructure needed beyond the LLM.</td>
+                            <td class="pro">Instant. Edit the prompt template and redeploy.</td>
+                            <td class="cell-text">Does not scale. Token budget competes with conversation history. Easy to get wrong -- prompt engineering is empirical and fragile.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="prose" style="margin-top: 1.25rem;">
+                Huyen's key insight: <strong>RAG and fine-tuning are not competing approaches but complementary</strong>.
+                Fine-tuning teaches the model how to behave; RAG gives it access to current information. The best
+                production systems use fine-tuning for style, format, and domain behavior, then RAG for knowledge that
+                changes. Prompting handles the handful of critical rules that must never be missed. Long context is
+                the fallback when retrieval quality is unacceptable.
+            </p>
+        </section>
+
+        <!-- Section 3: Memory Management Strategies -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">03</span>
+                Memory Management Strategies
+            </h2>
+
+            <p class="prose">
+                Context windows are finite. As conversations grow and memory accumulates, something must give.
+                Huyen identifies three canonical strategies for managing memory within the constraint of a fixed
+                token budget. Each makes different tradeoffs between completeness, relevance, and computational cost.
+            </p>
+
+            <div class="strategy-cards">
+                <div class="strategy-card">
+                    <h3>FIFO Eviction</h3>
+                    <span class="strategy-tag">Simplest</span>
+                    <p>
+                        First In, First Out. When the context window fills up, drop the oldest messages.
+                        The system prompt and most recent turns are always kept. This is the default strategy
+                        in most chat applications and requires zero additional infrastructure.
+                    </p>
+                    <div class="mechanism">
+                        if tokens > limit:<br>
+                        &nbsp;&nbsp;drop oldest messages<br>
+                        &nbsp;&nbsp;keep system prompt<br>
+                        &nbsp;&nbsp;keep last N turns
+                    </div>
+                    <div class="tradeoff">
+                        <strong>Tradeoff:</strong> Loses early context that may contain critical setup information,
+                        user preferences, or decisions made at the start of a session. Works well for short,
+                        transactional conversations. Breaks down for long sessions with important early context.
+                    </div>
+                </div>
+
+                <div class="strategy-card">
+                    <h3>Redundancy Removal</h3>
+                    <span class="strategy-tag">Deduplication</span>
+                    <p>
+                        Detect and remove redundant information across the conversation. If the same fact appears
+                        in three different messages, keep only the most recent or most authoritative version.
+                        Requires semantic similarity comparison between memory entries.
+                    </p>
+                    <div class="mechanism">
+                        for each new memory:<br>
+                        &nbsp;&nbsp;find similar existing<br>
+                        &nbsp;&nbsp;if sim > threshold:<br>
+                        &nbsp;&nbsp;&nbsp;&nbsp;merge or replace
+                    </div>
+                    <div class="tradeoff">
+                        <strong>Tradeoff:</strong> More compute per write (similarity comparison is O(n) against
+                        existing memories). Risk of incorrectly merging memories that are similar but meaningfully
+                        different. Requires tuning the similarity threshold -- too aggressive loses nuance, too
+                        conservative wastes tokens on duplicates.
+                    </div>
+                </div>
+
+                <div class="strategy-card">
+                    <h3>Reflection-Based</h3>
+                    <span class="strategy-tag">Most Sophisticated</span>
+                    <p>
+                        Periodically use the LLM itself to summarize, consolidate, and abstract clusters of
+                        memories into higher-level insights. Raw memories are replaced by their distilled
+                        summaries, freeing token budget while preserving semantic content. This mirrors the
+                        Generative Agents reflection mechanism.
+                    </p>
+                    <div class="mechanism">
+                        every K interactions:<br>
+                        &nbsp;&nbsp;cluster recent memories<br>
+                        &nbsp;&nbsp;LLM summarizes cluster<br>
+                        &nbsp;&nbsp;replace raw with summary
+                    </div>
+                    <div class="tradeoff">
+                        <strong>Tradeoff:</strong> Highest quality compression but most expensive -- each reflection
+                        consumes LLM tokens. Summaries lose granular detail that may be needed later.
+                        Summarization can introduce hallucinations or drift from the original meaning.
+                        Recursive summarization compounds these errors.
+                    </div>
+                </div>
+            </div>
+
+            <p class="prose" style="margin-top: 1.5rem;">
+                Huyen emphasizes that production systems rarely use a single strategy in isolation. The practical
+                approach is <strong>layered</strong>: FIFO as the baseline, redundancy removal for the working set,
+                and reflection-based consolidation for long-term storage. The key metric is not how much the agent
+                remembers, but how effectively it retrieves relevant memories at decision time.
+            </p>
+        </section>
+
+        <!-- Section 4: Production Engineering -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">04</span>
+                Production Engineering
+            </h2>
+
+            <div class="prod-section">
+                <!-- Caching as Infrastructure -->
+                <div class="prod-subsection">
+                    <h3>Caching as Memory Infrastructure</h3>
+
+                    <p class="prose">
+                        Huyen reframes caching -- traditionally an infrastructure optimization -- as a form of
+                        agent memory. When an LLM generates a response, caching that response means the system
+                        "remembers" the answer for identical or similar future queries. This is not semantic memory
+                        in the cognitive science sense, but it is functionally equivalent for production systems:
+                        <strong>the system avoids recomputing what it already knows</strong>.
+                    </p>
+
+                    <div class="caching-card">
+                        <h4>Three Caching Layers</h4>
+                        <div class="caching-layers">
+                            <div class="caching-layer">
+                                <div class="layer-name">Prompt Cache</div>
+                                <div class="layer-what">Cache KV-pairs for static prompt prefixes. Saves compute on system prompt processing. Provider-level (Anthropic, OpenAI).</div>
+                            </div>
+                            <div class="caching-layer">
+                                <div class="layer-name">Semantic Cache</div>
+                                <div class="layer-what">Cache responses by query embedding similarity. Near-duplicate questions return cached answers. Application-level (GPTCache, Redis).</div>
+                            </div>
+                            <div class="caching-layer">
+                                <div class="layer-name">Result Cache</div>
+                                <div class="layer-what">Cache exact query-response pairs. Deterministic lookup for repeated identical requests. Cheapest and most reliable tier.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <p class="prose">
+                        The engineering challenge is <strong>cache invalidation</strong> -- the classic hard problem.
+                        When should a cached response be evicted? If the underlying knowledge changes, stale caches
+                        serve wrong answers with high confidence. Huyen recommends TTL-based expiration with semantic
+                        invalidation triggers: when a source document changes, invalidate all cache entries whose
+                        retrieval included that document.
+                    </p>
+                </div>
+
+                <!-- Latency Metrics -->
+                <div class="prod-subsection">
+                    <h3>Latency Metrics That Matter</h3>
+
+                    <p class="prose">
+                        Huyen defines three latency metrics that production teams must track for LLM-based systems.
+                        Memory operations (retrieval, caching, embedding) affect all three. A memory system that adds
+                        200ms of retrieval latency might be acceptable for a research assistant but fatal for a
+                        real-time coding copilot.
+                    </p>
+
+                    <div class="latency-grid">
+                        <div class="latency-metric">
+                            <div class="metric-abbrev">TTFT</div>
+                            <div class="metric-name">Time to First Token</div>
+                            <div class="metric-desc">
+                                How long the user waits before seeing any output. Dominated by prompt processing
+                                and retrieval latency. Memory retrieval adds directly to TTFT. Prompt caching
+                                reduces it. Target: under 1 second for interactive use.
+                            </div>
+                        </div>
+                        <div class="latency-metric">
+                            <div class="metric-abbrev">TPOT</div>
+                            <div class="metric-name">Time Per Output Token</div>
+                            <div class="metric-desc">
+                                Throughput during generation. Affected by model size, batch size, and hardware.
+                                Memory operations do not directly affect TPOT since retrieval happens before
+                                generation. But larger retrieved contexts increase KV-cache pressure.
+                            </div>
+                        </div>
+                        <div class="latency-metric">
+                            <div class="metric-abbrev">TBT</div>
+                            <div class="metric-name">Time Between Tokens</div>
+                            <div class="metric-desc">
+                                Inter-token latency during streaming. Jitter here causes stuttering in real-time
+                                applications. Memory writes (saving conversation state) should be asynchronous
+                                to avoid blocking generation. Target: under 50ms for smooth streaming.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Reliability Arithmetic -->
+                <div class="prod-subsection">
+                    <h3>Reliability Arithmetic</h3>
+
+                    <p class="prose">
+                        Huyen's most sobering contribution is a simple mathematical observation about compound
+                        reliability in multi-step agent systems. If each step in an agentic pipeline has independent
+                        reliability <em>p</em>, then a chain of <em>n</em> steps has compound reliability
+                        <em>p<sup>n</sup></em>. This is multiplicative, not additive -- and the numbers get ugly fast.
+                    </p>
+
+                    <div class="reliability-card">
+                        <h4>The Compound Reliability Problem</h4>
+
+                        <div class="reliability-formula">
+                            <div class="formula-main">0.95<sup>10</sup></div>
+                            <div class="formula-result">= 59.9%</div>
+                            <div class="formula-label">Ten steps at 95% each yields ~60% end-to-end reliability</div>
+                        </div>
+
+                        <p class="prose" style="margin-bottom: 0.75rem;">
+                            A single LLM call at 95% reliability is excellent. But an agentic workflow with 10
+                            sequential LLM calls -- retrieval, planning, tool selection, execution, reflection,
+                            summarization -- drops to <strong>60% end-to-end reliability</strong>. This is not
+                            a theoretical concern; it explains why complex agent demos work impressively but
+                            fail unpredictably in production.
+                        </p>
+
+                        <div class="reliability-examples">
+                            <div class="reliability-example">
+                                <div class="steps">3 steps @ 95%</div>
+                                <div class="result good">85.7%</div>
+                            </div>
+                            <div class="reliability-example">
+                                <div class="steps">5 steps @ 95%</div>
+                                <div class="result warn">77.4%</div>
+                            </div>
+                            <div class="reliability-example">
+                                <div class="steps">10 steps @ 95%</div>
+                                <div class="result bad">59.9%</div>
+                            </div>
+                        </div>
+
+                        <p class="prose" style="margin-top: 1rem; margin-bottom: 0;">
+                            The implications for memory are direct: every memory retrieval step, every embedding
+                            lookup, every cache check is another link in the chain. Memory systems that add
+                            reliability (by catching errors or providing grounding) must add more reliability than
+                            they subtract through additional failure points. Huyen's prescription: <strong>minimize
+                            chain length, maximize per-step reliability, and build fallback paths</strong> that
+                            skip memory when retrieval fails rather than crashing the entire pipeline.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 5: Key Facts -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">05</span>
+                Key Facts
+            </h2>
+
+            <div class="key-facts">
+                <ul>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Primary work:</span> <em>AI Engineering</em> (O'Reilly, 2025). Comprehensive textbook covering the full LLM application stack from inference to deployment. Memory is one chapter among many, framed as infrastructure rather than cognitive science</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Market reception:</span> #1 bestseller on O'Reilly's platform at launch. Widely adopted as the reference text for LLM engineering teams. Succeeds her earlier <em>Designing Machine Learning Systems</em> (2022)</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Memory blog post:</span> Huyen promised a dedicated blog post on agent memory (referenced in several talks and interviews) but as of early 2026 it has not been published. The book chapter remains the primary source</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Perspective:</span> Engineering-first, production-focused. Where Weng asks "what types of memory exist?" and Ng asks "what patterns should agents use?", Huyen asks "how do you build memory systems that work at scale and don't break at 3am?"</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Reliability arithmetic:</span> The 95%^10 = 60% calculation is the most-cited insight from the book. It reframes agent design from "how powerful can we make it?" to "how reliable can we make each step?"</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">RAG coverage:</span> The most detailed production treatment of RAG in print. Covers chunking strategies, embedding model selection, reranking, hybrid search, and evaluation -- not just the concept but the operational details</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Affiliation:</span> Independent author and consultant. Previously at NVIDIA (AI infrastructure), Snorkel AI (data-centric AI), and Claypot AI (real-time ML, which she co-founded). Stanford CS adjunct</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Relationship to field:</span> Huyen's work fills the gap between research and production. Weng and Ng provide the conceptual frameworks; Huyen provides the runbook for building them. Her audience is the engineering team that must ship agent memory, not the researcher who studies it</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <footer class="page-footer">
+            <a href="../">&larr; Back to Agentic Memory Landscape</a>
+        </footer>
+    </div>
+</body>
+</html>

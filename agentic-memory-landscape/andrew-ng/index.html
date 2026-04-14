@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Andrew Ng -- Four Agentic Design Patterns + Memory as Enabler</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #0d1220;
+            --border: #1a2235;
+            --text: #dde2ec;
+            --dim: #7a8599;
+            --faint: #3d4a5c;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --accent-glow: rgba(0, 212, 170, 0.08);
+            --serif: 'DM Serif Display', serif;
+            --sans: 'DM Sans', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 16px;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--dim);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .back-link::before {
+            content: '\2190';
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: var(--serif);
+            font-size: 2.8rem;
+            color: var(--text);
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header .subtitle {
+            font-family: var(--sans);
+            font-size: 1.15rem;
+            color: var(--dim);
+            font-weight: 400;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-number {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        .prose {
+            font-size: 0.92rem;
+            color: var(--dim);
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        .prose strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.85rem;
+        }
+
+        /* Four Patterns Diagram */
+        .patterns-diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .patterns-diagram:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .patterns-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .pattern-node {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            position: relative;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .pattern-node:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .pattern-number {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.5rem;
+        }
+
+        .pattern-name {
+            font-family: var(--serif);
+            font-size: 1.2rem;
+            color: var(--text);
+            margin-bottom: 0.4rem;
+        }
+
+        .pattern-one-liner {
+            font-size: 0.85rem;
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        .enabler-node {
+            background: var(--accent-dim);
+            border: 1px solid rgba(0, 212, 170, 0.3);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            text-align: center;
+            position: relative;
+        }
+
+        .enabler-node::before {
+            content: '';
+            position: absolute;
+            top: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 1rem;
+            background: var(--faint);
+        }
+
+        .enabler-label {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.3rem;
+        }
+
+        .enabler-name {
+            font-family: var(--serif);
+            font-size: 1.15rem;
+            color: var(--accent);
+        }
+
+        .enabler-desc {
+            font-size: 0.82rem;
+            color: var(--dim);
+            margin-top: 0.3rem;
+        }
+
+        .connector-lines {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            height: 1.25rem;
+            position: relative;
+            margin-bottom: 0;
+        }
+
+        .connector-lines::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 25%;
+            right: 25%;
+            height: 1px;
+            background: var(--faint);
+        }
+
+        .connector-lines::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1px;
+            height: 100%;
+            background: var(--faint);
+        }
+
+        /* Pattern Detail Cards */
+        .pattern-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.25rem;
+        }
+
+        .detail-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.75rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .detail-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .detail-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .detail-card-header h3 {
+            font-family: var(--serif);
+            font-size: 1.2rem;
+            color: var(--text);
+        }
+
+        .detail-tag {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .detail-body {
+            font-size: 0.9rem;
+            color: var(--dim);
+            line-height: 1.7;
+        }
+
+        .detail-body strong {
+            color: var(--text);
+        }
+
+        .flow-diagram {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1rem 0;
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--accent);
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        .metric-highlight {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem;
+            margin-top: 0.75rem;
+        }
+
+        .metric-label {
+            font-size: 0.8rem;
+            color: var(--dim);
+        }
+
+        .metric-value {
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .metric-arrow {
+            color: var(--accent);
+            font-size: 1rem;
+        }
+
+        /* Benchmark Section */
+        .benchmark-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .benchmark-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .benchmark-comparison {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 1.5rem;
+            align-items: center;
+            margin: 1.5rem 0;
+        }
+
+        .benchmark-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .benchmark-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .benchmark-model {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .benchmark-mode {
+            font-family: var(--sans);
+            font-size: 0.85rem;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        .benchmark-score {
+            font-family: var(--serif);
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        .benchmark-score.winner {
+            color: var(--accent);
+        }
+
+        .benchmark-score.loser {
+            color: var(--dim);
+        }
+
+        .benchmark-label {
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-top: 0.4rem;
+        }
+
+        .benchmark-vs {
+            font-family: var(--serif);
+            font-size: 1.2rem;
+            color: var(--faint);
+        }
+
+        .benchmark-dataset {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--faint);
+            text-align: center;
+            margin-top: 0.5rem;
+        }
+
+        .benchmark-insight {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-top: 1.25rem;
+        }
+
+        .benchmark-insight p {
+            font-size: 0.88rem;
+            color: var(--dim);
+            line-height: 1.6;
+        }
+
+        .benchmark-insight strong {
+            color: var(--text);
+        }
+
+        /* Memory as Fifth Dimension */
+        .memory-section {
+            background: var(--surface);
+            border: 1px solid rgba(0, 212, 170, 0.25);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .memory-section:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .quote-block {
+            border-left: 3px solid var(--accent);
+            padding: 1rem 1.5rem;
+            margin: 1.25rem 0;
+            background: var(--bg);
+            border-radius: 0 8px 8px 0;
+        }
+
+        .quote-block p {
+            font-family: var(--serif);
+            font-size: 1.05rem;
+            color: var(--text);
+            line-height: 1.6;
+            font-style: italic;
+        }
+
+        .quote-block .attribution {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--dim);
+            margin-top: 0.5rem;
+            font-style: normal;
+        }
+
+        .memory-points {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.25rem;
+        }
+
+        .memory-point {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .memory-point:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .memory-point h4 {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .memory-point p {
+            font-size: 0.85rem;
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        /* Key Facts */
+        .key-facts {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .key-facts:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .key-facts ul {
+            list-style: none;
+        }
+
+        .key-facts li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--dim);
+            display: flex;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .key-facts li:last-child {
+            border-bottom: none;
+        }
+
+        .key-facts .fact-marker {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .key-facts .fact-label {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .page-footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .page-footer a {
+            color: var(--dim);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .page-footer a:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .patterns-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .benchmark-comparison {
+                grid-template-columns: 1fr;
+                gap: 1rem;
+            }
+
+            .benchmark-vs {
+                display: none;
+            }
+
+            .memory-points {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1.25rem 1rem 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .section-title {
+                font-size: 1.25rem;
+            }
+
+            .benchmark-score {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../" class="back-link">Agentic Memory Landscape</a>
+
+        <header class="page-header">
+            <h1>Andrew Ng</h1>
+            <p class="subtitle">Four agentic design patterns + memory as enabler</p>
+        </header>
+
+        <!-- Section 1: The Four Patterns Diagram -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">01</span>
+                The Four Agentic Design Patterns
+            </h2>
+
+            <p class="prose">
+                In a five-part blog series published March-April 2024, Andrew Ng distilled the emerging landscape of
+                agentic AI into <strong>four design patterns</strong>. Unlike Weng's taxonomy (which maps cognitive structures),
+                Ng's framework is operational -- it tells practitioners <strong>what to build</strong>. Each pattern is
+                a distinct architectural choice that can be composed with the others. Memory is not a pattern itself
+                but the substrate that makes the patterns effective across interactions.
+            </p>
+
+            <div class="patterns-diagram">
+                <div class="patterns-grid">
+                    <div class="pattern-node">
+                        <div class="pattern-number">Pattern 1</div>
+                        <div class="pattern-name">Reflection</div>
+                        <div class="pattern-one-liner">The agent critiques its own output and iterates toward quality</div>
+                    </div>
+                    <div class="pattern-node">
+                        <div class="pattern-number">Pattern 2</div>
+                        <div class="pattern-name">Tool Use</div>
+                        <div class="pattern-one-liner">The agent invokes external tools via structured requests</div>
+                    </div>
+                    <div class="pattern-node">
+                        <div class="pattern-number">Pattern 3</div>
+                        <div class="pattern-name">Planning</div>
+                        <div class="pattern-one-liner">The agent autonomously decomposes goals into executable steps</div>
+                    </div>
+                    <div class="pattern-node">
+                        <div class="pattern-number">Pattern 4</div>
+                        <div class="pattern-name">Multi-Agent</div>
+                        <div class="pattern-one-liner">Multiple specialized agents collaborate on complex tasks</div>
+                    </div>
+                </div>
+
+                <div class="connector-lines"></div>
+
+                <div class="enabler-node">
+                    <div class="enabler-label">Enabler</div>
+                    <div class="enabler-name">Memory</div>
+                    <div class="enabler-desc">Persistent state that makes all four patterns effective across sessions</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 2: Pattern Details -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">02</span>
+                Pattern Details
+            </h2>
+
+            <div class="pattern-details">
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <h3>Reflection</h3>
+                        <span class="detail-tag">Self-Improvement</span>
+                    </div>
+                    <div class="detail-body">
+                        <p>
+                            The agent generates output, then evaluates it against criteria -- either self-generated
+                            or externally defined. The <strong>generator-critic loop</strong> runs iteratively:
+                            generate, critique, revise, re-critique, until quality thresholds are met or iteration
+                            limits are reached. This is the simplest pattern to implement and yields surprisingly
+                            large gains.
+                        </p>
+                        <div class="flow-diagram">
+                            Generator &rarr; Output &rarr; Critic &rarr; Feedback &rarr; Generator (iterate)
+                        </div>
+                        <p>
+                            Ng cites a striking result from coding benchmarks: a <strong>GPT-3.5-based agent
+                            with reflection</strong> achieved dramatically higher accuracy than the same model without
+                            reflection. The pattern works because the critic role catches errors that the generator
+                            role systematically makes, and each revision narrows the gap. The key insight is that
+                            <strong>iteration is often cheaper than capability</strong> -- a weaker model looping
+                            can outperform a stronger model in a single pass.
+                        </p>
+                        <div class="metric-highlight">
+                            <span class="metric-label">HumanEval (SQL):</span>
+                            <span class="metric-value">87%</span>
+                            <span class="metric-arrow">&rarr;</span>
+                            <span class="metric-value">95%</span>
+                            <span class="metric-label">with self-reflection</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <h3>Tool Use</h3>
+                        <span class="detail-tag">External Capability</span>
+                    </div>
+                    <div class="detail-body">
+                        <p>
+                            The agent generates <strong>structured requests</strong> to external tools -- web search,
+                            code execution, API calls, database queries, calculators. Tool use extends the agent
+                            beyond what the LLM can do from its training data alone. Ng frames this as the pattern
+                            that bridges the gap between knowing and doing.
+                        </p>
+                        <div class="flow-diagram">
+                            Agent &rarr; Structured Tool Call (JSON) &rarr; Tool Execution &rarr; Result &rarr; Agent
+                        </div>
+                        <p>
+                            The pattern requires careful design of tool descriptions and schemas. The LLM must understand
+                            <strong>when</strong> to use a tool, <strong>which</strong> tool to choose, and
+                            <strong>how</strong> to format the request. Tool use is the most widely adopted pattern --
+                            it is standard in ChatGPT, Claude, Gemini, and virtually every production agent framework.
+                            Ng notes that the quality of tool descriptions matters as much as the quality of the model's
+                            reasoning about them.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <h3>Planning</h3>
+                        <span class="detail-tag">Autonomous Decomposition</span>
+                    </div>
+                    <div class="detail-body">
+                        <p>
+                            The agent <strong>autonomously decomposes</strong> a complex goal into a sequence of steps,
+                            executes them, and adapts the plan based on intermediate results. Unlike simple chain-of-thought
+                            prompting, planning involves maintaining a persistent plan structure, tracking completion
+                            status, and re-planning when steps fail or new information emerges.
+                        </p>
+                        <div class="flow-diagram">
+                            Goal &rarr; Decompose &rarr; Step 1 &rarr; Step 2 &rarr; ... &rarr; Re-plan if needed &rarr; Result
+                        </div>
+                        <p>
+                            Ng identifies planning as the pattern with the most room for improvement. Current LLMs are
+                            good at decomposition but struggle with <strong>plan monitoring</strong> -- knowing when
+                            a step has failed and the plan needs revision. The pattern becomes essential for tasks
+                            that take minutes to hours, where the agent cannot rely on a single context window to
+                            hold the full problem state. Planning is what separates a chatbot from an agent.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="detail-card">
+                    <div class="detail-card-header">
+                        <h3>Multi-Agent Collaboration</h3>
+                        <span class="detail-tag">Specialized Roles</span>
+                    </div>
+                    <div class="detail-body">
+                        <p>
+                            Multiple LLM instances are assigned <strong>specialized roles</strong> and collaborate through
+                            structured communication. One agent might be a coder, another a tester, a third a project
+                            manager. Each brings a different system prompt, tool set, and perspective. The collaboration
+                            can be hierarchical (manager delegates to workers) or peer-to-peer (agents debate and
+                            negotiate).
+                        </p>
+                        <div class="flow-diagram">
+                            Orchestrator &rarr; Agent A (coder) + Agent B (reviewer) + Agent C (tester) &rarr; Synthesis
+                        </div>
+                        <p>
+                            Ng highlights <strong>ChatDev</strong> and <strong>MetaGPT</strong> as exemplars -- systems
+                            where a software company's org chart is implemented as a multi-agent system. The pattern
+                            works because <strong>role specialization improves focus</strong>: an LLM prompted as
+                            "a security reviewer" catches vulnerabilities that the same LLM prompted as "a coder"
+                            would miss. The cost is coordination overhead and the need for well-defined communication
+                            protocols between agents.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: The Benchmark Highlight -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">03</span>
+                The Benchmark That Changed the Conversation
+            </h2>
+
+            <div class="benchmark-card">
+                <p class="prose">
+                    Ng's most cited data point comes from the HumanEval coding benchmark. It crystallized the
+                    argument that <strong>agentic workflows on weaker models can beat stronger models used
+                    traditionally</strong>. This single comparison became the rallying cry for the agentic AI
+                    movement and justified significant investment in agent infrastructure.
+                </p>
+
+                <div class="benchmark-comparison">
+                    <div class="benchmark-item">
+                        <div class="benchmark-model">GPT-3.5</div>
+                        <div class="benchmark-mode">+ Agentic Workflow</div>
+                        <div class="benchmark-score winner">95.1%</div>
+                        <div class="benchmark-label">HumanEval</div>
+                    </div>
+
+                    <div class="benchmark-vs">vs</div>
+
+                    <div class="benchmark-item">
+                        <div class="benchmark-model">GPT-4</div>
+                        <div class="benchmark-mode">Zero-Shot</div>
+                        <div class="benchmark-score loser">67.0%</div>
+                        <div class="benchmark-label">HumanEval</div>
+                    </div>
+                </div>
+
+                <div class="benchmark-dataset">
+                    HumanEval -- 164 Python programming challenges (Chen et al. 2021)
+                </div>
+
+                <div class="benchmark-insight">
+                    <p>
+                        <strong>The 28-point gap</strong> demonstrates that agentic architecture can compensate for
+                        model capability. GPT-3.5 with reflection, tool use, and iterative refinement surpassed
+                        GPT-4 making a single attempt. This is not just an incremental improvement -- it suggests
+                        that <strong>how you use a model matters more than which model you use</strong>, at least
+                        for tasks where iteration is possible. The caveat: agentic workflows consume more tokens,
+                        take more time, and introduce failure modes that zero-shot does not have. The tradeoff is
+                        latency and cost for accuracy and reliability.
+                    </p>
+                </div>
+
+                <p class="prose" style="margin-top: 1.25rem;">
+                    Ng uses this result to argue that even when a frontier model exists, it may be more economical
+                    to wrap a smaller model in agentic scaffolding. This has profound implications for deployment:
+                    organizations can achieve frontier-level performance on specific tasks using cheaper, faster
+                    models augmented with the right patterns.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 4: Memory as Fifth Dimension -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">04</span>
+                Memory as the Fifth Dimension
+            </h2>
+
+            <div class="memory-section">
+                <p class="prose">
+                    Ng deliberately excluded memory from the four patterns. It is not a fifth pattern but a
+                    <strong>cross-cutting enabler</strong> -- the substrate that gives the other four patterns
+                    continuity across interactions. Without memory, reflection only works within a single session,
+                    tool results are lost, plans cannot span conversations, and multi-agent teams forget their
+                    coordination history. Memory transforms agents from stateless responders into persistent
+                    collaborators.
+                </p>
+
+                <div class="quote-block">
+                    <p>
+                        "Memory is not just another feature -- it's what transforms an AI from a tool you use
+                        to a colleague you work with. The four agentic patterns become dramatically more powerful
+                        when the agent remembers what worked, what failed, and what you prefer."
+                    </p>
+                    <div class="attribution">-- Andrew Ng, Microsoft BUILD 2024 keynote</div>
+                </div>
+
+                <div class="memory-points">
+                    <div class="memory-point">
+                        <h4>Why Not a Pattern?</h4>
+                        <p>
+                            Patterns are architectural choices -- you can build an agent that uses reflection but not
+                            multi-agent, or tool use but not planning. Memory is different: it amplifies every pattern
+                            but is not a standalone capability. An agent with only memory and no patterns would just
+                            be a database with an LLM frontend.
+                        </p>
+                    </div>
+                    <div class="memory-point">
+                        <h4>MemGPT / Letta Connection</h4>
+                        <p>
+                            Ng partnered with Charles Packer (MemGPT creator) to build a DeepLearning.AI course
+                            on agent memory. MemGPT's approach -- treating context window management as a virtual
+                            memory system with hierarchical paging -- aligns with Ng's view that memory is
+                            infrastructure, not application logic.
+                        </p>
+                    </div>
+                    <div class="memory-point">
+                        <h4>Memory Enables Personalization</h4>
+                        <p>
+                            The BUILD 2024 talk emphasized that memory is what allows agents to become
+                            <strong style="color: var(--text);">personalized</strong>. An agent that remembers your
+                            coding style, your preferred frameworks, your past mistakes -- that agent gets better
+                            over time. Without memory, every session starts from scratch.
+                        </p>
+                    </div>
+                    <div class="memory-point">
+                        <h4>Cross-Session State</h4>
+                        <p>
+                            Ng identifies the "fresh session problem" as the key blocker for production agents.
+                            Users build rapport and context over a conversation, then lose it when the session
+                            ends. Memory solves this by persisting relevant context across session boundaries,
+                            making the agent feel continuous rather than episodic.
+                        </p>
+                    </div>
+                </div>
+
+                <p class="prose" style="margin-top: 1.25rem;">
+                    The DeepLearning.AI course on memory (launched late 2024) covers practical implementation:
+                    how to decide what to store, retrieval strategies, memory compression, and the tradeoffs
+                    between different persistence backends. It operationalizes the BUILD 2024 vision into
+                    buildable components.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 5: Key Facts -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">05</span>
+                Key Facts
+            </h2>
+
+            <div class="key-facts">
+                <ul>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Publication format:</span> Five-part blog series on DeepLearning.AI newsletter ("The Batch"), published March-April 2024</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Series structure:</span> Part 1: overview. Parts 2-5: one pattern each (Reflection, Tool Use, Planning, Multi-Agent). Memory discussed throughout as enabler</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Keynote:</span> Microsoft BUILD 2024 -- expanded the framework with emphasis on memory as the critical missing piece in current agent deployments</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">DeepLearning.AI courses:</span> Multiple courses implement the patterns: "AI Agentic Design Patterns with AutoGen", "Building Agentic RAG with LlamaIndex", and the MemGPT/Letta memory course</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Influence:</span> The four-pattern framework became the standard vocabulary for agent architecture discussions. "Agentic" as an adjective entered mainstream AI discourse largely through Ng's advocacy</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Key claim:</span> Agentic workflows on GPT-3.5 outperform GPT-4 zero-shot on HumanEval (95.1% vs 67.0%). Most-cited datapoint in the agentic AI discourse of 2024</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Relationship to Weng:</span> Complementary, not competing. Weng provides the cognitive science mapping (what types of memory exist). Ng provides the engineering framework (what patterns to implement). Together they form the descriptive and prescriptive layers of agent architecture</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Affiliation:</span> Founder of DeepLearning.AI, co-founder of Coursera, former head of Google Brain and Baidu AI Group. The blog series reflects his educator role rather than research output</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <footer class="page-footer">
+            <a href="../">&larr; Back to Agentic Memory Landscape</a>
+        </footer>
+    </div>
+</body>
+</html>

@@ -1,0 +1,742 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mem0 — Agentic Memory Landscape</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080c14;
+      --surface: #0d1220;
+      --border: #1a2235;
+      --text: #dde2ec;
+      --dim: #7a8599;
+      --faint: #3d4a5c;
+      --accent: #00d4aa;
+      --accent-dim: rgba(0, 212, 170, 0.12);
+      --accent-glow: rgba(0, 212, 170, 0.25);
+      --radius: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 16px;
+      line-height: 1.65;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.8; }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.875rem;
+      color: var(--dim);
+      padding: 1.5rem 0;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); opacity: 1; }
+    .back-link svg { width: 16px; height: 16px; }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 1.5rem;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      text-align: center;
+      padding: 4rem 0 3.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .hero h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 3.5rem;
+      font-weight: 400;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.75rem;
+    }
+    .hero .subtitle {
+      font-size: 1.15rem;
+      color: var(--dim);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+
+    /* ── Sections ── */
+    section {
+      padding: 3rem 0;
+      border-bottom: 1px solid var(--border);
+    }
+    section:last-of-type { border-bottom: none; }
+
+    h2 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.75rem;
+      font-weight: 400;
+      margin-bottom: 1.25rem;
+      color: var(--text);
+    }
+    h3 {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    p { color: var(--dim); margin-bottom: 1rem; }
+    p:last-child { margin-bottom: 0; }
+
+    /* ── Cards ── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .card:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .card .label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .card h3 { margin-bottom: 0.6rem; }
+    .card p { font-size: 0.9rem; }
+
+    /* ── Tables ── */
+    .table-wrap {
+      overflow-x: auto;
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+    thead th {
+      background: var(--surface);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.85rem 1rem;
+      color: var(--text);
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    tbody td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--dim);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: var(--accent-dim); }
+
+    /* ── Architecture Diagram ── */
+    .arch-diagram {
+      display: flex;
+      align-items: stretch;
+      gap: 0;
+      overflow-x: auto;
+      padding: 1rem 0;
+    }
+    .arch-phase {
+      flex: 1;
+      min-width: 160px;
+      position: relative;
+    }
+    .arch-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1rem;
+      text-align: center;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .arch-box:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .arch-box .phase-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+    .arch-box .phase-title {
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text);
+      margin-bottom: 0.4rem;
+    }
+    .arch-box .phase-detail {
+      font-size: 0.8rem;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+    .arch-arrow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 48px;
+      min-width: 48px;
+      color: var(--faint);
+      font-size: 1.5rem;
+    }
+
+    /* ── Sub-items inside arch box ── */
+    .arch-sub {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+    }
+    .arch-sub span {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--dim);
+      background: rgba(0, 212, 170, 0.06);
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    /* ── Code Block ── */
+    .code-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      line-height: 1.75;
+      color: var(--dim);
+    }
+    .code-block .kw { color: #c792ea; }
+    .code-block .fn { color: #82aaff; }
+    .code-block .str { color: #c3e88d; }
+    .code-block .cmt { color: var(--faint); font-style: italic; }
+    .code-block .var { color: var(--text); }
+    .code-block .op { color: #89ddff; }
+    .code-block .num { color: #f78c6c; }
+
+    /* ── Stat row ── */
+    .stat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+    .stat {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      flex: 1;
+      min-width: 180px;
+      text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .stat:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .stat .stat-value {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.75rem;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+    .stat .stat-label {
+      font-size: 0.8rem;
+      color: var(--dim);
+    }
+
+    /* ── Benchmark bars ── */
+    .bench-item {
+      margin-bottom: 1rem;
+    }
+    .bench-item:last-child { margin-bottom: 0; }
+    .bench-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.35rem;
+    }
+    .bench-name {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text);
+    }
+    .bench-score {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+    .bench-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .bench-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #00b894);
+      border-radius: 4px;
+      transition: width 0.6s ease;
+    }
+    .bench-note {
+      font-size: 0.78rem;
+      color: var(--faint);
+      margin-top: 0.25rem;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 3rem 0;
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+    footer p {
+      font-size: 0.85rem;
+      color: var(--faint);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 700px) {
+      .hero h1 { font-size: 2.5rem; }
+      .hero .subtitle { font-size: 1rem; }
+      h2 { font-size: 1.4rem; }
+      .arch-diagram { flex-direction: column; align-items: center; }
+      .arch-arrow { transform: rotate(90deg); width: auto; min-width: auto; height: 36px; }
+      .arch-phase { min-width: 100%; }
+      .card-grid { grid-template-columns: 1fr; }
+      .stat-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="../" class="back-link">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+    Back to Agentic Memory Landscape
+  </a>
+</div>
+
+<!-- ── Hero ── -->
+<header class="hero">
+  <div class="container">
+    <h1>Mem0</h1>
+    <p class="subtitle">The most widely adopted open-source agentic memory layer</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- ── 1. Architecture ── -->
+  <section>
+    <h2>Architecture</h2>
+    <p>Mem0 processes every conversation turn through a two-phase pipeline that decides what to remember, then stores memories across three complementary backends for retrieval at inference time.</p>
+
+    <div class="arch-diagram">
+      <div class="arch-phase">
+        <div class="arch-box">
+          <div class="phase-label">Input</div>
+          <div class="phase-title">User / Assistant Exchange</div>
+          <div class="phase-detail">Raw conversation messages passed to the memory layer</div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">&rarr;</div>
+
+      <div class="arch-phase">
+        <div class="arch-box">
+          <div class="phase-label">Phase 1</div>
+          <div class="phase-title">Extraction</div>
+          <div class="phase-detail">LLM extracts memory candidates from the conversation</div>
+          <div class="arch-sub">
+            <span>facts</span>
+            <span>preferences</span>
+            <span>entities</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">&rarr;</div>
+
+      <div class="arch-phase">
+        <div class="arch-box">
+          <div class="phase-label">Phase 2</div>
+          <div class="phase-title">Update</div>
+          <div class="phase-detail">Vector similarity against existing memories determines action</div>
+          <div class="arch-sub">
+            <span>ADD</span>
+            <span>UPDATE</span>
+            <span>DELETE</span>
+            <span>NOOP</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">&rarr;</div>
+
+      <div class="arch-phase">
+        <div class="arch-box">
+          <div class="phase-label">Storage</div>
+          <div class="phase-title">Hybrid Datastore</div>
+          <div class="phase-detail">Three complementary stores for different access patterns</div>
+          <div class="arch-sub">
+            <span>Vector Store</span>
+            <span>Graph Store</span>
+            <span>Key-Value Store</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-arrow">&rarr;</div>
+
+      <div class="arch-phase">
+        <div class="arch-box">
+          <div class="phase-label">Output</div>
+          <div class="phase-title">Retrieval</div>
+          <div class="phase-detail">Relevant memories surfaced at inference time via search</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 2. Memory Scopes ── -->
+  <section>
+    <h2>Memory Scopes</h2>
+    <p>Mem0 supports three scoping levels, each keyed by a different identifier. All scopes can coexist and are queried in combination at retrieval time.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Scope</th>
+            <th>Lifetime</th>
+            <th>Key</th>
+            <th>Use Case</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">User</td>
+            <td>Cross-session, persistent</td>
+            <td><code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--accent);">user_id</code></td>
+            <td>Long-term preferences, facts, and history tied to a specific user across all conversations</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Session</td>
+            <td>Single conversation</td>
+            <td><code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--accent);">run_id</code></td>
+            <td>Short-term context within one conversation thread, discarded or archived after session ends</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Agent</td>
+            <td>Per agent instance</td>
+            <td><code style="font-family:'JetBrains Mono',monospace;font-size:0.82rem;color:var(--accent);">agent_id</code></td>
+            <td>Agent-specific learned behaviors, tool preferences, and operational patterns</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 3. Graph Memory ── -->
+  <section>
+    <h2>Graph Memory</h2>
+    <p>
+      Beyond vector similarity, Mem0 extracts <strong style="color:var(--text);">entities and relationships</strong> from conversations
+      using an LLM, then stores them as a knowledge graph. This enables multi-hop reasoning and relationship-aware retrieval
+      that flat vector search cannot provide.
+    </p>
+
+    <div class="card-grid" style="margin-top:1.25rem;">
+      <div class="card">
+        <div class="label">Supported Backends</div>
+        <h3>Graph Databases</h3>
+        <p>Neo4j, Memgraph, Amazon Neptune, Kuzu, and Apache AGE are all supported as graph store backends. The graph layer runs alongside the vector store, not as a replacement.</p>
+      </div>
+      <div class="card">
+        <div class="label">Benchmark</div>
+        <h3>Mem0g Performance</h3>
+        <p>Mem0 with graph memory (Mem0g) scores <strong style="color:var(--accent);">68.4%</strong> on LOCOMO, compared to the base vector-only Mem0 at <strong style="color:var(--accent);">66.9%</strong>. The graph layer adds relational reasoning at modest cost.</p>
+      </div>
+      <div class="card">
+        <div class="label">Extraction</div>
+        <h3>Entity &amp; Relation Pipeline</h3>
+        <p>The LLM identifies named entities and typed relationships from each turn. These are deduplicated against the existing graph before insertion, maintaining a clean knowledge structure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 4. Key Patterns ── -->
+  <section>
+    <h2>Key Patterns</h2>
+    <p>Two architectural patterns distinguish Mem0 from simpler memory implementations.</p>
+
+    <div class="card-grid" style="margin-top:1.25rem;">
+      <div class="card">
+        <div class="label">Pattern</div>
+        <h3>LLM-Driven Deduplication</h3>
+        <p>
+          Each candidate memory is compared against existing memories via vector similarity. An LLM then classifies the action as
+          <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--accent);">ADD</code>,
+          <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--accent);">UPDATE</code>,
+          <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--accent);">DELETE</code>, or
+          <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--accent);">NOOP</code>.
+          This prevents unbounded memory growth and keeps the store semantically clean without manual curation.
+        </p>
+      </div>
+      <div class="card">
+        <div class="label">Pattern</div>
+        <h3>Actor-Aware Memory</h3>
+        <p>
+          The <strong style="color:var(--text);">Group-Chat v2</strong> update (June 2025) introduced actor-aware memory extraction.
+          In multi-agent or multi-user conversations, Mem0 tracks which actor said what, enabling correct attribution and
+          per-participant memory scoping within a shared conversation context.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 5. Memory API ── -->
+  <section>
+    <h2>Memory API</h2>
+    <p>Mem0 exposes six core methods. All accept scope parameters (<code style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--accent);">user_id</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--accent);">agent_id</code>, <code style="font-family:'JetBrains Mono',monospace;font-size:0.85rem;color:var(--accent);">run_id</code>) for filtering.</p>
+
+    <div class="code-block">
+<span class="cmt"># Initialize the memory client</span>
+<span class="kw">from</span> <span class="var">mem0</span> <span class="kw">import</span> <span class="var">Memory</span>
+<span class="var">m</span> <span class="op">=</span> <span class="var">Memory</span><span class="op">()</span>
+
+<span class="cmt"># Add memories from a conversation</span>
+<span class="var">m</span><span class="op">.</span><span class="fn">add</span><span class="op">(</span>
+    <span class="str">"I prefer dark-roast coffee and work from Copenhagen"</span><span class="op">,</span>
+    <span class="var">user_id</span><span class="op">=</span><span class="str">"christian"</span>
+<span class="op">)</span>
+
+<span class="cmt"># Search memories by semantic similarity</span>
+<span class="var">results</span> <span class="op">=</span> <span class="var">m</span><span class="op">.</span><span class="fn">search</span><span class="op">(</span>
+    <span class="str">"What does the user like to drink?"</span><span class="op">,</span>
+    <span class="var">user_id</span><span class="op">=</span><span class="str">"christian"</span>
+<span class="op">)</span>
+
+<span class="cmt"># Update an existing memory by ID</span>
+<span class="var">m</span><span class="op">.</span><span class="fn">update</span><span class="op">(</span>
+    <span class="var">memory_id</span><span class="op">=</span><span class="str">"mem_abc123"</span><span class="op">,</span>
+    <span class="var">data</span><span class="op">=</span><span class="str">"Now prefers light-roast coffee"</span>
+<span class="op">)</span>
+
+<span class="cmt"># Delete a specific memory</span>
+<span class="var">m</span><span class="op">.</span><span class="fn">delete</span><span class="op">(</span><span class="var">memory_id</span><span class="op">=</span><span class="str">"mem_abc123"</span><span class="op">)</span>
+
+<span class="cmt"># Get all memories for a user</span>
+<span class="var">all_mems</span> <span class="op">=</span> <span class="var">m</span><span class="op">.</span><span class="fn">get_all</span><span class="op">(</span><span class="var">user_id</span><span class="op">=</span><span class="str">"christian"</span><span class="op">)</span>
+
+<span class="cmt"># View mutation history for a memory</span>
+<span class="var">changes</span> <span class="op">=</span> <span class="var">m</span><span class="op">.</span><span class="fn">history</span><span class="op">(</span><span class="var">memory_id</span><span class="op">=</span><span class="str">"mem_abc123"</span><span class="op">)</span>
+    </div>
+  </section>
+
+  <!-- ── 6. Benchmarks ── -->
+  <section>
+    <h2>Benchmarks</h2>
+    <p>Mem0 trades a modest accuracy gap against full-context baselines for dramatically lower latency and cost, making it practical for production workloads.</p>
+
+    <div style="margin-top:1.25rem;">
+      <div class="bench-item">
+        <div class="bench-header">
+          <span class="bench-name">Full Context (baseline)</span>
+          <span class="bench-score">72.9%</span>
+        </div>
+        <div class="bench-bar">
+          <div class="bench-fill" style="width:72.9%"></div>
+        </div>
+        <div class="bench-note">Entire conversation history in context window</div>
+      </div>
+
+      <div class="bench-item">
+        <div class="bench-header">
+          <span class="bench-name">Mem0 + Graph (Mem0g)</span>
+          <span class="bench-score">68.4%</span>
+        </div>
+        <div class="bench-bar">
+          <div class="bench-fill" style="width:68.4%"></div>
+        </div>
+        <div class="bench-note">Vector + graph memory, relationship-aware retrieval</div>
+      </div>
+
+      <div class="bench-item">
+        <div class="bench-header">
+          <span class="bench-name">Mem0 (vector only)</span>
+          <span class="bench-score">66.9%</span>
+        </div>
+        <div class="bench-bar">
+          <div class="bench-fill" style="width:66.9%"></div>
+        </div>
+        <div class="bench-note">Vector similarity retrieval only</div>
+      </div>
+    </div>
+
+    <div class="card-grid" style="margin-top:2rem;">
+      <div class="card">
+        <div class="label">Accuracy Trade-off</div>
+        <h3>~6% Gap</h3>
+        <p>Mem0 scores 66.9% vs full-context 72.9% on LOCOMO. The graph-enhanced variant (Mem0g) narrows this to 4.5 percentage points.</p>
+      </div>
+      <div class="card">
+        <div class="label">Latency Reduction</div>
+        <h3>91% Lower</h3>
+        <p>By retrieving only relevant memories instead of passing the full conversation history, Mem0 achieves 91% lower latency at inference time.</p>
+      </div>
+      <div class="card">
+        <div class="label">Benchmark</div>
+        <h3>LOCOMO</h3>
+        <p>Long-context memory benchmark measuring factual recall, temporal reasoning, and multi-hop questions across extended conversations.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── 7. Deployment ── -->
+  <section>
+    <h2>Deployment</h2>
+    <p>Mem0 ships as both a self-hosted open-source library and a managed cloud platform with enterprise compliance.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Aspect</th>
+            <th>Open Source</th>
+            <th>Mem0 Cloud</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">License</td>
+            <td>Apache 2.0</td>
+            <td>Proprietary (SaaS)</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">GitHub Stars</td>
+            <td>53,000+</td>
+            <td>&mdash;</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Compliance</td>
+            <td>Self-managed</td>
+            <td>SOC 2 Type II, HIPAA</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Pricing</td>
+            <td>Free</td>
+            <td>$19 &ndash; $249/mo (usage-based tiers)</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Infrastructure</td>
+            <td>BYO vector DB, graph DB, LLM</td>
+            <td>Fully managed, auto-scaling</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Graph Memory</td>
+            <td>Supported (bring your own Neo4j, etc.)</td>
+            <td>Built-in, managed</td>
+          </tr>
+          <tr>
+            <td style="color:var(--text);font-weight:500;">Dashboard</td>
+            <td>No</td>
+            <td>Yes (memory inspector, analytics)</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── 8. Key Facts ── -->
+  <section>
+    <h2>Key Facts</h2>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="stat-value">$24M</div>
+        <div class="stat-label">Series A funding</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">YC W24</div>
+        <div class="stat-label">Y Combinator batch</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">53K</div>
+        <div class="stat-label">GitHub stars</div>
+      </div>
+    </div>
+
+    <div class="card-grid" style="margin-top:1.5rem;">
+      <div class="card">
+        <div class="label">Academic</div>
+        <h3>ECAI Publication</h3>
+        <p>Published as arXiv:2504.19413, accepted at ECAI. Formalizes the extraction-update-retrieval pipeline and benchmarks against full-context baselines.</p>
+      </div>
+      <div class="card">
+        <div class="label">Integration</div>
+        <h3>AWS Agent SDK</h3>
+        <p>Selected as the exclusive memory provider for the AWS Agent SDK, providing built-in memory capabilities for agents built on Amazon Bedrock.</p>
+      </div>
+      <div class="card">
+        <div class="label">Default LLM</div>
+        <h3>gpt-4.1-nano</h3>
+        <p>Memory extraction and classification use <code style="font-family:'JetBrains Mono',monospace;font-size:0.8rem;color:var(--accent);">gpt-4.1-nano</code> by default, optimizing for cost and latency on the high-volume memory pipeline.</p>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Footer ── -->
+<footer>
+  <div class="container">
+    <a href="../" class="back-link" style="justify-content:center;padding:0;margin-bottom:0.75rem;">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Back to Agentic Memory Landscape
+    </a>
+    <p>Part of the Agentic Memory Landscape showcase series</p>
+  </div>
+</footer>
+
+</body>
+</html>

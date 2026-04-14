@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MemGPT / Letta — OS-Inspired Virtual Context Management</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #0d1220;
+            --border: #1a2235;
+            --text: #dde2ec;
+            --dim: #7a8599;
+            --faint: #3d4a5c;
+            --accent: #00d4aa;
+        }
+
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        a:hover {
+            opacity: 0.8;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 1.5rem 2rem;
+            font-size: 0.9rem;
+            color: var(--dim);
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .hero {
+            text-align: center;
+            padding: 4rem 2rem 3rem;
+            border-bottom: 1px solid var(--border);
+            background: linear-gradient(180deg, rgba(0, 212, 170, 0.03) 0%, transparent 100%);
+        }
+
+        .hero h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: clamp(2.2rem, 5vw, 3.5rem);
+            font-weight: 400;
+            color: var(--text);
+            margin-bottom: 0.75rem;
+        }
+
+        .hero h1 span {
+            color: var(--accent);
+        }
+
+        .hero .subtitle {
+            font-size: 1.15rem;
+            color: var(--dim);
+            max-width: 600px;
+            margin: 0 auto;
+            font-weight: 300;
+        }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        section {
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        section:last-of-type {
+            border-bottom: none;
+        }
+
+        h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            font-weight: 400;
+            margin-bottom: 1.25rem;
+            color: var(--text);
+        }
+
+        h2 .num {
+            color: var(--accent);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.9rem;
+            margin-right: 0.75rem;
+        }
+
+        p {
+            color: var(--dim);
+            margin-bottom: 1rem;
+            max-width: 720px;
+        }
+
+        /* Tables */
+        .table-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            background: var(--surface);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.92rem;
+        }
+
+        thead th {
+            background: rgba(0, 212, 170, 0.06);
+            text-align: left;
+            padding: 0.85rem 1.1rem;
+            font-weight: 500;
+            color: var(--text);
+            border-bottom: 1px solid var(--border);
+            white-space: nowrap;
+        }
+
+        tbody td {
+            padding: 0.75rem 1.1rem;
+            border-bottom: 1px solid var(--border);
+            color: var(--dim);
+            vertical-align: top;
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        tbody tr:hover {
+            background: rgba(0, 212, 170, 0.03);
+        }
+
+        td code, p code {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.82rem;
+            background: rgba(0, 212, 170, 0.08);
+            color: var(--accent);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+        }
+
+        .os-col {
+            color: var(--faint);
+        }
+
+        .memgpt-col {
+            color: var(--text);
+        }
+
+        /* Tiered Storage Diagram */
+        .diagram {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 700px) {
+            .diagram {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .diagram-panel {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            background: var(--surface);
+            overflow: hidden;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .diagram-panel:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 24px rgba(0, 212, 170, 0.08);
+        }
+
+        .panel-header {
+            padding: 1rem 1.2rem;
+            font-weight: 700;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-main .panel-header {
+            background: rgba(0, 212, 170, 0.08);
+            color: var(--accent);
+        }
+
+        .panel-external .panel-header {
+            background: rgba(122, 133, 153, 0.1);
+            color: var(--dim);
+        }
+
+        .panel-block {
+            padding: 0.85rem 1.2rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-block:last-child {
+            border-bottom: none;
+        }
+
+        .block-label {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            color: var(--accent);
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .block-tag {
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.7rem;
+            padding: 0.1rem 0.4rem;
+            border-radius: 3px;
+            font-weight: 500;
+        }
+
+        .tag-readonly {
+            background: rgba(255, 107, 107, 0.12);
+            color: #ff6b6b;
+        }
+
+        .tag-writable {
+            background: rgba(0, 212, 170, 0.12);
+            color: var(--accent);
+        }
+
+        .tag-fifo {
+            background: rgba(255, 193, 7, 0.12);
+            color: #ffc107;
+        }
+
+        .tag-search {
+            background: rgba(100, 149, 237, 0.12);
+            color: #6495ed;
+        }
+
+        .tag-embed {
+            background: rgba(186, 85, 211, 0.12);
+            color: #ba55d3;
+        }
+
+        .block-desc {
+            font-size: 0.85rem;
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        .block-tokens {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--faint);
+            margin-top: 0.2rem;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+        }
+
+        .card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 28px rgba(0, 212, 170, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .card h3 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.1rem;
+            font-weight: 400;
+            margin-bottom: 0.6rem;
+            color: var(--text);
+        }
+
+        .card p {
+            font-size: 0.88rem;
+            color: var(--dim);
+            margin-bottom: 0;
+        }
+
+        /* Comparison highlight */
+        .comparison-row-header td {
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .trad-col {
+            color: var(--faint);
+        }
+
+        .memgpt-advantage {
+            color: var(--accent);
+            font-weight: 500;
+        }
+
+        /* Letta section */
+        .letta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+            margin-top: 1rem;
+        }
+
+        @media (max-width: 600px) {
+            .letta-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .letta-stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.5rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .letta-stat:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 212, 170, 0.08);
+        }
+
+        .stat-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 1.6rem;
+            color: var(--accent);
+            margin-bottom: 0.2rem;
+        }
+
+        .stat-label {
+            font-size: 0.82rem;
+            color: var(--dim);
+        }
+
+        .benchmark-bar {
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+        }
+
+        .bench-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .bench-label span:first-child {
+            color: var(--text);
+        }
+
+        .bench-label span:last-child {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--accent);
+        }
+
+        .bench-track {
+            height: 8px;
+            background: var(--border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+
+        .bench-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+
+        .fill-letta {
+            background: var(--accent);
+        }
+
+        .fill-mem0 {
+            background: var(--faint);
+        }
+
+        /* Key facts */
+        .facts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .fact {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.2rem;
+            transition: border-color 0.3s;
+        }
+
+        .fact:hover {
+            border-color: var(--accent);
+        }
+
+        .fact-key {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            margin-bottom: 0.3rem;
+        }
+
+        .fact-val {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--faint);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--dim);
+        }
+
+        footer a:hover {
+            color: var(--accent);
+        }
+
+        /* Responsive */
+        @media (max-width: 480px) {
+            .hero {
+                padding: 3rem 1.5rem 2rem;
+            }
+            .container {
+                padding: 0 1.25rem;
+            }
+            section {
+                padding: 2rem 0;
+            }
+            h2 {
+                font-size: 1.35rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="../" class="back-link">&larr; Agentic Memory Landscape</a>
+
+    <!-- Hero -->
+    <header class="hero">
+        <h1>MemGPT / <span>Letta</span></h1>
+        <p class="subtitle">OS-inspired virtual context management for LLM agents</p>
+    </header>
+
+    <div class="container">
+
+        <!-- 1. OS Analogy -->
+        <section>
+            <h2><span class="num">01</span>The OS Analogy</h2>
+            <p>
+                MemGPT treats the LLM context window like an operating system treats physical memory.
+                Just as virtual memory lets programs use more RAM than physically exists, MemGPT lets
+                agents use more context than the model window allows.
+            </p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Operating System</th>
+                            <th>MemGPT Equivalent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="os-col">Main memory / RAM</td>
+                            <td class="memgpt-col">Main context (the active token window)</td>
+                        </tr>
+                        <tr>
+                            <td class="os-col">Disk storage</td>
+                            <td class="memgpt-col">External context (recall + archival databases)</td>
+                        </tr>
+                        <tr>
+                            <td class="os-col">Virtual memory</td>
+                            <td class="memgpt-col">Virtual context (illusion of unbounded memory)</td>
+                        </tr>
+                        <tr>
+                            <td class="os-col">Page faults</td>
+                            <td class="memgpt-col">Heartbeat requests (self-triggered continuation)</td>
+                        </tr>
+                        <tr>
+                            <td class="os-col">Memory Management Unit (MMU)</td>
+                            <td class="memgpt-col">The LLM itself (decides what to page in/out)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 2. Tiered Storage -->
+        <section>
+            <h2><span class="num">02</span>Tiered Storage Architecture</h2>
+            <p>
+                Context is split into two tiers with distinct access characteristics. The LLM manages
+                data movement between them using dedicated memory tools.
+            </p>
+            <div class="diagram">
+                <div class="diagram-panel panel-main">
+                    <div class="panel-header">Main Context (In-Window)</div>
+                    <div class="panel-block">
+                        <div class="block-label">
+                            System Instructions
+                            <span class="block-tag tag-readonly">read-only</span>
+                        </div>
+                        <div class="block-desc">Base persona, instructions, and tool definitions.</div>
+                        <div class="block-tokens">~1,076 tokens</div>
+                    </div>
+                    <div class="panel-block">
+                        <div class="block-label">
+                            Core Memory: Human
+                            <span class="block-tag tag-writable">writable</span>
+                        </div>
+                        <div class="block-desc">
+                            Persistent facts about the user. The agent edits this
+                            block in-place as it learns.
+                        </div>
+                    </div>
+                    <div class="panel-block">
+                        <div class="block-label">
+                            Core Memory: Persona
+                            <span class="block-tag tag-writable">writable</span>
+                        </div>
+                        <div class="block-desc">
+                            The agent's self-description and behavioral guidelines.
+                            Also self-editable.
+                        </div>
+                    </div>
+                    <div class="panel-block">
+                        <div class="block-label">
+                            Conversation History
+                            <span class="block-tag tag-fifo">FIFO + summarization</span>
+                        </div>
+                        <div class="block-desc">
+                            Recent messages kept in a FIFO queue. When the window fills,
+                            oldest messages are recursively summarized before eviction.
+                        </div>
+                    </div>
+                </div>
+
+                <div class="diagram-panel panel-external">
+                    <div class="panel-header">External Context (Out-of-Window)</div>
+                    <div class="panel-block">
+                        <div class="block-label">
+                            Recall Storage
+                            <span class="block-tag tag-search">text search</span>
+                        </div>
+                        <div class="block-desc">
+                            Full conversation history stored as searchable text.
+                            Queried via <code>conversation_search</code> with
+                            date-range and keyword filters.
+                        </div>
+                    </div>
+                    <div class="panel-block">
+                        <div class="block-label">
+                            Archival Storage
+                            <span class="block-tag tag-embed">embedding search</span>
+                        </div>
+                        <div class="block-desc">
+                            Unbounded external memory. Data is embedded and
+                            retrieved via semantic similarity search. The agent
+                            can insert, search, and delete entries autonomously.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. Self-Editing Memory Tools -->
+        <section>
+            <h2><span class="num">03</span>Self-Editing Memory Tools</h2>
+            <p>
+                The agent is given a set of function tools to manage its own memory. Critically,
+                <code>send_message</code> is the only tool that produces user-visible output &mdash;
+                all other operations are internal reasoning.
+            </p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tool</th>
+                            <th>Target</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>core_memory_append</code></td>
+                            <td>Core Memory</td>
+                            <td>Append new information to the human or persona block</td>
+                        </tr>
+                        <tr>
+                            <td><code>core_memory_replace</code></td>
+                            <td>Core Memory</td>
+                            <td>Edit existing text in-place (find-and-replace within a block)</td>
+                        </tr>
+                        <tr>
+                            <td><code>archival_memory_insert</code></td>
+                            <td>Archival Storage</td>
+                            <td>Insert a new entry into long-term archival storage</td>
+                        </tr>
+                        <tr>
+                            <td><code>archival_memory_search</code></td>
+                            <td>Archival Storage</td>
+                            <td>Semantic search over archived entries by embedding similarity</td>
+                        </tr>
+                        <tr>
+                            <td><code>conversation_search</code></td>
+                            <td>Recall Storage</td>
+                            <td>Search past conversation history by keyword and date range</td>
+                        </tr>
+                        <tr>
+                            <td><code>send_message</code></td>
+                            <td>User</td>
+                            <td>Send a message to the user &mdash; the only user-visible output</td>
+                        </tr>
+                        <tr>
+                            <td><code>request_heartbeat</code></td>
+                            <td>System</td>
+                            <td>Request another reasoning step (self-triggered continuation)</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 4. MemGPT vs Traditional RAG -->
+        <section>
+            <h2><span class="num">04</span>MemGPT vs Traditional RAG</h2>
+            <p>
+                Traditional RAG retrieves documents once per query. MemGPT gives the LLM
+                continuous read-write access to its own memory, fundamentally changing the
+                data flow.
+            </p>
+            <div class="table-wrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Dimension</th>
+                            <th>Traditional RAG</th>
+                            <th>MemGPT</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td style="color: var(--text); font-weight: 500;">Data flow</td>
+                            <td class="trad-col">Unidirectional &mdash; retriever feeds context to LLM</td>
+                            <td class="memgpt-advantage">Bidirectional &mdash; LLM reads and writes its own context</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text); font-weight: 500;">Who manages context</td>
+                            <td class="trad-col">External pipeline (chunking, embedding, retrieval)</td>
+                            <td class="memgpt-advantage">The LLM itself via function calls</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text); font-weight: 500;">Memory updates</td>
+                            <td class="trad-col">External ETL process, batch re-indexing</td>
+                            <td class="memgpt-advantage">Real-time self-edits during conversation</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text); font-weight: 500;">Cross-session learning</td>
+                            <td class="trad-col">Does not learn from interactions</td>
+                            <td class="memgpt-advantage">Accumulates knowledge across conversations</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 5. Key Patterns -->
+        <section>
+            <h2><span class="num">05</span>Key Patterns</h2>
+            <div class="card-grid">
+                <div class="card">
+                    <h3>Virtual Context Management</h3>
+                    <p>
+                        The LLM acts as its own memory controller, deciding when to page data
+                        in and out of the fixed-size context window. This creates the illusion
+                        of unbounded memory within a bounded token budget.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3>Self-Editing Core Memory</h3>
+                    <p>
+                        Instead of relying on external systems to update user profiles, the agent
+                        directly modifies its own core memory blocks using <code>core_memory_append</code>
+                        and <code>core_memory_replace</code> during conversation.
+                    </p>
+                </div>
+                <div class="card">
+                    <h3>Recursive Summarization on Eviction</h3>
+                    <p>
+                        When conversation history overflows, messages are not simply truncated.
+                        Instead, they are recursively summarized &mdash; preserving semantic content
+                        while freeing token space for new interactions.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. The Letta Evolution -->
+        <section>
+            <h2><span class="num">06</span>The Letta Evolution</h2>
+            <p>
+                MemGPT became Letta &mdash; a VC-backed company building production infrastructure
+                for stateful LLM agents, while keeping the core framework open source.
+            </p>
+            <div class="letta-grid">
+                <div class="letta-stat">
+                    <div class="stat-value">$10M</div>
+                    <div class="stat-label">Seed round led by Felicis Ventures</div>
+                </div>
+                <div class="letta-stat">
+                    <div class="stat-value">$70M</div>
+                    <div class="stat-label">Post-money valuation</div>
+                </div>
+                <div class="letta-stat">
+                    <div class="stat-value">Apache 2.0</div>
+                    <div class="stat-label">Open-source license</div>
+                </div>
+                <div class="letta-stat">
+                    <div class="stat-value">19K+</div>
+                    <div class="stat-label">GitHub stars</div>
+                </div>
+            </div>
+
+            <p style="margin-top: 1.5rem;">
+                In April 2026, Letta pivoted toward filesystem-based memory operations,
+                enabling agents to use structured file hierarchies rather than embedding-only retrieval.
+                This approach outperformed competitors on long-conversation benchmarks.
+            </p>
+
+            <div class="benchmark-bar">
+                <div class="bench-label">
+                    <span>Letta (filesystem agents)</span>
+                    <span>74.0%</span>
+                </div>
+                <div class="bench-track">
+                    <div class="bench-fill fill-letta" style="width: 74%;"></div>
+                </div>
+                <div class="bench-label">
+                    <span style="color: var(--dim);">Mem0</span>
+                    <span style="color: var(--faint);">68.5%</span>
+                </div>
+                <div class="bench-track">
+                    <div class="bench-fill fill-mem0" style="width: 68.5%;"></div>
+                </div>
+                <p style="font-size: 0.8rem; color: var(--faint); margin-top: 0.5rem; margin-bottom: 0;">
+                    LOCOMO benchmark &mdash; long-conversation memory evaluation
+                </p>
+            </div>
+        </section>
+
+        <!-- 7. Key Facts -->
+        <section>
+            <h2><span class="num">07</span>Key Facts</h2>
+            <div class="facts-grid">
+                <div class="fact">
+                    <div class="fact-key">Paper</div>
+                    <div class="fact-val"><a href="https://arxiv.org/abs/2310.08560" target="_blank" rel="noopener">arXiv:2310.08560</a></div>
+                </div>
+                <div class="fact">
+                    <div class="fact-key">Origin</div>
+                    <div class="fact-val">UC Berkeley</div>
+                </div>
+                <div class="fact">
+                    <div class="fact-key">Compatibility</div>
+                    <div class="fact-val">Model-agnostic (any LLM with function calling)</div>
+                </div>
+                <div class="fact">
+                    <div class="fact-key">Product: Letta Code</div>
+                    <div class="fact-val">Self-hosted open-source agent framework</div>
+                </div>
+                <div class="fact">
+                    <div class="fact-key">Product: Letta API</div>
+                    <div class="fact-val">REST API for stateful agent management</div>
+                </div>
+                <div class="fact">
+                    <div class="fact-key">Product: Letta Cloud</div>
+                    <div class="fact-val">Managed hosting with built-in persistence</div>
+                </div>
+            </div>
+        </section>
+
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <a href="../">&larr; Back to Agentic Memory Landscape</a>
+    </footer>
+
+</body>
+</html>

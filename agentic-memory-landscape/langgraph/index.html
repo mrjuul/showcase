@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LangGraph — Memory Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#080c14;--surface:#0d1220;--border:#1a2235;--text:#dde2ec;--dim:#7a8599;--faint:#3d4a5c;--accent:#00d4aa;--accent-dim:#00d4aa33;--serif:'DM Serif Display',serif;--sans:'DM Sans',sans-serif;--mono:'JetBrains Mono',monospace}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,#0d1a2a 0%,transparent 60%);pointer-events:none;z-index:0}
+.container{max-width:900px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+.back{display:inline-flex;align-items:center;gap:8px;font-family:var(--mono);font-size:0.82rem;color:var(--dim);text-decoration:none;padding:24px 0 0;transition:color 0.2s}
+.back:hover{color:var(--accent)}
+.hero{padding:48px 0 40px;text-align:center}
+.hero h1{font-family:var(--serif);font-size:clamp(2.2rem,5vw,3.2rem);background:linear-gradient(135deg,var(--accent),#00f0c0,#40e0d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+.hero .subtitle{font-size:1.1rem;color:var(--dim);max-width:550px;margin:0 auto}
+.section{padding:40px 0}
+.section-label{font-family:var(--mono);font-size:0.72rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
+.section h2{font-family:var(--serif);font-size:1.6rem;margin-bottom:16px}
+.section p{color:var(--dim);margin-bottom:16px;max-width:700px}
+
+/* Diagram */
+.arch-diagram{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin:24px 0}
+.arch-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;flex:1;min-width:250px;max-width:380px}
+.arch-box h4{font-family:var(--serif);font-size:1.1rem;margin-bottom:4px}
+.arch-box .arch-scope{font-family:var(--mono);font-size:0.7rem;color:var(--accent);margin-bottom:12px}
+.arch-box ul{list-style:none;padding:0}
+.arch-box li{font-size:0.85rem;color:var(--dim);padding:6px 0;border-bottom:1px solid var(--border)}
+.arch-box li:last-child{border-bottom:none}
+.arch-box li strong{color:var(--text)}
+.arch-connector{display:flex;align-items:center;font-size:1.5rem;color:var(--faint);padding:0 8px}
+.arch-result{background:var(--surface);border:2px solid var(--accent);border-radius:12px;padding:20px;text-align:center;margin-top:16px}
+.arch-result h4{font-family:var(--serif);color:var(--accent)}
+
+/* Table */
+.table-wrap{overflow-x:auto;margin:16px 0;border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:0.82rem}
+th{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding:12px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface)}
+td{padding:10px 12px;border-bottom:1px solid var(--border);color:var(--dim);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td:first-child{color:var(--text);font-weight:500;white-space:nowrap}
+tr:hover td{background:#0a1020}
+.version{font-family:var(--mono);color:var(--accent);font-size:0.8rem}
+
+/* Code */
+.code-block{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;font-family:var(--mono);font-size:0.8rem;line-height:1.7;color:var(--dim);overflow-x:auto;margin:16px 0}
+.code-block .kw{color:var(--accent)}
+.code-block .str{color:#f0a060}
+.code-block .cm{color:var(--faint)}
+
+/* Cards */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin:16px 0}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;transition:all 0.3s}
+.card:hover{border-color:var(--accent);box-shadow:0 4px 20px var(--accent-dim)}
+.card h4{font-family:var(--serif);font-size:1rem;margin-bottom:8px}
+.card p{font-size:0.85rem;color:var(--dim);line-height:1.5;margin:0}
+.card .card-label{font-family:var(--mono);font-size:0.65rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+
+/* Facts */
+.fact-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin:16px 0}
+.fact{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px}
+.fact .fact-label{font-family:var(--mono);font-size:0.65rem;color:var(--faint);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.fact .fact-value{font-size:0.9rem;color:var(--text)}
+
+footer{padding:40px 0;text-align:center;border-top:1px solid var(--border);margin-top:32px}
+footer a{color:var(--accent);text-decoration:none;font-size:0.85rem}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp 0.5s ease both}
+@media(max-width:640px){.arch-diagram{flex-direction:column}.arch-connector{display:none}.card-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="container">
+
+<a class="back" href="../">&larr; Agentic Memory Landscape</a>
+
+<section class="hero">
+<h1>LangGraph</h1>
+<p class="subtitle">Two-layer memory architecture for stateful AI agents</p>
+</section>
+
+<section class="section">
+<div class="section-label">Architecture</div>
+<h2>Checkpointers + Stores</h2>
+<p>LangGraph separates memory into two systems, both injected at compile time. Checkpointers handle thread-scoped conversation state; Stores handle cross-thread long-term memory with optional semantic search.</p>
+
+<div class="arch-diagram">
+<div class="arch-box">
+  <h4>Checkpointers</h4>
+  <div class="arch-scope">Thread-scoped (short-term)</div>
+  <ul>
+    <li><strong>What:</strong> Saves full graph state at every superstep</li>
+    <li><strong>Keyed by:</strong> thread_id + checkpoint_id</li>
+    <li><strong>Enables:</strong> Resume, time-travel, human-in-the-loop</li>
+    <li><strong>Backends:</strong> SQLite, Postgres, Redis, MongoDB, CosmosDB</li>
+  </ul>
+</div>
+<div class="arch-connector">+</div>
+<div class="arch-box">
+  <h4>BaseStore</h4>
+  <div class="arch-scope">Cross-thread (long-term)</div>
+  <ul>
+    <li><strong>What:</strong> Key-value store with namespace tuples</li>
+    <li><strong>Keyed by:</strong> (namespace_tuple, key)</li>
+    <li><strong>Enables:</strong> User profiles, preferences, semantic search</li>
+    <li><strong>Backends:</strong> InMemory, Postgres, Redis</li>
+  </ul>
+</div>
+</div>
+<div class="arch-result">
+  <h4>graph = builder.compile(checkpointer=cp, store=store)</h4>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Packages</div>
+<h2>Package Structure</h2>
+<p>Since v0.2 (mid-2024), checkpointers live in separate packages. This was the main breaking change — the API has been stable since.</p>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Package</th><th>Version</th><th>Purpose</th></tr></thead>
+<tbody>
+<tr><td>langgraph</td><td class="version">1.1.6</td><td>Core framework</td></tr>
+<tr><td>langgraph-checkpoint</td><td class="version">4.0.1</td><td>Base checkpoint interfaces</td></tr>
+<tr><td>langgraph-checkpoint-postgres</td><td class="version">3.0.5</td><td>Postgres checkpointer + store</td></tr>
+<tr><td>langgraph-checkpoint-sqlite</td><td class="version">3.0.3</td><td>SQLite checkpointer</td></tr>
+<tr><td>langgraph-checkpoint-redis</td><td class="version">0.4.0</td><td>Redis checkpointer + store</td></tr>
+<tr><td>langgraph-checkpoint-mongodb</td><td class="version">0.3.1</td><td>MongoDB checkpointer</td></tr>
+<tr><td>langmem</td><td class="version">0.0.30</td><td>Higher-level memory SDK</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Memory Model</div>
+<h2>Concepts</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Concept</th><th>Description</th><th>Scope</th></tr></thead>
+<tbody>
+<tr><td>Checkpointer state</td><td>Thread-scoped message history and graph state</td><td>Per-thread</td></tr>
+<tr><td>BaseStore entries</td><td>Cross-thread key-value with namespace tuples</td><td>Cross-thread</td></tr>
+<tr><td>Semantic search</td><td>Embedding-based retrieval on store entries (added Dec 2024)</td><td>Cross-thread</td></tr>
+<tr><td>LangMem semantic</td><td>Facts, user profiles via create_memory_manager()</td><td>Cross-thread</td></tr>
+<tr><td>LangMem procedural</td><td>Prompt optimization via create_prompt_optimizer()</td><td>Cross-thread</td></tr>
+<tr><td>LangMem episodic</td><td>Past experiences as few-shot examples</td><td>Cross-thread</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">API</div>
+<h2>BaseStore Interface</h2>
+<div class="code-block">
+<span class="cm"># Store with semantic search</span><br>
+store = InMemoryStore(<span class="kw">index</span>={<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"embed"</span>: init_embeddings(<span class="str">"openai:text-embedding-3-small"</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"dims"</span>: <span class="kw">1536</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"fields"</span>: [<span class="str">"text"</span>],<br>
+})<br><br>
+<span class="cm"># Core operations</span><br>
+store.<span class="kw">put</span>(namespace, key, value, index=None)<br>
+store.<span class="kw">get</span>(namespace, key)<br>
+store.<span class="kw">search</span>(namespace, query=<span class="str">"..."</span>, filter={...}, limit=10)<br>
+store.<span class="kw">delete</span>(namespace, key)<br>
+store.<span class="kw">list_keys</span>(namespace)<br><br>
+<span class="cm"># New Runtime context API (1.x)</span><br>
+<span class="kw">async def</span> call_model(state, runtime: Runtime[Context]):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;user_id = runtime.context.user_id<br>
+&nbsp;&nbsp;&nbsp;&nbsp;memories = <span class="kw">await</span> runtime.store.asearch((...), query=<span class="str">"..."</span>)
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Patterns</div>
+<h2>Key Patterns</h2>
+<div class="card-grid">
+<div class="card">
+  <div class="card-label">New in 1.x</div>
+  <h4>Runtime Context API</h4>
+  <p>Runtime[Context] dataclass replaces the verbose config["configurable"] pattern. Provides typed access to user_id, store, and config. Requires defining a context_schema at graph definition.</p>
+</div>
+<div class="card">
+  <div class="card-label">Core Pattern</div>
+  <h4>Dual Persistence</h4>
+  <p>Checkpointer + Store compiled together. Short-term thread state and long-term cross-thread knowledge coexist with different persistence strategies and backends.</p>
+</div>
+<div class="card">
+  <div class="card-label">Higher-Level SDK</div>
+  <h4>LangMem Three Types</h4>
+  <p>Semantic (facts via create_memory_manager), procedural (prompt optimization), episodic (few-shot examples). Plugs into BaseStore for persistence. Works with create_react_agent.</p>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Migration</div>
+<h2>Breaking Changes: Old &rarr; Current</h2>
+<div class="table-wrap">
+<table>
+<thead><tr><th>Change</th><th>Old (pre-0.2)</th><th>Current (1.x)</th></tr></thead>
+<tbody>
+<tr><td>Checkpoint packages</td><td>Bundled in langgraph</td><td>Split into langgraph-checkpoint-*</td></tr>
+<tr><td>Import paths</td><td>from langgraph.checkpoint import SqliteSaver</td><td>from langgraph.checkpoint.sqlite import SqliteSaver</td></tr>
+<tr><td>Context access</td><td>config["configurable"]["user_id"]</td><td>runtime.context.user_id</td></tr>
+<tr><td>Checkpoint IDs</td><td>thread_ts, parent_ts</td><td>checkpoint_id, parent_checkpoint_id</td></tr>
+<tr><td>Python version</td><td>&ge;3.9</td><td>&ge;3.10 (3.9 dropped at 1.0)</td></tr>
+<tr><td>Serialization</td><td>JSON only</td><td>JsonPlusSerializer + ormsgpack + AES encryption</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Facts</div>
+<h2>Key Facts</h2>
+<div class="fact-grid">
+<div class="fact"><div class="fact-label">GA Release</div><div class="fact-value">October 22, 2025 (1.0)</div></div>
+<div class="fact"><div class="fact-label">License</div><div class="fact-value">MIT</div></div>
+<div class="fact"><div class="fact-label">Current Version</div><div class="fact-value">1.1.6 (April 2026)</div></div>
+<div class="fact"><div class="fact-label">Platform</div><div class="fact-value">Cloud, Hybrid, Self-hosted</div></div>
+<div class="fact"><div class="fact-label">Encryption</div><div class="fact-value">AES via EncryptedSerializer</div></div>
+<div class="fact"><div class="fact-label">Semantic Search</div><div class="fact-value">Added Dec 2024 (non-breaking)</div></div>
+</div>
+</section>
+
+<footer>
+<a href="../">Part of Agentic Memory Landscape 2026 &rarr;</a>
+</footer>
+
+</div>
+</body>
+</html>

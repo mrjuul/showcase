@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Anthropic / Claude — Agentic Memory Landscape</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #080c14;
+      --surface: #0d1220;
+      --border: #1a2235;
+      --text: #dde2ec;
+      --dim: #7a8599;
+      --faint: #3d4a5c;
+      --accent: #00d4aa;
+      --accent-glow: rgba(0, 212, 170, 0.12);
+      --accent-dim: rgba(0, 212, 170, 0.5);
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    a { color: var(--accent); text-decoration: none; transition: opacity 0.2s; }
+    a:hover { opacity: 0.8; }
+
+    code, .mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.88em;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ── Back link ── */
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 20px 0 0;
+      font-size: 0.9rem;
+      color: var(--dim);
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--accent); opacity: 1; }
+    .back-link svg { width: 16px; height: 16px; }
+
+    /* ── Header ── */
+    header {
+      padding: 48px 0 40px;
+      border-bottom: 1px solid var(--border);
+    }
+    header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.4rem;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 8px;
+      letter-spacing: -0.02em;
+    }
+    header h1 span { color: var(--accent); }
+    header p.subtitle {
+      font-size: 1.1rem;
+      color: var(--dim);
+      max-width: 520px;
+    }
+
+    /* ── Section ── */
+    section {
+      padding: 48px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    section:last-of-type { border-bottom: none; }
+
+    .section-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+    .section-title {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.6rem;
+      font-weight: 400;
+      margin-bottom: 24px;
+      color: var(--text);
+    }
+    .section-desc {
+      color: var(--dim);
+      margin-bottom: 28px;
+      max-width: 640px;
+      font-size: 0.95rem;
+    }
+
+    /* ── Taxonomy Diagram ── */
+    .taxonomy-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+    @media (max-width: 720px) {
+      .taxonomy-grid { grid-template-columns: 1fr; }
+    }
+    .taxonomy-group {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .taxonomy-group:hover {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+    .taxonomy-group-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .taxonomy-item {
+      padding: 10px 12px;
+      background: rgba(0, 212, 170, 0.04);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      margin-bottom: 8px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .taxonomy-item:last-child { margin-bottom: 0; }
+    .taxonomy-item:hover {
+      background: rgba(0, 212, 170, 0.08);
+      border-color: var(--faint);
+    }
+    .taxonomy-item-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      margin-bottom: 2px;
+    }
+    .taxonomy-item-detail {
+      font-size: 0.78rem;
+      color: var(--dim);
+    }
+
+    /* ── Connector lines ── */
+    .taxonomy-connector {
+      display: flex;
+      justify-content: center;
+      padding: 8px 0;
+    }
+    .taxonomy-connector .line {
+      width: 2px;
+      height: 20px;
+      background: var(--faint);
+      border-radius: 1px;
+    }
+
+    /* ── Table ── */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+    thead th {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      padding: 14px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+      background: rgba(0, 212, 170, 0.03);
+    }
+    tbody td {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr:hover { background: rgba(0, 212, 170, 0.04); }
+    .cell-name { font-weight: 600; white-space: nowrap; }
+    .cell-mono {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      color: var(--accent);
+    }
+
+    /* ── Status badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .badge-ga { background: rgba(0, 212, 170, 0.15); color: var(--accent); }
+    .badge-beta { background: rgba(255, 180, 50, 0.15); color: #ffb432; }
+    .badge-new { background: rgba(100, 140, 255, 0.15); color: #648cff; }
+    .badge-stable { background: rgba(0, 212, 170, 0.1); color: var(--accent-dim); }
+
+    /* ── API Section ── */
+    .api-block {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      margin-bottom: 20px;
+    }
+    .api-block h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.15rem;
+      font-weight: 400;
+      margin-bottom: 16px;
+    }
+    .api-signature {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      overflow-x: auto;
+    }
+    .api-signature code {
+      color: var(--dim);
+      line-height: 1.8;
+    }
+    .api-signature .kw { color: #648cff; }
+    .api-signature .str { color: #ffb432; }
+    .api-signature .val { color: var(--accent); }
+    .api-signature .cmt { color: var(--faint); font-style: italic; }
+
+    .command-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+    .command-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+      color: var(--text);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .command-chip:hover {
+      border-color: var(--faint);
+      background: rgba(0, 212, 170, 0.04);
+    }
+    .command-chip .icon {
+      color: var(--accent);
+      font-size: 0.9rem;
+    }
+
+    /* ── Pattern Cards ── */
+    .pattern-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .pattern-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px;
+      transition: border-color 0.3s, box-shadow 0.3s, transform 0.2s;
+    }
+    .pattern-card:hover {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 24px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+    .pattern-card h3 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.1rem;
+      font-weight: 400;
+      margin-bottom: 12px;
+    }
+    .pattern-card p {
+      font-size: 0.88rem;
+      color: var(--dim);
+      margin-bottom: 12px;
+    }
+    .pattern-card ul {
+      list-style: none;
+      padding: 0;
+    }
+    .pattern-card ul li {
+      padding: 5px 0;
+      font-size: 0.85rem;
+      color: var(--dim);
+      display: flex;
+      align-items: baseline;
+      gap: 8px;
+    }
+    .pattern-card ul li::before {
+      content: '';
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+
+    /* ── Caching Economics ── */
+    .econ-table .price-write { color: #ffb432; }
+    .econ-table .price-read { color: var(--accent); }
+    .econ-table .multiplier {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.82rem;
+    }
+
+    /* ── Key Facts ── */
+    .facts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+    .fact-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .fact-card:hover {
+      border-color: var(--accent-dim);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+    .fact-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: rgba(0, 212, 170, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--accent);
+      font-size: 1rem;
+    }
+    .fact-content h4 {
+      font-size: 0.88rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .fact-content p {
+      font-size: 0.82rem;
+      color: var(--dim);
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    footer {
+      padding: 40px 0;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    footer .footer-text {
+      font-size: 0.82rem;
+      color: var(--faint);
+    }
+    footer a {
+      font-size: 0.85rem;
+      color: var(--dim);
+    }
+    footer a:hover { color: var(--accent); }
+
+    /* ── Responsive ── */
+    @media (max-width: 600px) {
+      header h1 { font-size: 1.8rem; }
+      .section-title { font-size: 1.3rem; }
+      .pattern-grid { grid-template-columns: 1fr; }
+      .facts-grid { grid-template-columns: 1fr; }
+      .command-grid { grid-template-columns: 1fr; }
+      section { padding: 32px 0; }
+      .api-block { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <!-- Back -->
+    <a href="../" class="back-link">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Agentic Memory Landscape
+    </a>
+
+    <!-- Header -->
+    <header>
+      <h1><span>Anthropic</span> / Claude</h1>
+      <p class="subtitle">Six-layer memory architecture from product to API</p>
+    </header>
+
+    <!-- 1. Memory Taxonomy Diagram -->
+    <section>
+      <div class="section-label">01 / Architecture</div>
+      <h2 class="section-title">Memory Taxonomy</h2>
+      <p class="section-desc">Three groups spanning persistent product features, developer-controlled storage, and ephemeral inference-time mechanisms.</p>
+
+      <div class="taxonomy-grid">
+        <!-- Product -->
+        <div class="taxonomy-group">
+          <div class="taxonomy-group-label">Product-Level</div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Chat Memory</div>
+            <div class="taxonomy-item-detail">24-hour synthesis cycle. Model-initiated storage of user preferences, facts, and corrections across conversations.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Chat Search</div>
+            <div class="taxonomy-item-detail">RAG over conversation history. Retrieves relevant past exchanges at query time.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Managed Agent Sessions</div>
+            <div class="taxonomy-item-detail">Server-side session persistence for long-running agents. State survives disconnects and reconnects.</div>
+          </div>
+        </div>
+
+        <!-- Developer-Controlled -->
+        <div class="taxonomy-group">
+          <div class="taxonomy-group-label">Developer-Controlled</div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Memory Tool</div>
+            <div class="taxonomy-item-detail">Client-side filesystem tool. API consumers control persistence layer &mdash; model reads and writes, host stores.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Claude Code Auto-Memory</div>
+            <div class="taxonomy-item-detail">Automatic capture of preferences, patterns, and corrections to MEMORY.md between sessions.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">CLAUDE.md Hierarchy</div>
+            <div class="taxonomy-item-detail">Cascading project instructions. Loaded bottom-up from working directory to user root. Developer-authored, git-tracked.</div>
+          </div>
+        </div>
+
+        <!-- Ephemeral -->
+        <div class="taxonomy-group">
+          <div class="taxonomy-group-label">Ephemeral</div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Extended Thinking</div>
+            <div class="taxonomy-item-detail">Chain-of-thought scratchpad. Budget-controlled, never persisted, visible only during generation.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Think Tool</div>
+            <div class="taxonomy-item-detail">Explicit reasoning step within tool-use workflows. Logged in conversation but not persisted cross-session.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Prompt Cache</div>
+            <div class="taxonomy-item-detail">KV-cache reuse for repeated prefixes. 5-minute or 1-hour TTL. Cost optimization, not semantic memory.</div>
+          </div>
+          <div class="taxonomy-connector"><div class="line"></div></div>
+          <div class="taxonomy-item">
+            <div class="taxonomy-item-name">Compaction</div>
+            <div class="taxonomy-item-detail">Automatic context summarization when conversation exceeds window. Lossy compression of earlier turns.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Memory Layers Table -->
+    <section>
+      <div class="section-label">02 / Reference</div>
+      <h2 class="section-title">Memory Layers</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Layer</th>
+              <th>Where</th>
+              <th>Persistence</th>
+              <th>Who Controls</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell-name">Chat Memory</td>
+              <td>claude.ai server-side</td>
+              <td>Indefinite (user can delete)</td>
+              <td>Model + user</td>
+              <td><span class="badge badge-ga">GA</span></td>
+            </tr>
+            <tr>
+              <td class="cell-name">Memory Tool</td>
+              <td>Client filesystem (host-managed)</td>
+              <td>Depends on host implementation</td>
+              <td>Developer / API consumer</td>
+              <td><span class="badge badge-beta">Beta</span></td>
+            </tr>
+            <tr>
+              <td class="cell-name">Auto-Memory</td>
+              <td>~/.claude/projects/*/MEMORY.md</td>
+              <td>Cross-session, file-based</td>
+              <td>Claude Code + user</td>
+              <td><span class="badge badge-ga">GA</span></td>
+            </tr>
+            <tr>
+              <td class="cell-name">CLAUDE.md</td>
+              <td>Project tree (cascading)</td>
+              <td>Permanent, git-tracked</td>
+              <td>Developer</td>
+              <td><span class="badge badge-ga">GA</span></td>
+            </tr>
+            <tr>
+              <td class="cell-name">Managed Agents</td>
+              <td>Anthropic infrastructure</td>
+              <td>Session-scoped (server-side)</td>
+              <td>API / platform</td>
+              <td><span class="badge badge-new">Apr 2026</span></td>
+            </tr>
+            <tr>
+              <td class="cell-name">Extended Thinking</td>
+              <td>Inference-time only</td>
+              <td>None (generation-scoped)</td>
+              <td>Model (budget-capped)</td>
+              <td><span class="badge badge-ga">GA</span></td>
+            </tr>
+            <tr>
+              <td class="cell-name">Prompt Caching</td>
+              <td>Anthropic KV-cache</td>
+              <td>5 min / 1 hr TTL</td>
+              <td>Developer (cache_control)</td>
+              <td><span class="badge badge-stable">Stable</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- 3. Memory Tool API -->
+    <section>
+      <div class="section-label">03 / API</div>
+      <h2 class="section-title">Memory Tool</h2>
+      <p class="section-desc">A beta tool type that gives models persistent read/write memory. The model issues commands; the client executes them against its own storage.</p>
+
+      <div class="api-block">
+        <h3>Tool Definition</h3>
+        <div class="api-signature">
+          <code>
+            <span class="cmt">// Include in tools array</span><br>
+            {<br>
+            &nbsp;&nbsp;<span class="kw">"type"</span>: <span class="str">"memory_20250818"</span>,<br>
+            &nbsp;&nbsp;<span class="kw">"name"</span>: <span class="str">"memory"</span><br>
+            }
+          </code>
+        </div>
+        <p style="font-size: 0.88rem; color: var(--dim); margin-bottom: 16px;">
+          Client-side execution model: the API returns memory commands in <code>tool_use</code> blocks. The host application executes them against its own filesystem or database and returns results via <code>tool_result</code>.
+        </p>
+        <h3>Commands</h3>
+        <div class="command-grid">
+          <div class="command-chip"><span class="icon">&#9656;</span> view</div>
+          <div class="command-chip"><span class="icon">+</span> create</div>
+          <div class="command-chip"><span class="icon">&#8644;</span> str_replace</div>
+          <div class="command-chip"><span class="icon">&#8629;</span> insert</div>
+          <div class="command-chip"><span class="icon">&times;</span> delete</div>
+          <div class="command-chip"><span class="icon">&#8634;</span> rename</div>
+        </div>
+      </div>
+
+      <div class="api-block">
+        <h3>Execution Flow</h3>
+        <div class="api-signature">
+          <code>
+            <span class="cmt">// 1. Send message with memory tool enabled</span><br>
+            <span class="kw">POST</span> /v1/messages { <span class="kw">tools</span>: [{ <span class="kw">type</span>: <span class="str">"memory_20250818"</span> }] }<br><br>
+            <span class="cmt">// 2. Model returns tool_use with command</span><br>
+            { <span class="kw">command</span>: <span class="str">"create"</span>, <span class="kw">title</span>: <span class="str">"user_prefs"</span>, <span class="kw">content</span>: <span class="str">"..."</span> }<br><br>
+            <span class="cmt">// 3. Host executes, returns tool_result</span><br>
+            { <span class="kw">type</span>: <span class="str">"tool_result"</span>, <span class="kw">content</span>: <span class="val">"Created user_prefs.md"</span> }<br><br>
+            <span class="cmt">// 4. Model continues with updated context</span>
+          </code>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Key Patterns -->
+    <section>
+      <div class="section-label">04 / Patterns</div>
+      <h2 class="section-title">Key Patterns</h2>
+
+      <div class="pattern-grid">
+        <div class="pattern-card">
+          <h3>Context Engineering</h3>
+          <p>Three strategies for managing what the model knows at inference time:</p>
+          <ul>
+            <li>Write to context &mdash; CLAUDE.md, auto-memory, explicit memory tool writes</li>
+            <li>Select into context &mdash; RAG retrieval, chat search, file reads on demand</li>
+            <li>Compress context &mdash; compaction, summarization, prompt cache reuse</li>
+          </ul>
+        </div>
+
+        <div class="pattern-card">
+          <h3>Progressive Disclosure</h3>
+          <p>Memory layers activate in order of relevance, not all at once:</p>
+          <ul>
+            <li>CLAUDE.md loads on session start (always relevant)</li>
+            <li>Auto-memory injects project-scoped context</li>
+            <li>Chat memory surfaces when model detects relevance</li>
+            <li>Full history available via search (on demand)</li>
+          </ul>
+        </div>
+
+        <div class="pattern-card">
+          <h3>Cross-Session Learning</h3>
+          <p>Multiple mechanisms accumulate knowledge across conversations:</p>
+          <ul>
+            <li>Chat Memory synthesizes every 24 hours from conversations</li>
+            <li>Auto-Memory captures corrections and preferences per-project</li>
+            <li>Memory Tool enables app-specific persistent knowledge</li>
+            <li>CLAUDE.md evolves manually as projects mature</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5. Prompt Caching Economics -->
+    <section>
+      <div class="section-label">05 / Economics</div>
+      <h2 class="section-title">Prompt Caching</h2>
+      <p class="section-desc">Cache repeated prefixes to reduce latency and cost. Two TTL tiers with different write premiums.</p>
+
+      <div class="table-wrap econ-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Tier</th>
+              <th>TTL</th>
+              <th>Write Cost</th>
+              <th>Read Cost</th>
+              <th>Net Effect</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="cell-name">Ephemeral</td>
+              <td class="cell-mono">5 min</td>
+              <td><span class="multiplier price-write">1.25x</span> base input price</td>
+              <td><span class="multiplier price-read">0.1x</span> base input price</td>
+              <td style="color: var(--dim);">Default. Free auto-refresh on cache hit. Best for interactive sessions.</td>
+            </tr>
+            <tr>
+              <td class="cell-name">Extended</td>
+              <td class="cell-mono">1 hr</td>
+              <td><span class="multiplier price-write">2x</span> base input price</td>
+              <td><span class="multiplier price-read">0.1x</span> base input price</td>
+              <td style="color: var(--dim);">Higher write premium but longer retention. Best for batch workloads.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div style="margin-top: 20px; padding: 16px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.85rem; color: var(--dim);">
+        Cache reads are <strong style="color: var(--accent);">90% cheaper</strong> than uncached input. The write premium pays for itself after 2 cache hits (ephemeral) or 4 hits (extended). Minimum cacheable prefix: 1,024 tokens (Haiku) or 2,048 tokens (Sonnet/Opus).
+      </div>
+    </section>
+
+    <!-- 6. Key Facts -->
+    <section>
+      <div class="section-label">06 / Key Facts</div>
+      <h2 class="section-title">Status and Milestones</h2>
+
+      <div class="facts-grid">
+        <div class="fact-card">
+          <div class="fact-icon">&#946;</div>
+          <div class="fact-content">
+            <h4>Memory Tool: Beta</h4>
+            <p>Type <code>memory_20250818</code>. Client-side execution model. Not yet GA &mdash; API surface may change. Requires explicit opt-in via tools array.</p>
+          </div>
+        </div>
+
+        <div class="fact-card">
+          <div class="fact-icon">&#10003;</div>
+          <div class="fact-content">
+            <h4>Chat Memory: GA</h4>
+            <p>Generally available on claude.ai. 24-hour synthesis cycle. Users can view, edit, and delete stored memories. Model-initiated with user override.</p>
+          </div>
+        </div>
+
+        <div class="fact-card">
+          <div class="fact-icon">&#9671;</div>
+          <div class="fact-content">
+            <h4>Managed Agents: Apr 2026</h4>
+            <p>Server-side agent sessions with persistent state. Agents survive client disconnects. Scheduled execution and webhook triggers.</p>
+          </div>
+        </div>
+
+        <div class="fact-card">
+          <div class="fact-icon">&#8634;</div>
+          <div class="fact-content">
+            <h4>Compaction: Automatic</h4>
+            <p>Context window management via lossy summarization. Triggers automatically when conversation length approaches model limits. No developer configuration.</p>
+          </div>
+        </div>
+
+        <div class="fact-card">
+          <div class="fact-icon">&#9881;</div>
+          <div class="fact-content">
+            <h4>CLAUDE.md: Convention</h4>
+            <p>Not an API feature but a developer convention adopted by Claude Code. Cascading file hierarchy loaded automatically. Community-driven best practices.</p>
+          </div>
+        </div>
+
+        <div class="fact-card">
+          <div class="fact-icon">&#36;</div>
+          <div class="fact-content">
+            <h4>Cache Breakpoints</h4>
+            <p>Minimum 1,024 tokens (Haiku) or 2,048 tokens (Sonnet/Opus). Place <code>cache_control</code> at system prompt, tool definitions, or conversation boundaries.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+      <span class="footer-text">Anthropic / Claude &mdash; Agentic Memory Landscape</span>
+      <a href="../">
+        <svg style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px;" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        Back to overview
+      </a>
+    </footer>
+
+  </div>
+</body>
+</html>

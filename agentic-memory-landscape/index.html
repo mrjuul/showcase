@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Memory Landscape 2026</title>
+<meta property="og:title" content="Agentic Memory Landscape 2026">
+<meta property="og:description" content="Deep research into 10 frameworks shaping how AI agents remember — LangGraph, Zep, Mem0, Cognee, MemGPT/Letta, Anthropic, and thought leaders Weng, Ng, and Huyen.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/agentic-memory-landscape/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/agentic-memory-landscape/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#00d4aa">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,400;0,500;0,700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#080c14;--surface:#0d1220;--border:#1a2235;
+  --text:#dde2ec;--dim:#7a8599;--faint:#3d4a5c;
+  --accent:#00d4aa;--accent-dim:#00d4aa33;
+  --serif:'DM Serif Display',serif;
+  --sans:'DM Sans',sans-serif;
+  --mono:'JetBrains Mono',monospace;
+}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 50% 0%,#0d1a2a 0%,transparent 60%);pointer-events:none;z-index:0}
+
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+
+/* Hero */
+.hero{padding:80px 0 40px;text-align:center}
+.ascii-art{font-family:var(--mono);font-size:11px;line-height:1.3;color:var(--accent);opacity:0.7;margin-bottom:32px;white-space:pre}
+.hero h1{font-family:var(--serif);font-size:clamp(2.4rem,5vw,3.6rem);background:linear-gradient(135deg,var(--accent),#00f0c0,#40e0d0);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:12px}
+.hero .subtitle{font-size:1.15rem;color:var(--dim);max-width:600px;margin:0 auto 24px}
+.hero .meta{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.meta-chip{font-family:var(--mono);font-size:0.8rem;padding:6px 14px;border:1px solid var(--border);border-radius:20px;color:var(--dim)}
+.meta-chip span{color:var(--accent)}
+
+/* Section */
+.section{padding:48px 0}
+.section-label{font-family:var(--mono);font-size:0.75rem;text-transform:uppercase;letter-spacing:2px;color:var(--accent);margin-bottom:8px}
+.section h2{font-family:var(--serif);font-size:1.8rem;margin-bottom:20px}
+.section p{color:var(--dim);max-width:700px;margin-bottom:20px}
+
+/* Card Grid */
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;margin-top:24px}
+.card{display:block;text-decoration:none;color:var(--text);background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all 0.3s ease;position:relative;overflow:hidden}
+.card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 8px 32px var(--accent-dim)}
+.card::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--accent),transparent);opacity:0;transition:opacity 0.3s}
+.card:hover::after{opacity:1}
+.card-icon{font-size:1.8rem;margin-bottom:12px;display:block}
+.card-category{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--faint);margin-bottom:6px}
+.card h3{font-family:var(--serif);font-size:1.2rem;margin-bottom:8px}
+.card .card-desc{font-size:0.88rem;color:var(--dim);line-height:1.5;margin-bottom:16px}
+.card-footer{display:flex;justify-content:space-between;align-items:center}
+.card-tags{display:flex;gap:6px;flex-wrap:wrap}
+.card-tag{font-family:var(--mono);font-size:0.65rem;padding:3px 8px;border:1px solid var(--border);border-radius:10px;color:var(--faint)}
+.card-arrow{font-size:1.2rem;color:var(--accent);opacity:0;transition:opacity 0.3s,transform 0.3s}
+.card:hover .card-arrow{opacity:1;transform:translateX(4px)}
+
+/* Comparison Table */
+.table-wrap{overflow-x:auto;margin:20px 0;border:1px solid var(--border);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:0.82rem}
+th{font-family:var(--mono);font-size:0.7rem;text-transform:uppercase;letter-spacing:1px;color:var(--accent);padding:14px 12px;text-align:left;border-bottom:1px solid var(--border);background:var(--surface);position:sticky;top:0}
+td{padding:12px;border-bottom:1px solid var(--border);color:var(--dim);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td:first-child{color:var(--text);font-weight:500;white-space:nowrap}
+tr:hover td{background:#0a1020}
+
+/* Pattern Cards */
+.pattern-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px;margin-top:20px}
+.pattern-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+.pattern-card h4{font-family:var(--serif);font-size:1.05rem;margin-bottom:8px;color:var(--text)}
+.pattern-card .used-by{font-family:var(--mono);font-size:0.7rem;color:var(--accent);margin-bottom:10px}
+.pattern-card p{font-size:0.85rem;color:var(--dim);line-height:1.5}
+
+/* Benchmark */
+.bench-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:20px}
+.bench-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center}
+.bench-card .bench-label{font-family:var(--mono);font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--faint);margin-bottom:8px}
+.bench-card .bench-value{font-family:var(--serif);font-size:2rem;color:var(--accent)}
+.bench-card .bench-who{font-size:0.8rem;color:var(--dim);margin-top:4px}
+
+/* Footer */
+footer{padding:48px 0;text-align:center;border-top:1px solid var(--border);margin-top:40px}
+footer p{font-size:0.82rem;color:var(--faint)}
+footer a{color:var(--accent);text-decoration:none}
+
+/* Animations */
+@keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+.section{animation:fadeUp 0.6s ease both}
+.section:nth-child(2){animation-delay:0.1s}
+.section:nth-child(3){animation-delay:0.2s}
+
+@media(max-width:640px){
+  .card-grid{grid-template-columns:1fr}
+  .hero h1{font-size:2rem}
+  .pattern-grid{grid-template-columns:1fr}
+  table{font-size:0.75rem}
+}
+</style>
+</head>
+<body>
+<div class="container">
+
+<section class="hero">
+<div class="ascii-art">
+    +---------+     +---------+     +---------+
+    | SENSORY |---->| WORKING |---->|LONG-TERM|
+    | memory  |     | memory  |     | memory  |
+    +---------+     +----+----+     +----+----+
+                         |               |
+                    [context window] [vector/graph/file]
+                         |               |
+                    +----+----+     +----+----+
+                    |  AGENT  |<--->| RETRIEVE|
+                    |  BRAIN  |     | & STORE |
+                    +---------+     +---------+
+</div>
+<h1>Agentic Memory Landscape</h1>
+<p class="subtitle">A survey of 10 frameworks and thought leaders shaping how AI agents remember — April 2026</p>
+<div class="meta">
+  <span class="meta-chip"><span>10</span> frameworks</span>
+  <span class="meta-chip"><span>6</span> patterns</span>
+  <span class="meta-chip"><span>3</span> benchmarks</span>
+  <span class="meta-chip"><span>$130M+</span> funding</span>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">The Problem</div>
+<h2>LLMs Forget Everything</h2>
+<p>Large language models are stateless. Every request is a blank slate. They can't remember your name, your preferences, or what you discussed five minutes ago. Agentic memory solves this — but the landscape of solutions is fragmented, fast-moving, and full of tradeoffs. This survey maps the terrain.</p>
+</section>
+
+<section class="section">
+<div class="section-label">The Frameworks</div>
+<h2>10 Approaches to Agent Memory</h2>
+<p>Click any card to explore the framework's architecture, key patterns, benchmarks, and how it compares to alternatives.</p>
+
+<div class="card-grid">
+
+<a class="card" href="./langgraph/">
+  <span class="card-icon">&#9881;</span>
+  <div class="card-category">Platform Framework</div>
+  <h3>LangGraph</h3>
+  <p class="card-desc">Two-layer architecture — checkpointers for thread state, BaseStore for cross-session memory. The backbone of the LangChain ecosystem.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">v1.1.6</span><span class="card-tag">MIT</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./langchain/">
+  <span class="card-icon">&#128279;</span>
+  <div class="card-category">Platform Framework</div>
+  <h3>LangChain Memory</h3>
+  <p class="card-desc">A cautionary migration tale — 8 memory classes deprecated, replaced by LangGraph stores and the LangMem SDK. Now converging on memory-as-filesystem.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">deprecated</span><span class="card-tag">LangMem</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./anthropic/">
+  <span class="card-icon">&#9672;</span>
+  <div class="card-category">Platform Framework</div>
+  <h3>Anthropic / Claude</h3>
+  <p class="card-desc">Six-layer memory stack — from chat memory to managed agents. Client-side memory tool gives developers full control over storage.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">6 layers</span><span class="card-tag">beta</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./zep/">
+  <span class="card-icon">&#9200;</span>
+  <div class="card-category">Dedicated Memory System</div>
+  <h3>Zep / Graphiti</h3>
+  <p class="card-desc">Temporal knowledge graphs with a bi-temporal model — tracks when facts became true, when they stopped, and when the system learned about each change.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">Apache 2.0</span><span class="card-tag">24.9K stars</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./mem0/">
+  <span class="card-icon">&#129504;</span>
+  <div class="card-category">Dedicated Memory System</div>
+  <h3>Mem0</h3>
+  <p class="card-desc">The most widely adopted standalone memory layer — hybrid vector+graph+KV store with LLM-driven deduplication. 53K GitHub stars, $24M Series A.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">Apache 2.0</span><span class="card-tag">53K stars</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./cognee/">
+  <span class="card-icon">&#127793;</span>
+  <div class="card-category">Dedicated Memory System</div>
+  <h3>Cognee</h3>
+  <p class="card-desc">Knowledge graph engine with a self-improvement loop — memify prunes stale nodes, strengthens connections, and reweights edges from feedback.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">Apache 2.0</span><span class="card-tag">v1.0.0</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./memgpt-letta/">
+  <span class="card-icon">&#128187;</span>
+  <div class="card-category">Dedicated Memory System</div>
+  <h3>MemGPT / Letta</h3>
+  <p class="card-desc">OS-inspired virtual context management — context window as RAM, external storage as disk. The agent IS the memory manager.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">Apache 2.0</span><span class="card-tag">$10M seed</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./lilian-weng/">
+  <span class="card-icon">&#128218;</span>
+  <div class="card-category">Thought Leader</div>
+  <h3>Lilian Weng</h3>
+  <p class="card-desc">The canonical taxonomy — sensory, short-term, and long-term memory mapped from cognitive science to LLM agents. Most-cited reference in the field.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">2023</span><span class="card-tag">taxonomy</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./andrew-ng/">
+  <span class="card-icon">&#127891;</span>
+  <div class="card-category">Thought Leader</div>
+  <h3>Andrew Ng</h3>
+  <p class="card-desc">Four agentic design patterns — reflection, tool use, planning, multi-agent. Memory as the critical enabler that amplifies all four.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">2024</span><span class="card-tag">patterns</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+<a class="card" href="./chip-huyen/">
+  <span class="card-icon">&#128736;</span>
+  <div class="card-category">Thought Leader</div>
+  <h3>Chip Huyen</h3>
+  <p class="card-desc">The production engineering lens — RAG vs fine-tuning decision matrix, caching as infrastructure, and why 95% accuracy per step means 60% over 10 steps.</p>
+  <div class="card-footer">
+    <div class="card-tags"><span class="card-tag">2025</span><span class="card-tag">O'Reilly</span></div>
+    <span class="card-arrow">&rarr;</span>
+  </div>
+</a>
+
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Comparison</div>
+<h2>At a Glance</h2>
+<div class="table-wrap">
+<table>
+<thead>
+<tr><th>Framework</th><th>Memory Model</th><th>Storage</th><th>Retrieval</th><th>Cross-Agent</th><th>License</th></tr>
+</thead>
+<tbody>
+<tr><td>LangGraph</td><td>Checkpointers + BaseStore</td><td>Postgres, SQLite, Redis</td><td>Embedding + filter</td><td>Namespace scoping</td><td>MIT</td></tr>
+<tr><td>Anthropic</td><td>6-layer stack</td><td>Client-side filesystem</td><td>Developer-implemented</td><td>Managed Agents (preview)</td><td>Proprietary</td></tr>
+<tr><td>Zep / Graphiti</td><td>Temporal knowledge graph</td><td>Neo4j, FalkorDB, Kuzu</td><td>Semantic + BM25 + graph</td><td>Groups</td><td>Apache 2.0</td></tr>
+<tr><td>Mem0</td><td>Vector + graph + KV</td><td>Configurable</td><td>Cosine + graph traversal</td><td>Agent memory scope</td><td>Apache 2.0</td></tr>
+<tr><td>Cognee</td><td>KG + vector + relational</td><td>KuzuDB, LanceDB, SQLite</td><td>14 retrieval modes</td><td>Permissions + datasets</td><td>Apache 2.0</td></tr>
+<tr><td>MemGPT / Letta</td><td>OS virtual context</td><td>Postgres / SQLite</td><td>Agent self-serves</td><td>Conversations API</td><td>Apache 2.0</td></tr>
+</tbody>
+</table>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Benchmarks</div>
+<h2>Who Wins Where</h2>
+<p>No single framework dominates. Each benchmark tests a different dimension of memory capability.</p>
+<div class="bench-grid">
+  <div class="bench-card">
+    <div class="bench-label">LongMemEval (GPT-4o)</div>
+    <div class="bench-value">63.8%</div>
+    <div class="bench-who">Zep</div>
+  </div>
+  <div class="bench-card">
+    <div class="bench-label">Deep Memory Retrieval</div>
+    <div class="bench-value">94.8%</div>
+    <div class="bench-who">Zep</div>
+  </div>
+  <div class="bench-card">
+    <div class="bench-label">LOCOMO QA</div>
+    <div class="bench-value">74.0%</div>
+    <div class="bench-who">Letta (filesystem)</div>
+  </div>
+  <div class="bench-card">
+    <div class="bench-label">Total GitHub Stars</div>
+    <div class="bench-value">130K+</div>
+    <div class="bench-who">across all surveyed</div>
+  </div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Patterns</div>
+<h2>Cross-Cutting Architecture Patterns</h2>
+<p>Six patterns appear repeatedly across frameworks — the building blocks of agentic memory.</p>
+
+<div class="pattern-grid">
+<div class="pattern-card">
+  <h4>Scored Retrieval</h4>
+  <div class="used-by">Zep, Mem0, LangGraph</div>
+  <p>Multi-factor scoring (recency, importance, relevance, access frequency) to select which memories enter the prompt. Implementations differ: Zep uses bi-temporal validity, Mem0 uses cosine similarity + graph traversal.</p>
+</div>
+<div class="pattern-card">
+  <h4>Virtual Context / Sliding Window</h4>
+  <div class="used-by">MemGPT/Letta, LangGraph, Anthropic</div>
+  <p>Fixed context window as "RAM" with external storage as "disk." The agent or framework manages paging. MemGPT's insight: let the LLM itself be the memory manager.</p>
+</div>
+<div class="pattern-card">
+  <h4>Knowledge Graph Extraction</h4>
+  <div class="used-by">Cognee, Zep/Graphiti, Mem0</div>
+  <p>LLM extracts entities and relationships from unstructured text, builds a graph. Enables relational queries that pure vector search cannot answer.</p>
+</div>
+<div class="pattern-card">
+  <h4>Reflection / Consolidation</h4>
+  <div class="used-by">Letta, Ng's patterns, Weng's Reflexion</div>
+  <p>Periodic synthesis of episodic memories into semantic knowledge. Ranges from per-turn recursive summarization (Letta) to nightly batch consolidation.</p>
+</div>
+<div class="pattern-card">
+  <h4>Memory as Filesystem</h4>
+  <div class="used-by">Anthropic, Letta (2026), LangChain Deep Agents</div>
+  <p>Memory lives as files (markdown, JSON) that agents read/write via standard file operations. Multiple teams independently converging on this pattern — models are "good at using filesystems."</p>
+</div>
+<div class="pattern-card">
+  <h4>Client-Side Memory</h4>
+  <div class="used-by">Anthropic, LangGraph, self-hosted options</div>
+  <p>Memory infrastructure runs in the developer's environment, not the provider's. Avoids lock-in, enables custom persistence, full data ownership.</p>
+</div>
+</div>
+</section>
+
+<section class="section">
+<div class="section-label">Trends</div>
+<h2>Where It's Heading</h2>
+<div class="pattern-grid">
+<div class="pattern-card">
+  <h4>Memory as Filesystem</h4>
+  <p>Letta, Anthropic, and LangChain are all converging on file-based memory over specialized tools. Letta's own benchmarks show filesystem agents outperform specialized memory abstractions.</p>
+</div>
+<div class="pattern-card">
+  <h4>Temporal Reasoning Gap</h4>
+  <p>Zep's bi-temporal model is the gold standard for tracking how facts change over time. Others lag significantly — a 15-point gap on LongMemEval between Zep and Mem0.</p>
+</div>
+<div class="pattern-card">
+  <h4>Self-Improving Memory</h4>
+  <p>Cognee's memify, MemGPT's self-editing, and biological consolidation patterns show memory evolving from static storage to adaptive systems that learn from usage.</p>
+</div>
+<div class="pattern-card">
+  <h4>Benchmark Maturation</h4>
+  <p>MemoryArena (2026) reveals that models scoring near-perfect on LOCOMO plummet to 40-60% on interdependent multi-session tasks. The real frontier is multi-session, not single-turn.</p>
+</div>
+</div>
+</section>
+
+<footer>
+<p>Research conducted April 2026 &middot; <a href="https://mrjuul.github.io/showcase/">mrjuul.github.io/showcase</a></p>
+</footer>
+
+</div>
+</body>
+</html>

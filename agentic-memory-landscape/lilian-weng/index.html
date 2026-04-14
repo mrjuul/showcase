@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lilian Weng -- The Canonical Taxonomy for Agent Memory</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #080c14;
+            --surface: #0d1220;
+            --border: #1a2235;
+            --text: #dde2ec;
+            --dim: #7a8599;
+            --faint: #3d4a5c;
+            --accent: #00d4aa;
+            --accent-dim: rgba(0, 212, 170, 0.15);
+            --accent-glow: rgba(0, 212, 170, 0.08);
+            --serif: 'DM Serif Display', serif;
+            --sans: 'DM Sans', sans-serif;
+            --mono: 'JetBrains Mono', monospace;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: var(--sans);
+            font-size: 16px;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem 1.5rem 4rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            color: var(--dim);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            margin-bottom: 2.5rem;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: var(--accent);
+        }
+
+        .back-link::before {
+            content: '\2190';
+        }
+
+        .page-header {
+            margin-bottom: 3rem;
+        }
+
+        .page-header h1 {
+            font-family: var(--serif);
+            font-size: 2.8rem;
+            color: var(--text);
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-header .subtitle {
+            font-family: var(--sans);
+            font-size: 1.15rem;
+            color: var(--dim);
+            font-weight: 400;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-family: var(--serif);
+            font-size: 1.5rem;
+            color: var(--text);
+            margin-bottom: 1.25rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-number {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            margin-right: 0.5rem;
+        }
+
+        /* Memory Taxonomy Diagram */
+        .taxonomy-diagram {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            overflow-x: auto;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .taxonomy-diagram:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .taxonomy-flow {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+            min-width: 600px;
+        }
+
+        .taxonomy-level {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .taxonomy-node {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 0.75rem 1.25rem;
+            text-align: center;
+            min-width: 140px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .taxonomy-node:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .taxonomy-node .label {
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--accent);
+            display: block;
+        }
+
+        .taxonomy-node .desc {
+            font-size: 0.8rem;
+            color: var(--dim);
+            margin-top: 0.25rem;
+        }
+
+        .taxonomy-arrow {
+            color: var(--faint);
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+
+        .taxonomy-branch {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .taxonomy-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .taxonomy-group-label {
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            color: var(--faint);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Main Flow */
+        .memory-flow {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .memory-flow-item {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            position: relative;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .memory-flow-item:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .memory-flow-item:not(:last-child)::after {
+            content: '\2192';
+            position: absolute;
+            right: -0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--faint);
+            font-size: 1.2rem;
+            z-index: 1;
+        }
+
+        .memory-flow-item .human-label {
+            font-family: var(--serif);
+            font-size: 1.05rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .memory-flow-item .llm-label {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .memory-flow-item .duration {
+            font-size: 0.78rem;
+            color: var(--dim);
+            margin-top: 0.4rem;
+        }
+
+        /* LTM Breakdown */
+        .ltm-breakdown {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .ltm-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .ltm-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .ltm-card h4 {
+            font-family: var(--mono);
+            font-size: 0.9rem;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+        }
+
+        .ltm-card .type {
+            font-family: var(--serif);
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 0.3rem;
+        }
+
+        .ltm-card p {
+            font-size: 0.85rem;
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        .ltm-sub {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .ltm-sub-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+        }
+
+        .ltm-sub-item .type {
+            font-family: var(--mono);
+            font-size: 0.82rem;
+            color: var(--accent);
+        }
+
+        .ltm-sub-item p {
+            font-size: 0.8rem;
+            color: var(--dim);
+            margin-top: 0.2rem;
+        }
+
+        /* Mapping Table */
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        .mapping-table th,
+        .mapping-table td {
+            padding: 0.75rem 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mapping-table th {
+            font-family: var(--mono);
+            font-size: 0.8rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            background: var(--surface);
+        }
+
+        .mapping-table td {
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+
+        .mapping-table td:last-child {
+            color: var(--dim);
+        }
+
+        .mapping-table tr:hover td {
+            background: var(--accent-glow);
+        }
+
+        .mapping-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        /* Table wrapper for responsive */
+        .table-wrapper {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            background: var(--surface);
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .table-wrapper:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        /* MIPS Table */
+        .mips-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .mips-table th,
+        .mips-table td {
+            padding: 0.85rem 1.15rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .mips-table th {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: var(--bg);
+        }
+
+        .mips-table td {
+            font-size: 0.88rem;
+        }
+
+        .mips-table .algo-name {
+            font-family: var(--mono);
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .mips-table .approach {
+            color: var(--text);
+        }
+
+        .mips-table .property {
+            color: var(--dim);
+            font-size: 0.83rem;
+        }
+
+        .mips-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .mips-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .mips-table tbody tr:hover {
+            background: var(--accent-glow);
+        }
+
+        /* Generative Agents Case Study */
+        .case-study {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .case-study:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .case-study-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .case-study-header h3 {
+            font-family: var(--serif);
+            font-size: 1.2rem;
+            color: var(--text);
+        }
+
+        .case-study-header .citation {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--dim);
+            background: var(--bg);
+            padding: 0.3rem 0.7rem;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .memory-stream {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .memory-stream h4 {
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 0.75rem;
+        }
+
+        .memory-stream p {
+            font-size: 0.88rem;
+            color: var(--dim);
+            line-height: 1.6;
+        }
+
+        .retrieval-factors {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+        }
+
+        .factor-card {
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.25rem;
+            text-align: center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .factor-card:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .factor-card .factor-name {
+            font-family: var(--serif);
+            font-size: 1rem;
+            color: var(--text);
+            margin-bottom: 0.5rem;
+        }
+
+        .factor-card .factor-formula {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            display: inline-block;
+            margin-bottom: 0.5rem;
+        }
+
+        .factor-card .factor-desc {
+            font-size: 0.82rem;
+            color: var(--dim);
+            line-height: 1.5;
+        }
+
+        .retrieval-formula {
+            margin-top: 1.25rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            color: var(--accent);
+            text-align: center;
+        }
+
+        /* Post-Weng Extensions Table */
+        .extensions-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .extensions-table th,
+        .extensions-table td {
+            padding: 0.85rem 1.15rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+            vertical-align: top;
+        }
+
+        .extensions-table th {
+            font-family: var(--mono);
+            font-size: 0.78rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: var(--bg);
+        }
+
+        .extensions-table .author {
+            font-family: var(--mono);
+            font-weight: 600;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        .extensions-table .framework {
+            font-family: var(--serif);
+            color: var(--text);
+        }
+
+        .extensions-table .contribution {
+            color: var(--dim);
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        .extensions-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .extensions-table tbody tr {
+            transition: background 0.2s;
+        }
+
+        .extensions-table tbody tr:hover {
+            background: var(--accent-glow);
+        }
+
+        /* Key Facts */
+        .key-facts {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem 2rem;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+
+        .key-facts:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 30px var(--accent-glow);
+        }
+
+        .key-facts ul {
+            list-style: none;
+        }
+
+        .key-facts li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+            color: var(--dim);
+            display: flex;
+            gap: 0.75rem;
+            align-items: baseline;
+        }
+
+        .key-facts li:last-child {
+            border-bottom: none;
+        }
+
+        .key-facts .fact-marker {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.75rem;
+            flex-shrink: 0;
+        }
+
+        .key-facts .fact-label {
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        /* Footer */
+        .page-footer {
+            margin-top: 4rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .page-footer a {
+            color: var(--dim);
+            text-decoration: none;
+            font-family: var(--mono);
+            font-size: 0.85rem;
+            transition: color 0.2s;
+        }
+
+        .page-footer a:hover {
+            color: var(--accent);
+        }
+
+        /* Prose */
+        .prose {
+            font-size: 0.92rem;
+            color: var(--dim);
+            line-height: 1.7;
+            margin-bottom: 1.25rem;
+        }
+
+        .prose strong {
+            color: var(--text);
+            font-weight: 600;
+        }
+
+        .highlight {
+            color: var(--accent);
+            font-family: var(--mono);
+            font-size: 0.85rem;
+        }
+
+        .tag {
+            display: inline-block;
+            font-family: var(--mono);
+            font-size: 0.72rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            padding: 0.15rem 0.5rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2rem;
+            }
+
+            .memory-flow {
+                grid-template-columns: 1fr;
+            }
+
+            .memory-flow-item:not(:last-child)::after {
+                content: '\2193';
+                right: 50%;
+                top: auto;
+                bottom: -0.85rem;
+                transform: translateX(50%);
+            }
+
+            .ltm-breakdown {
+                grid-template-columns: 1fr;
+            }
+
+            .retrieval-factors {
+                grid-template-columns: 1fr;
+            }
+
+            .container {
+                padding: 1.25rem 1rem 3rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.6rem;
+            }
+
+            .section-title {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="../" class="back-link">Agentic Memory Landscape</a>
+
+        <header class="page-header">
+            <h1>Lilian Weng</h1>
+            <p class="subtitle">The canonical taxonomy for agent memory</p>
+        </header>
+
+        <!-- Section 1: Memory Taxonomy -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">01</span>
+                Memory Taxonomy
+            </h2>
+
+            <p class="prose">
+                Weng's blog post <strong>"LLM Powered Autonomous Agents"</strong> (June 2023) established the
+                definitive mapping between human cognitive memory systems and their LLM equivalents. The taxonomy
+                draws from cognitive psychology's standard model and shows how each memory type finds a natural
+                analog in the architecture of language model agents.
+            </p>
+
+            <div class="taxonomy-diagram">
+                <h3 style="font-family: var(--mono); font-size: 0.82rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.25rem;">Primary Flow: Sensory to Long-Term</h3>
+                <div class="memory-flow">
+                    <div class="memory-flow-item">
+                        <div class="human-label">Sensory Memory</div>
+                        <span class="llm-label">Raw Input</span>
+                        <div class="duration">Milliseconds</div>
+                    </div>
+                    <div class="memory-flow-item">
+                        <div class="human-label">Short-Term Memory</div>
+                        <span class="llm-label">Context Window</span>
+                        <div class="duration">Seconds to minutes</div>
+                    </div>
+                    <div class="memory-flow-item">
+                        <div class="human-label">Long-Term Memory</div>
+                        <span class="llm-label">External Store</span>
+                        <div class="duration">Days to lifetime</div>
+                    </div>
+                </div>
+
+                <h3 style="font-family: var(--mono); font-size: 0.82rem; color: var(--faint); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 1.25rem;">Long-Term Memory Breakdown</h3>
+                <div class="ltm-breakdown">
+                    <div class="ltm-card">
+                        <h4>Explicit (Declarative)</h4>
+                        <div class="ltm-sub">
+                            <div class="ltm-sub-item">
+                                <div class="type">Episodic Memory</div>
+                                <p>Personal experiences and events. LLM equivalent: logged past interactions, conversation history, experience replay buffers.</p>
+                            </div>
+                            <div class="ltm-sub-item">
+                                <div class="type">Semantic Memory</div>
+                                <p>General world knowledge and facts. LLM equivalent: knowledge base, vector store of documents, structured databases.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ltm-card">
+                        <h4>Implicit (Procedural)</h4>
+                        <div class="ltm-sub">
+                            <div class="ltm-sub-item">
+                                <div class="type">Procedural Memory</div>
+                                <p>Skills and habits performed automatically. LLM equivalent: model weights from pretraining, fine-tuned behaviors, in-context learning patterns.</p>
+                            </div>
+                        </div>
+                        <p style="margin-top: 0.75rem; font-size: 0.82rem; color: var(--faint);">
+                            Implicit memory is encoded in the model's weights and cannot be easily inspected or modified at runtime, unlike explicit memory which resides in external retrievable stores.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="table-wrapper" style="margin-top: 1.5rem;">
+                <table class="mapping-table">
+                    <thead>
+                        <tr>
+                            <th>Human Memory Type</th>
+                            <th>LLM Equivalent</th>
+                            <th>Persistence</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Sensory Memory</td>
+                            <td><span class="highlight">Raw input embeddings</span></td>
+                            <td>Single forward pass; discarded after attention</td>
+                        </tr>
+                        <tr>
+                            <td>Short-Term / Working</td>
+                            <td><span class="highlight">Context window (in-context learning)</span></td>
+                            <td>Duration of conversation; limited by token budget</td>
+                        </tr>
+                        <tr>
+                            <td>LTM -- Episodic</td>
+                            <td><span class="highlight">Conversation logs / experience replay</span></td>
+                            <td>Persistent; retrieved via similarity search</td>
+                        </tr>
+                        <tr>
+                            <td>LTM -- Semantic</td>
+                            <td><span class="highlight">Vector DB / knowledge base</span></td>
+                            <td>Persistent; structured or embedded retrieval</td>
+                        </tr>
+                        <tr>
+                            <td>LTM -- Procedural</td>
+                            <td><span class="highlight">Model weights / fine-tuning</span></td>
+                            <td>Permanent; modified only through training</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- Section 2: MIPS Algorithms -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">02</span>
+                Maximum Inner Product Search (MIPS)
+            </h2>
+
+            <p class="prose">
+                Weng dedicates significant attention to the retrieval infrastructure that makes external memory practical.
+                She frames the core challenge as <strong>Maximum Inner Product Search (MIPS)</strong> -- given a query embedding,
+                find the stored vectors with the highest dot-product similarity. Exact search is O(n) and impractical at scale,
+                so approximate algorithms trade accuracy for speed. These are the building blocks behind every vector database
+                used in RAG and agent memory systems.
+            </p>
+
+            <div class="table-wrapper">
+                <table class="mips-table">
+                    <thead>
+                        <tr>
+                            <th>Algorithm</th>
+                            <th>Approach</th>
+                            <th>Key Property</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="algo-name">LSH</td>
+                            <td class="approach">Locality-Sensitive Hashing. Maps similar vectors to the same hash bucket using random projection families. Query time is sublinear in dataset size.</td>
+                            <td class="property">Probabilistic guarantees; tunable accuracy vs. speed via number of hash tables and bucket width. Works well in high dimensions but needs many tables for high recall.</td>
+                        </tr>
+                        <tr>
+                            <td class="algo-name">ANNOY</td>
+                            <td class="approach">Approximate Nearest Neighbors Oh Yeah. Builds a forest of random projection trees. Each tree recursively partitions the space with random hyperplanes.</td>
+                            <td class="property">Static index (build once, query many). Memory-mapped files allow sharing across processes. Developed by Spotify for music recommendation. Good for read-heavy workloads.</td>
+                        </tr>
+                        <tr>
+                            <td class="algo-name">HNSW</td>
+                            <td class="approach">Hierarchical Navigable Small World graphs. Builds a multi-layer graph where each layer has exponentially fewer nodes. Search starts at the top and refines downward.</td>
+                            <td class="property">Best-in-class recall at high throughput. Greedy traversal with logarithmic complexity. The default choice in most modern vector databases (Pinecone, Weaviate, Qdrant).</td>
+                        </tr>
+                        <tr>
+                            <td class="algo-name">FAISS</td>
+                            <td class="approach">Facebook AI Similarity Search. A library (not a single algorithm) combining IVF (inverted file index), PQ (product quantization), and HNSW. GPU-accelerated.</td>
+                            <td class="property">Industrial-grade; handles billion-scale datasets. Composable index types let you trade memory, speed, and accuracy. The most widely deployed ANN library in production.</td>
+                        </tr>
+                        <tr>
+                            <td class="algo-name">ScaNN</td>
+                            <td class="approach">Scalable Nearest Neighbors by Google. Uses anisotropic vector quantization -- accounts for the direction of quantization error relative to the query, not just magnitude.</td>
+                            <td class="property">State-of-the-art accuracy-speed tradeoff at the time of publication. Outperforms HNSW and FAISS on standard benchmarks (ANN-Benchmarks). Optimized for inner product search specifically.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="prose" style="margin-top: 1.25rem;">
+                Weng emphasizes that the choice of MIPS algorithm is not academic -- it directly determines the
+                latency and quality of agent memory retrieval. A poorly-chosen index can make the difference between
+                an agent that recalls relevant context in 10ms and one that either times out or retrieves irrelevant memories.
+            </p>
+        </section>
+
+        <!-- Section 3: Generative Agents Case Study -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">03</span>
+                Generative Agents Case Study
+            </h2>
+
+            <div class="case-study">
+                <div class="case-study-header">
+                    <h3>Generative Agents: Interactive Simulacra of Human Behavior</h3>
+                    <span class="citation">Park et al. 2023</span>
+                </div>
+
+                <p class="prose">
+                    The Generative Agents paper is Weng's primary case study for how memory enables emergent behavior.
+                    Stanford researchers created a Sims-like sandbox with 25 LLM-powered agents who autonomously formed
+                    relationships, organized parties, and spread information through social networks -- all driven by a
+                    carefully designed memory architecture.
+                </p>
+
+                <div class="memory-stream">
+                    <h4>The Memory Stream</h4>
+                    <p>
+                        Each agent maintains a <strong style="color: var(--text);">memory stream</strong> -- an append-only log of
+                        natural language observations. Every perceived event ("Klaus is painting at the studio"),
+                        conversation snippet, and internal reflection gets timestamped and stored. This creates a
+                        comprehensive record of the agent's subjective experience, forming the raw material
+                        for all downstream retrieval. The stream grows indefinitely; retrieval scoring determines
+                        what surfaces when the agent needs to act.
+                    </p>
+                </div>
+
+                <h4 style="font-family: var(--mono); font-size: 0.85rem; color: var(--accent); margin-bottom: 1rem;">Three-Factor Retrieval Scoring</h4>
+
+                <div class="retrieval-factors">
+                    <div class="factor-card">
+                        <div class="factor-name">Recency</div>
+                        <div class="factor-formula">exp(-&alpha; &times; &Delta;t)</div>
+                        <div class="factor-desc">
+                            Exponential decay based on time since last access.
+                            Recent memories surface more readily, mirroring the
+                            human recency bias. Decay rate &alpha; controls how
+                            fast old memories fade.
+                        </div>
+                    </div>
+                    <div class="factor-card">
+                        <div class="factor-name">Importance</div>
+                        <div class="factor-formula">LLM score [1-10]</div>
+                        <div class="factor-desc">
+                            An LLM rates each memory's inherent significance.
+                            "Brushing teeth" scores low; "breakup with partner"
+                            scores high. Assigned once at creation time,
+                            acting as a static weight.
+                        </div>
+                    </div>
+                    <div class="factor-card">
+                        <div class="factor-name">Relevance</div>
+                        <div class="factor-formula">cos(q, m)</div>
+                        <div class="factor-desc">
+                            Cosine similarity between the query embedding
+                            and the memory embedding. This is the standard
+                            semantic retrieval signal -- how topically related
+                            is this memory to the current situation?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="retrieval-formula">
+                    score(m) = &alpha;<sub>recency</sub> &times; recency(m) + &alpha;<sub>importance</sub> &times; importance(m) + &alpha;<sub>relevance</sub> &times; relevance(m)
+                </div>
+
+                <p class="prose" style="margin-top: 1.25rem;">
+                    The weighted sum of all three factors determines which memories are injected into the agent's
+                    prompt at decision time. This multi-factor approach prevents pure semantic similarity from
+                    dominating -- a highly relevant but ancient memory may be outranked by a moderately relevant
+                    but recent and important one. The system also supports <strong>reflection</strong>: periodically,
+                    the agent generates higher-level abstractions from clusters of recent memories, creating
+                    metacognitive entries that themselves enter the memory stream.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 4: Post-Weng Extensions -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">04</span>
+                Post-Weng Extensions
+            </h2>
+
+            <p class="prose">
+                Weng's taxonomy has not been updated since June 2023. Subsequent researchers have built upon, challenged,
+                and extended her framework in significant ways. Each adds dimensionality that the original formulation
+                lacked, particularly around memory operations (not just types), structural organization, and
+                decision-theoretic grounding.
+            </p>
+
+            <div class="table-wrapper">
+                <table class="extensions-table">
+                    <thead>
+                        <tr>
+                            <th>Author &amp; Year</th>
+                            <th>Framework</th>
+                            <th>Key Contribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="author">Zhang et al. 2024</td>
+                            <td class="framework">Survey of Memory in LLM-based Agents</td>
+                            <td class="contribution">
+                                Introduces a three-axis taxonomy: <strong style="color: var(--text);">sources</strong> (where memory comes from: internal knowledge, user interaction, external tools),
+                                <strong style="color: var(--text);">forms</strong> (how memory is represented: natural language, embeddings, databases, structured knowledge graphs),
+                                and <strong style="color: var(--text);">operations</strong> (what agents do with memory: read, write, reflect, consolidate, forget).
+                                The operations axis is the critical addition -- Weng focused on memory types but not the active processes that manage them.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="author">Wu et al. 2025</td>
+                            <td class="framework">3D-8Q Evaluation Framework</td>
+                            <td class="contribution">
+                                Proposes three evaluation dimensions: <strong style="color: var(--text);">knowledge</strong> (what does the agent remember?),
+                                <strong style="color: var(--text);">time</strong> (how does recall degrade or improve over time?),
+                                and <strong style="color: var(--text);">cognition</strong> (what cognitive processes govern memory use?).
+                                Within these, eight specific questions operationalize evaluation. First systematic attempt to benchmark
+                                agent memory quality rather than just retrieval accuracy.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="author">Xu et al. 2025</td>
+                            <td class="framework">A-Mem (Agentic Memory)</td>
+                            <td class="contribution">
+                                Applies <strong style="color: var(--text);">Zettelkasten principles</strong> (Luhmann's slip-box method) to agent memory.
+                                Each memory note is atomic, uniquely addressed, and linked to related notes. Memories self-organize
+                                through agent-driven indexing, tagging, and cross-referencing. Demonstrates that structured note-taking
+                                outperforms flat vector stores on complex reasoning tasks requiring multi-hop memory retrieval.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td class="author">Du et al. 2026</td>
+                            <td class="framework">POMDP Memory Framework</td>
+                            <td class="contribution">
+                                Grounds agent memory in <strong style="color: var(--text);">Partially Observable Markov Decision Processes</strong>.
+                                Memory is not just storage but a belief state that the agent maintains about its partially observable
+                                environment. Read/write/forget become actions in a decision-theoretic framework with explicit
+                                costs and rewards. Formalizes the intuition that remembering everything is not optimal --
+                                the agent should actively choose what to forget based on expected future utility.
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <p class="prose" style="margin-top: 1.25rem;">
+                The trajectory from Weng (2023) through these extensions shows the field maturing from
+                <strong>descriptive taxonomy</strong> (what types of memory exist) to <strong>operational frameworks</strong>
+                (how memory should be managed) to <strong>formal decision theory</strong> (when memory operations are
+                optimal). Each layer builds on Weng's foundation while addressing its limitations.
+            </p>
+        </section>
+
+        <!-- Section 5: Key Facts -->
+        <section class="section">
+            <h2 class="section-title">
+                <span class="section-number">05</span>
+                Key Facts
+            </h2>
+
+            <div class="key-facts">
+                <ul>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Published:</span> June 2023, on Lilian Weng's personal blog (lilianweng.github.io)</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Title:</span> "LLM Powered Autonomous Agents" -- memory is one of three pillars alongside planning and tool use</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Updates:</span> No revisions since original publication. The post remains a static snapshot of mid-2023 understanding</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Citation impact:</span> The most-cited reference in the agent memory literature. Virtually every subsequent survey, framework, and system paper references the Weng taxonomy as baseline</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Affiliation at time:</span> Head of Applied Research at OpenAI. The blog is personal, not an OpenAI publication</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Current role:</span> Now at Thinking Machines (as of 2025). No longer at OpenAI</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Scope:</span> The post covers the full agent stack, but the memory section became its most influential contribution. The planning section (Chain of Thought, Tree of Thoughts, LLM+P) and tool use section (MRKL, Toolformer, HuggingGPT) are also widely cited but have been more actively superseded by later work</span>
+                    </li>
+                    <li>
+                        <span class="fact-marker">&bull;</span>
+                        <span><span class="fact-label">Limitations:</span> No coverage of memory consolidation, forgetting, or operational lifecycle. Treats memory as static storage rather than active process. These gaps drove the post-Weng extensions above</span>
+                    </li>
+                </ul>
+            </div>
+        </section>
+
+        <footer class="page-footer">
+            <a href="../">&larr; Back to Agentic Memory Landscape</a>
+        </footer>
+    </div>
+</body>
+</html>
