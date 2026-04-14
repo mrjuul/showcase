@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Token Mechanics Explained</title>
+  <meta property="og:title" content="Token Mechanics Explained">
+  <meta property="og:description" content="How Claude's context window actually works — and why your tools eat most of it. The hidden cost of MCP tools, prompt caching, and optimization strategies.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mrjuul.github.io/showcase/token-mechanics/">
+  <meta property="og:image" content="https://mrjuul.github.io/showcase/token-mechanics/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="theme-color" content="#38bdf8">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #08080e;
+      --surface: #0f1118;
+      --surface-raised: #151820;
+      --surface-hover: #1a1e2a;
+      --border: #1a1e28;
+      --border-bright: #252a38;
+      --text: #e0e4ec;
+      --text-dim: #dde1e8;
+      --text-secondary: #99a0b4;
+      --text-muted: #777e94;
+      --accent: #38bdf8;
+      --accent-dim: #2496cc;
+      --accent-glow: rgba(56,189,248,0.10);
+      --accent-glow-strong: rgba(56,189,248,0.22);
+      --accent-border: rgba(56,189,248,0.25);
+      --teal: #34d4b0;
+      --teal-dim: rgba(52,212,176,0.10);
+      --teal-border: rgba(52,212,176,0.22);
+      --rose: #f06068;
+      --rose-dim: rgba(240,96,104,0.10);
+      --rose-border: rgba(240,96,104,0.22);
+      --amber: #f0a030;
+      --amber-dim: rgba(240,160,48,0.10);
+      --amber-border: rgba(240,160,48,0.22);
+      --purple: #a080f0;
+      --purple-dim: rgba(160,128,240,0.10);
+      --purple-border: rgba(160,128,240,0.22);
+      --sky: #60a0f0;
+      --sky-dim: rgba(96,160,240,0.10);
+      --sky-border: rgba(96,160,240,0.22);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
+      --shadow-md: 0 4px 14px rgba(0,0,0,0.45);
+      --shadow-lg: 0 8px 30px rgba(0,0,0,0.5);
+      --radius: 14px;
+      --radius-sm: 10px;
+      --radius-xs: 6px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+    ::selection { background: rgba(56,189,248,0.25); color: #fff; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.75;
+      -webkit-font-smoothing: antialiased;
+      position: relative;
+    }
+
+    /* Dot grid background */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+      background-image: radial-gradient(circle, #2a3040 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* Subtle noise overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 9999;
+      opacity: 0.02;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-repeat: repeat;
+      background-size: 200px 200px;
+    }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 2rem 6rem; position: relative; z-index: 1; }
+
+    /* ===== Hero ===== */
+    .hero {
+      position: relative;
+      padding: 5rem 2rem 4.5rem;
+      margin-bottom: 3rem;
+      overflow: hidden;
+      z-index: 1;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 25% 40%, rgba(56,189,248,0.09) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 60% at 75% 30%, rgba(52,212,176,0.05) 0%, transparent 70%),
+        radial-gradient(ellipse 50% 40% at 50% 85%, rgba(160,128,240,0.04) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-dim), var(--border-bright), transparent);
+    }
+    .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+
+    .hero-ascii {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      line-height: 1.35;
+      color: var(--accent);
+      opacity: 0.5;
+      margin-bottom: 2rem;
+      animation: fadeSlideDown 0.5s ease-out;
+      white-space: pre;
+      letter-spacing: 0.05em;
+    }
+
+    .hero-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 1rem;
+      border-radius: 100px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      color: var(--accent);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      animation: fadeSlideDown 0.5s ease-out 0.05s both;
+    }
+    .hero-tag::before {
+      content: '';
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent);
+    }
+
+    .hero h1 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: clamp(2.2rem, 5vw, 3.4rem);
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 1.25rem;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+      animation: fadeSlideDown 0.6s ease-out 0.1s both;
+    }
+    .hero h1 em { font-style: italic; color: var(--accent); }
+    .hero .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      max-width: 560px;
+      line-height: 1.7;
+      animation: fadeSlideDown 0.6s ease-out 0.2s both;
+    }
+
+    @keyframes fadeSlideDown {
+      from { opacity: 0; transform: translateY(-14px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Fade-up on scroll ===== */
+    .reveal {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ===== Typography ===== */
+    h2 {
+      font-family: 'DM Serif Display', Georgia, serif;
+      font-size: 1.7rem;
+      font-weight: 400;
+      margin: 4rem 0 1.5rem;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      line-height: 1.25;
+      position: relative;
+      padding-bottom: 0.75rem;
+    }
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0;
+      width: 36px; height: 2px;
+      background: var(--accent);
+      border-radius: 2px;
+    }
+
+    h3 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem;
+      color: var(--text);
+    }
+
+    p { margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.9rem; }
+    strong { color: var(--text-dim); font-weight: 600; }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.78em;
+      background: var(--surface-raised);
+      padding: 0.2rem 0.5rem;
+      border-radius: var(--radius-xs);
+      color: var(--accent);
+      border: 1px solid var(--border-bright);
+    }
+
+    .mono-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ===== Card ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.75rem 2rem;
+      margin-bottom: 1rem;
+      box-shadow: var(--shadow-sm);
+      transition: box-shadow 0.3s, border-color 0.3s, transform 0.3s;
+    }
+    .card:hover {
+      box-shadow: var(--shadow-md), 0 0 20px rgba(56,189,248,0.04);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+
+    /* ===== Callout ===== */
+    .callout {
+      border-radius: var(--radius);
+      padding: 1.4rem 1.75rem;
+      margin: 1.5rem 0;
+      font-size: 0.88rem;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      overflow: hidden;
+    }
+    .callout::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0;
+      width: 3px; height: 100%;
+    }
+    .callout-title { font-weight: 700; margin-bottom: 0.5rem; font-size: 0.88rem; }
+    .callout p { color: var(--text-secondary); margin-bottom: 0.5rem; }
+    .callout p:last-child { margin-bottom: 0; }
+
+    .callout-warning { background: var(--amber-dim); border: 1px solid var(--amber-border); }
+    .callout-warning::before { background: var(--amber); }
+    .callout-warning .callout-title { color: var(--amber); }
+
+    .callout-info { background: var(--sky-dim); border: 1px solid var(--sky-border); }
+    .callout-info::before { background: var(--sky); }
+    .callout-info .callout-title { color: var(--sky); }
+
+    .callout-tip { background: var(--teal-dim); border: 1px solid var(--teal-border); }
+    .callout-tip::before { background: var(--teal); }
+    .callout-tip .callout-title { color: var(--teal); }
+
+    .callout-accent { background: var(--accent-glow); border: 1px solid var(--accent-border); }
+    .callout-accent::before { background: var(--accent); }
+    .callout-accent .callout-title { color: var(--accent); }
+
+    /* ===== Budget bar ===== */
+    .budget-bar {
+      width: 100%; height: 34px;
+      background: var(--surface-raised);
+      border-radius: 100px;
+      overflow: hidden;
+      margin: 0.75rem 0;
+      display: flex;
+      border: 1px solid var(--border);
+    }
+    .budget-segment {
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--bg);
+      letter-spacing: 0.04em;
+      transition: width 0.8s ease-out;
+    }
+    .budget-legend { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 0.6rem; }
+    .budget-legend-item { display: flex; align-items: center; gap: 0.5rem; font-size: 0.76rem; color: var(--text-secondary); }
+    .budget-legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+
+    /* ===== Stat highlight ===== */
+    .stat-row {
+      display: flex;
+      gap: 1rem;
+      margin: 1.5rem 0;
+      flex-wrap: wrap;
+    }
+    .stat-box {
+      flex: 1;
+      min-width: 140px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem 1.5rem;
+      text-align: center;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .stat-box:hover { border-color: var(--accent-border); box-shadow: 0 0 16px rgba(56,189,248,0.06); }
+    .stat-number {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2rem;
+      line-height: 1.1;
+      margin-bottom: 0.25rem;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+
+    /* ===== Before/After comparison ===== */
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 1.5rem;
+      align-items: center;
+      margin: 1.5rem 0;
+    }
+    @media (max-width: 640px) {
+      .comparison { grid-template-columns: 1fr; gap: 0.75rem; }
+      .comparison-arrow { transform: rotate(90deg); }
+    }
+    .comparison-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .comparison-number {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.5rem;
+      margin-bottom: 0.25rem;
+    }
+    .comparison-label {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      font-weight: 600;
+    }
+    .comparison-arrow { font-size: 1.5rem; color: var(--accent); text-align: center; }
+
+    /* ===== Tables ===== */
+    .table-wrap { overflow-x: auto; margin: 1.5rem 0; }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      font-size: 0.82rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    th {
+      text-align: left;
+      padding: 0.85rem 1rem;
+      background: var(--surface-raised);
+      color: var(--text-muted);
+      font-weight: 600;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      border-bottom: 1px solid var(--border-bright);
+    }
+    td {
+      padding: 0.8rem 1rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      background: var(--surface);
+    }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: var(--surface-hover); }
+
+    /* ===== Tier visual ===== */
+    .tier-visual { margin: 1.5rem 0; }
+    .tier-row {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1.25rem;
+      border-radius: var(--radius-xs);
+      margin-bottom: 0.5rem;
+    }
+    .tier-label {
+      min-width: 85px;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 700;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .tier-desc { font-size: 0.82rem; color: var(--text-secondary); }
+
+    .tier-core { background: var(--teal-dim); border: 1px solid var(--teal-border); }
+    .tier-core .tier-label { color: var(--teal); }
+    .tier-extended { background: var(--amber-dim); border: 1px solid var(--amber-border); }
+    .tier-extended .tier-label { color: var(--amber); }
+    .tier-complete { background: var(--purple-dim); border: 1px solid var(--purple-border); }
+    .tier-complete .tier-label { color: var(--purple); }
+
+    /* ===== Platform grid ===== */
+    .platform-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1.5rem 0;
+    }
+    @media (max-width: 640px) { .platform-grid { grid-template-columns: 1fr; } }
+    .platform-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.3s;
+    }
+    .platform-card:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+    .platform-icon {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      font-weight: 700;
+      margin-bottom: 0.6rem;
+    }
+    .platform-name { font-weight: 700; font-size: 0.95rem; color: var(--text); margin-bottom: 0.2rem; }
+    .platform-sub { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.9rem; }
+    .platform-detail { font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.35rem; }
+    .platform-detail strong { color: var(--text-dim); font-size: 0.75rem; }
+
+    /* ===== Badges ===== */
+    .badge {
+      display: inline-block;
+      padding: 0.15rem 0.55rem;
+      border-radius: 100px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-left: 0.5rem;
+      vertical-align: middle;
+    }
+    .badge-accent { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent-border); }
+    .badge-teal { background: var(--teal-dim); color: var(--teal); border: 1px solid var(--teal-border); }
+    .badge-amber { background: var(--amber-dim); color: var(--amber); border: 1px solid var(--amber-border); }
+    .badge-rose { background: var(--rose-dim); color: var(--rose); border: 1px solid var(--rose-border); }
+    .badge-purple { background: var(--purple-dim); color: var(--purple); border: 1px solid var(--purple-border); }
+
+    /* ===== Hierarchy visual ===== */
+    .hierarchy { margin: 1.25rem 0; }
+    .hierarchy-level {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.7rem 1rem;
+      border-radius: var(--radius-xs);
+      margin-bottom: 0.4rem;
+      font-size: 0.82rem;
+    }
+    .hierarchy-arrow {
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      text-align: center;
+      padding: 0.2rem 0;
+    }
+
+    /* ===== Caching diagram ===== */
+    .cache-diagram {
+      display: flex;
+      align-items: center;
+      gap: 0;
+      margin: 1.5rem 0;
+      overflow-x: auto;
+    }
+    .cache-zone {
+      flex: 1;
+      min-width: 100px;
+      text-align: center;
+      padding: 1rem 0.75rem;
+      border-radius: var(--radius-xs);
+    }
+    .cache-zone-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 0.3rem;
+    }
+    .cache-zone-time {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.3rem;
+      margin-bottom: 0.2rem;
+    }
+    .cache-zone-desc { font-size: 0.7rem; color: var(--text-muted); }
+    .cache-connector {
+      width: 24px;
+      text-align: center;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      flex-shrink: 0;
+    }
+
+    /* ===== Divider ===== */
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-bright), transparent);
+      margin: 3.5rem 0;
+    }
+
+    /* ===== Footer ===== */
+    .footer {
+      margin-top: 5rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-align: center;
+      letter-spacing: 0.02em;
+      font-style: italic;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 480px) {
+      .container { padding: 0 1.25rem 4rem; }
+      .hero { padding: 3.5rem 1.25rem 3rem; }
+      .card { padding: 1.25rem 1.5rem; }
+      .stat-row { flex-direction: column; }
+      .cache-diagram { flex-direction: column; gap: 0.25rem; }
+      .cache-connector { transform: rotate(90deg); width: auto; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ============ HERO ============ -->
+  <div class="hero">
+    <div class="hero-inner">
+      <div class="hero-ascii">  ___________________
+ |  TOKENS  [=====] |
+ |  200K    |||||||  |
+ |  budget  |||||||  |
+ |__________|_____|__|
+   \__backpack__/</div>
+      <div class="hero-tag">Deep Dive</div>
+      <h1>Token Mechanics <em>Explained</em></h1>
+      <p class="subtitle">How Claude's context window actually works &mdash; and why your tools eat most of it.</p>
+    </div>
+  </div>
+
+  <div class="container">
+
+    <!-- ============ SECTION 1: WHAT ARE TOKENS ============ -->
+    <div class="reveal">
+      <h2>What Are Tokens?</h2>
+
+      <p>Tokens are the atomic units of text that language models process. Roughly <strong>one token per word</strong>, though longer or compound words may split into multiple tokens. Punctuation and whitespace consume tokens too.</p>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--accent);">~200K</div>
+          <div class="stat-label">Token budget per conversation</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--teal);">~150K</div>
+          <div class="stat-label">Words equivalent</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--amber);">~375</div>
+          <div class="stat-label">Pages of text</div>
+        </div>
+      </div>
+
+      <p>That sounds enormous. But the budget covers <strong>everything</strong>: your messages, Claude's responses, system instructions, <em>and</em> every tool definition loaded into the session.</p>
+
+      <div class="callout callout-accent">
+        <div class="callout-title">The backpack analogy</div>
+        <p>Think of the context window as a backpack with a fixed capacity. The more gear you pack before you leave the house &mdash; tool definitions, system prompts, CLAUDE.md files &mdash; the less room you have for what you actually pick up on the trail: conversation history, code, analysis.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 2: HIDDEN COST OF TOOLS ============ -->
+    <div class="reveal">
+      <h2>The Hidden Cost of Tools</h2>
+
+      <p>MCP tools are integrations that let Claude interact with external services &mdash; email, calendars, file systems, APIs. They're powerful. They're also expensive in ways that aren't obvious.</p>
+
+      <div class="callout callout-warning">
+        <div class="callout-title">The key insight</div>
+        <p>Every MCP tool costs tokens on <strong>every single message</strong>, even if you never use it. Like paying rent on an apartment you never visit &mdash; the cost is real whether you show up or not.</p>
+      </div>
+
+      <p>Why? Claude needs to know what tools are available <em>before</em> it can decide whether to use them. So every message sends the full tool catalog as part of the prompt.</p>
+
+      <div class="card">
+        <h3>The math on 460+ tools</h3>
+        <p><strong>Per message:</strong> ~3,000&ndash;5,000 tokens just on tool definitions</p>
+        <p><strong>Over 50 messages:</strong> ~250,000 tokens burned on tools alone</p>
+        <p style="margin-bottom: 0;"><strong>That's more than the entire 200K budget.</strong> Your conversation hits the wall before you've done meaningful work.</p>
+      </div>
+
+      <p style="margin-top: 1.5rem;"><strong>Budget breakdown &mdash; before optimization:</strong></p>
+      <div class="budget-bar">
+        <div class="budget-segment" style="width: 69%; background: var(--rose);">69%</div>
+        <div class="budget-segment" style="width: 20%; background: var(--sky);">20%</div>
+        <div class="budget-segment" style="width: 11%; background: var(--purple);">11%</div>
+      </div>
+      <div class="budget-legend">
+        <div class="budget-legend-item"><div class="budget-legend-dot" style="background: var(--rose);"></div> Tools</div>
+        <div class="budget-legend-item"><div class="budget-legend-dot" style="background: var(--sky);"></div> Conversation</div>
+        <div class="budget-legend-item"><div class="budget-legend-dot" style="background: var(--purple);"></div> System</div>
+      </div>
+
+      <p style="margin-top: 1.75rem; margin-bottom: 0.25rem;"><strong>Budget breakdown &mdash; after optimization:</strong></p>
+      <div class="budget-bar">
+        <div class="budget-segment" style="width: 15%; background: var(--teal);">15%</div>
+        <div class="budget-segment" style="width: 65%; background: var(--sky);">65%</div>
+        <div class="budget-segment" style="width: 20%; background: var(--purple);">20%</div>
+      </div>
+      <div class="budget-legend">
+        <div class="budget-legend-item"><div class="budget-legend-dot" style="background: var(--teal);"></div> Tools</div>
+        <div class="budget-legend-item"><div class="budget-legend-dot" style="background: var(--sky);"></div> Conversation</div>
+        <div class="budget-legend-item"><div class="budget-legend-dot" style="background: var(--purple);"></div> System</div>
+      </div>
+
+      <div class="callout callout-info" style="margin-top: 2rem;">
+        <div class="callout-title">Why sub-agents crash</div>
+        <p>Sub-agents inherit <strong>all</strong> your configured tools. They start with an already-stuffed backpack, leaving almost no room for the task they were spawned to do. High tool counts cause "Prompt is too long" failures before they even begin.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 3: FOUR PLATFORMS ============ -->
+    <div class="reveal">
+      <h2>The Four Platforms</h2>
+
+      <p>Claude runs on four distinct platforms. Each has its own config, memory, and tool access model. Understanding the differences is essential for managing your token budget.</p>
+
+      <div class="platform-grid">
+        <div class="platform-card">
+          <div class="platform-icon" style="color: var(--teal);">&gt;_</div>
+          <div class="platform-name">Code CLI <span class="badge badge-teal">Full Control</span></div>
+          <div class="platform-sub">Terminal-based development tool</div>
+          <div class="platform-detail"><strong>Config:</strong> <code>~/.claude.json</code></div>
+          <div class="platform-detail"><strong>MCP:</strong> Yes</div>
+          <div class="platform-detail"><strong>Connectors:</strong> No</div>
+          <div class="platform-detail"><strong>Memory:</strong> Auto-memory per project</div>
+          <div class="platform-detail"><strong>CLAUDE.md:</strong> Yes (hierarchy)</div>
+          <div class="platform-detail"><strong>Sub-agents:</strong> Yes</div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-icon" style="color: var(--purple);">( )</div>
+          <div class="platform-name">Chat <span class="badge badge-purple">Simplest</span></div>
+          <div class="platform-sub">claude.ai web interface</div>
+          <div class="platform-detail"><strong>Config:</strong> None</div>
+          <div class="platform-detail"><strong>MCP:</strong> No</div>
+          <div class="platform-detail"><strong>Connectors:</strong> Yes</div>
+          <div class="platform-detail"><strong>Memory:</strong> Projects (web)</div>
+          <div class="platform-detail"><strong>CLAUDE.md:</strong> No</div>
+          <div class="platform-detail"><strong>Sub-agents:</strong> No</div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-icon" style="color: var(--amber);">[A]</div>
+          <div class="platform-name">Cowork <span class="badge badge-amber">Agent Mode</span></div>
+          <div class="platform-sub">Desktop app agent mode</div>
+          <div class="platform-detail"><strong>Config:</strong> Desktop config</div>
+          <div class="platform-detail"><strong>MCP:</strong> Yes</div>
+          <div class="platform-detail"><strong>Connectors:</strong> Yes</div>
+          <div class="platform-detail"><strong>Memory:</strong> Task context</div>
+          <div class="platform-detail"><strong>CLAUDE.md:</strong> No</div>
+          <div class="platform-detail"><strong>Sub-agents:</strong> Yes (limited)</div>
+        </div>
+
+        <div class="platform-card">
+          <div class="platform-icon" style="color: var(--accent);">[]</div>
+          <div class="platform-name">Code in Desktop <span class="badge badge-accent">Both Worlds</span></div>
+          <div class="platform-sub">Code CLI embedded in Desktop</div>
+          <div class="platform-detail"><strong>Config:</strong> Both configs</div>
+          <div class="platform-detail"><strong>MCP:</strong> Yes</div>
+          <div class="platform-detail"><strong>Connectors:</strong> Yes</div>
+          <div class="platform-detail"><strong>Memory:</strong> Auto-memory per project</div>
+          <div class="platform-detail"><strong>CLAUDE.md:</strong> Yes (hierarchy)</div>
+          <div class="platform-detail"><strong>Sub-agents:</strong> Yes</div>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>Code CLI</th>
+              <th>Chat</th>
+              <th>Cowork</th>
+              <th>Code in Desktop</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Config file</strong></td>
+              <td><code>~/.claude.json</code></td>
+              <td>None</td>
+              <td>Desktop config</td>
+              <td>Both</td>
+            </tr>
+            <tr>
+              <td><strong>MCP servers</strong></td>
+              <td>Yes</td>
+              <td>No</td>
+              <td>Yes</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td><strong>Connectors</strong></td>
+              <td>No</td>
+              <td>Yes</td>
+              <td>Yes</td>
+              <td>Yes</td>
+            </tr>
+            <tr>
+              <td><strong>Memory</strong></td>
+              <td>Auto-memory per project</td>
+              <td>Projects (web)</td>
+              <td>Task context</td>
+              <td>Auto-memory</td>
+            </tr>
+            <tr>
+              <td><strong>CLAUDE.md</strong></td>
+              <td>Yes (hierarchy)</td>
+              <td>No</td>
+              <td>No</td>
+              <td>Yes (hierarchy)</td>
+            </tr>
+            <tr>
+              <td><strong>Sub-agents</strong></td>
+              <td>Yes</td>
+              <td>No</td>
+              <td>Yes (limited)</td>
+              <td>Yes</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 4: CONTROLLING TOOL LOAD ============ -->
+    <div class="reveal">
+      <h2>Controlling Your Tool Load</h2>
+
+      <p>You don't have to load every tool every time. Two flags give you precise control over what gets loaded into your token budget.</p>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <h3><code>--tools</code> &mdash; Choose which services</h3>
+        <p>Each service (Gmail, Calendar, Drive, Sheets, etc.) is a separate module. Without this flag, <strong>all</strong> services load &mdash; up to ~97 tools per account.</p>
+        <p style="margin-bottom: 0;"><code>--tools gmail,calendar</code> loads only those two services. Everything else stays unloaded.</p>
+      </div>
+
+      <div class="card">
+        <h3><code>--tool-tier</code> &mdash; Choose depth per service</h3>
+        <p style="margin-bottom: 0.75rem;">Within each service, tools are organized into three tiers of increasing capability:</p>
+
+        <div class="tier-visual">
+          <div class="tier-row tier-core">
+            <div class="tier-label">Core</div>
+            <div class="tier-desc">The essentials &mdash; search, read, send. <strong>3&ndash;7 tools</strong> per service.</div>
+          </div>
+          <div class="tier-row tier-extended">
+            <div class="tier-label">Extended</div>
+            <div class="tier-desc">Adds admin features &mdash; labels, filters, bulk operations. <strong>8&ndash;15 more</strong> tools.</div>
+          </div>
+          <div class="tier-row tier-complete">
+            <div class="tier-label">Complete</div>
+            <div class="tier-desc">Everything, including rarely-used tools. The full catalog.</div>
+          </div>
+        </div>
+        <p style="margin-bottom: 0; font-size: 0.82rem; color: var(--text-muted);">Tiers are cumulative: "extended" includes everything in "core" plus the extended tools.</p>
+      </div>
+
+      <div class="card">
+        <h3>Gmail tier breakdown</h3>
+        <div class="tier-visual" style="margin-top: 0.75rem;">
+          <div class="tier-row tier-core">
+            <div class="tier-label">Core (4)</div>
+            <div class="tier-desc">Search emails, read email, batch read, send email</div>
+          </div>
+          <div class="tier-row tier-extended">
+            <div class="tier-label">+Ext (8)</div>
+            <div class="tier-desc">Attachments, threads, labels, drafts, filters</div>
+          </div>
+          <div class="tier-row tier-complete">
+            <div class="tier-label">+Full (3)</div>
+            <div class="tier-desc">Batch thread reading, batch label changes, auth management</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 style="margin-top: 2rem;">The result</h3>
+
+      <div class="comparison">
+        <div class="comparison-box">
+          <div class="comparison-number" style="color: var(--rose);">343</div>
+          <div class="comparison-label">Tools before</div>
+        </div>
+        <div class="comparison-arrow">&rarr;</div>
+        <div class="comparison-box">
+          <div class="comparison-number" style="color: var(--teal);">131</div>
+          <div class="comparison-label">Tools after</div>
+        </div>
+      </div>
+      <p style="text-align: center; font-size: 0.82rem; color: var(--text-muted);">62% reduction with service + tier filtering. With workspace toggle off: down to 81 tools.</p>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 5: CLAUDE.MD ============ -->
+    <div class="reveal">
+      <h2>CLAUDE.md &mdash; Your Project Instructions</h2>
+
+      <p>CLAUDE.md files are automatic briefing notes. Place one in any folder, and Claude reads it at session start. They define conventions, rules, and context for that directory.</p>
+
+      <div class="card">
+        <h3>The hierarchy</h3>
+        <p>Claude walks <strong>up</strong> from your current folder to your home directory, reading every CLAUDE.md it finds. Each level adds context, from broad to specific:</p>
+
+        <div class="hierarchy">
+          <div class="hierarchy-level" style="background: var(--accent-glow); border: 1px solid var(--accent-border);">
+            <code style="min-width: 200px; border: none; background: none; padding: 0; font-size: 0.75rem;">~/.claude/CLAUDE.md</code>
+            <span style="font-size: 0.82rem; color: var(--accent);">Global &mdash; role, preferences, universal rules</span>
+          </div>
+          <div class="hierarchy-arrow">&darr;</div>
+          <div class="hierarchy-level" style="background: var(--teal-dim); border: 1px solid var(--teal-border);">
+            <code style="min-width: 200px; border: none; background: none; padding: 0; font-size: 0.75rem;">project/CLAUDE.md</code>
+            <span style="font-size: 0.82rem; color: var(--teal);">Project root &mdash; architecture, commands, conventions</span>
+          </div>
+          <div class="hierarchy-arrow">&darr;</div>
+          <div class="hierarchy-level" style="background: var(--purple-dim); border: 1px solid var(--purple-border);">
+            <code style="min-width: 200px; border: none; background: none; padding: 0; font-size: 0.75rem;">project/src/CLAUDE.md</code>
+            <span style="font-size: 0.82rem; color: var(--purple);">Subdirectory &mdash; component patterns, test strategies</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="stat-row" style="margin-top: 1.5rem;">
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--teal);">92%</div>
+          <div class="stat-label">Rule compliance &lt;200 lines</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number" style="color: var(--rose);">71%</div>
+          <div class="stat-label">Rule compliance &gt;400 lines</div>
+        </div>
+      </div>
+
+      <div class="callout callout-tip">
+        <div class="callout-title">Keep it lean</div>
+        <p>Keep each CLAUDE.md under 200 lines. Reference detailed docs instead of embedding them &mdash; Claude can always read linked files when it needs more depth. Shorter files mean higher compliance and lower token overhead.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 6: PROMPT CACHING ============ -->
+    <div class="reveal">
+      <h2>Prompt Caching</h2>
+
+      <p>Claude Code uses a prompt cache with a <strong>5-minute TTL</strong> (time-to-live). The cache stores the system prompt, tool definitions, and recent context &mdash; so repeated messages don't re-process all of it from scratch.</p>
+
+      <div class="cache-diagram">
+        <div class="cache-zone" style="background: var(--teal-dim); border: 1px solid var(--teal-border);">
+          <div class="cache-zone-label" style="color: var(--teal);">Warm Zone</div>
+          <div class="cache-zone-time" style="color: var(--teal);">&lt;270s</div>
+          <div class="cache-zone-desc">Cache hit. Faster, cheaper.</div>
+        </div>
+        <div class="cache-connector">&rarr;</div>
+        <div class="cache-zone" style="background: var(--amber-dim); border: 1px solid var(--amber-border);">
+          <div class="cache-zone-label" style="color: var(--amber);">Danger Zone</div>
+          <div class="cache-zone-time" style="color: var(--amber);">270&ndash;300s</div>
+          <div class="cache-zone-desc">Cache about to expire.</div>
+        </div>
+        <div class="cache-connector">&rarr;</div>
+        <div class="cache-zone" style="background: var(--rose-dim); border: 1px solid var(--rose-border);">
+          <div class="cache-zone-label" style="color: var(--rose);">Cold Zone</div>
+          <div class="cache-zone-time" style="color: var(--rose);">&gt;300s</div>
+          <div class="cache-zone-desc">Cache miss. Full re-read.</div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 1.5rem;">
+        <h3>Practical strategy</h3>
+        <p>If you're stepping away briefly, come back within <strong>~4.5 minutes</strong> (&lt;270s) to keep the cache warm. That means faster responses and lower cost.</p>
+        <p>If you're going to be longer than 5 minutes, don't rush back at 4:55 &mdash; you'll likely hit a miss anyway. Commit to a longer break (&gt;20 minutes) so the amortized cost of a cold start is negligible.</p>
+        <p style="margin-bottom: 0;"><strong>The worst spot:</strong> coming back at exactly 5&ndash;6 minutes. You pay for a full cache rebuild but haven't rested long enough to justify it.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 7: OPTIMIZATION SPECTRUM ============ -->
+    <div class="reveal">
+      <h2>The Optimization Spectrum</h2>
+
+      <p>From quick wins to architectural changes, here's how different approaches compare for reducing tool token overhead.</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Approach</th>
+              <th>Token Reduction</th>
+              <th>Complexity</th>
+              <th>How it works</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>Service filtering</strong> <code>--tools</code></td>
+              <td><span style="color: var(--teal); font-weight: 700;">60&ndash;80%</span></td>
+              <td><span class="badge badge-teal" style="margin-left: 0;">Low</span></td>
+              <td>Only load the services you need for this session</td>
+            </tr>
+            <tr>
+              <td><strong>Tier filtering</strong> <code>--tool-tier</code></td>
+              <td><span style="color: var(--teal); font-weight: 700;">~70%</span></td>
+              <td><span class="badge badge-teal" style="margin-left: 0;">Low</span></td>
+              <td>Load only core/extended tools per service</td>
+            </tr>
+            <tr>
+              <td><strong>Docker profiles</strong></td>
+              <td><span style="color: var(--amber); font-weight: 700;">Varies</span></td>
+              <td><span class="badge badge-teal" style="margin-left: 0;">Low</span></td>
+              <td>Swap between "full" and "lean" server sets</td>
+            </tr>
+            <tr>
+              <td><strong>mcp-filter proxy</strong></td>
+              <td><span style="color: var(--teal); font-weight: 700;">~72%</span></td>
+              <td><span class="badge badge-amber" style="margin-left: 0;">Medium</span></td>
+              <td>Proxy layer that strips tool definitions before they reach Claude</td>
+            </tr>
+            <tr>
+              <td><strong>Gateway lazy-loading</strong></td>
+              <td><span style="color: var(--accent); font-weight: 700;">~95%</span></td>
+              <td><span class="badge badge-amber" style="margin-left: 0;">Medium</span></td>
+              <td>Replace 400+ tools with ~19 meta-tools; load on demand</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout callout-accent">
+        <div class="callout-title">Start simple</div>
+        <p>Service filtering (<code>--tools</code>) and tier filtering (<code>--tool-tier core</code>) together give you 60&ndash;80% reduction with zero infrastructure changes. Start there. Move to proxy or lazy-loading only when you hit the ceiling.</p>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ============ SECTION 8: QUICK REFERENCE ============ -->
+    <div class="reveal">
+      <h2>Quick Reference</h2>
+
+      <div class="card">
+        <h3>Key takeaways</h3>
+        <p>&bull; <strong>Every tool costs tokens on every message</strong> &mdash; even if never invoked. Fewer tools = longer, smarter conversations.</p>
+        <p>&bull; <strong>200K tokens</strong> covers everything: messages, responses, system instructions, and tool definitions combined.</p>
+        <p>&bull; Use <code>--tools</code> to pick services and <code>--tool-tier core</code> to keep definitions lean. 62% reduction with zero effort.</p>
+        <p>&bull; <strong>Sub-agents inherit all tools.</strong> High tool counts cause them to crash before starting work.</p>
+        <p>&bull; <strong>CLAUDE.md files</strong> brief Claude automatically &mdash; one per folder level, max 200 lines each for 92% rule compliance.</p>
+        <p>&bull; <strong>Prompt cache</strong> has a 5-minute TTL. Stay under 270s to keep it warm, or commit to 20+ minutes to amortize a cold start.</p>
+        <p>&bull; Code CLI and Desktop have <strong>separate configs.</strong> Changes to one don't affect the other.</p>
+        <p style="margin-bottom: 0;">&bull; <strong>Gateway lazy-loading</strong> is the endgame: ~95% token reduction by replacing full catalogs with on-demand meta-tools.</p>
+      </div>
+    </div>
+
+    <!-- ============ FOOTER ============ -->
+    <div class="footer">
+      Built with Claude Code &mdash; April 2026
+    </div>
+
+  </div>
+
+  <!-- ============ SCROLL REVEAL ============ -->
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const reveals = document.querySelectorAll('.reveal');
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('visible');
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.08,
+        rootMargin: '0px 0px -40px 0px'
+      });
+      reveals.forEach(el => observer.observe(el));
+    });
+  </script>
+</body>
+</html>

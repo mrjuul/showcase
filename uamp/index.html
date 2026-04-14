@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>UAMP — Unified Automatic Memory Pipeline</title>
+<meta property="og:title" content="UAMP — Unified Automatic Memory Pipeline">
+<meta property="og:description" content="How Claude Code's memory system evolved from 4-agent pipelines to zero-config persistence — three versions, four layers, one unified approach.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/uamp/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/uamp/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#f0c040">
+<meta name="description" content="How Claude Code's memory system evolved from 4-agent pipelines to zero-config persistence">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,700;1,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0a0e14;
+    --surface-1: #0f1319;
+    --surface-2: #141a22;
+    --surface-3: #1a222c;
+    --border-1: #1a2030;
+    --border-2: #2a3444;
+    --text: #e0e4ea;
+    --text-dim: #7a8494;
+    --text-mid: #99a3b4;
+    --accent: #f0c040;
+    --accent-dim: rgba(240, 192, 64, 0.15);
+    --accent-glow: rgba(240, 192, 64, 0.08);
+    --teal: #5eead4;
+    --teal-dim: rgba(94, 234, 212, 0.12);
+    --red: #f87171;
+    --red-dim: rgba(248, 113, 113, 0.12);
+    --green: #86efac;
+    --purple: #c4b5fd;
+    --font-body: 'DM Sans', sans-serif;
+    --font-heading: 'DM Serif Display', serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-body);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 16px;
+    overflow-x: hidden;
+    background-image:
+      linear-gradient(rgba(240, 192, 64, 0.02) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(240, 192, 64, 0.02) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+  /* ---- HERO ---- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 80px 24px;
+    position: relative;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 200px;
+    background: linear-gradient(transparent, var(--bg));
+    pointer-events: none;
+  }
+  .hero-ascii {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--accent);
+    opacity: 0.55;
+    white-space: pre;
+    margin-bottom: 40px;
+    user-select: none;
+  }
+  .hero-label {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .hero h1 {
+    font-family: var(--font-heading);
+    font-size: clamp(56px, 10vw, 96px);
+    color: var(--text);
+    letter-spacing: -2px;
+    line-height: 1;
+    margin-bottom: 24px;
+  }
+  .hero h1 span { color: var(--accent); }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-dim);
+    max-width: 600px;
+    line-height: 1.6;
+  }
+
+  /* ---- SECTIONS ---- */
+  .section {
+    padding: 100px 0;
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .section h2 {
+    font-family: var(--font-heading);
+    font-size: clamp(32px, 5vw, 44px);
+    color: var(--text);
+    margin-bottom: 28px;
+    line-height: 1.15;
+  }
+  .section p {
+    color: var(--text-mid);
+    margin-bottom: 20px;
+    font-size: 17px;
+    max-width: 780px;
+  }
+  .section p strong { color: var(--text); font-weight: 500; }
+
+  /* ---- STAT ROW ---- */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 16px;
+    margin: 36px 0;
+  }
+  .stat-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+  }
+  .stat-card .value {
+    font-family: var(--font-mono);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent);
+    display: block;
+    margin-bottom: 4px;
+  }
+  .stat-card .label {
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .stat-card.negative .value { color: var(--red); }
+  .stat-card.positive .value { color: var(--green); }
+  .stat-card.teal .value { color: var(--teal); }
+
+  /* ---- PIPELINE DIAGRAM ---- */
+  .pipeline {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin: 32px 0;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.8;
+    color: var(--text-mid);
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .pipeline .accent { color: var(--accent); }
+  .pipeline .teal { color: var(--teal); }
+  .pipeline .dim { color: var(--text-dim); opacity: 0.6; }
+  .pipeline .red { color: var(--red); }
+
+  /* ---- VERSION CARD ---- */
+  .version-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 14px;
+    padding: 32px;
+    margin: 32px 0;
+    position: relative;
+  }
+  .version-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    border-radius: 14px 14px 0 0;
+  }
+  .version-card.v1::before { background: var(--accent); }
+  .version-card.v2::before { background: var(--red); }
+  .version-card.v3::before { background: var(--teal); }
+
+  .version-tag {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+    margin-bottom: 16px;
+  }
+  .version-tag.v1 { background: var(--accent-dim); color: var(--accent); }
+  .version-tag.v2 { background: var(--red-dim); color: var(--red); }
+  .version-tag.v3 { background: var(--teal-dim); color: var(--teal); }
+
+  .version-card h3 {
+    font-family: var(--font-heading);
+    font-size: 26px;
+    margin-bottom: 16px;
+    color: var(--text);
+  }
+
+  /* ---- AGENT LIST ---- */
+  .agent-list {
+    list-style: none;
+    margin: 20px 0;
+  }
+  .agent-list li {
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-1);
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+  }
+  .agent-list li:last-child { border-bottom: none; }
+  .agent-num {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--accent);
+    min-width: 22px;
+  }
+  .agent-name {
+    font-weight: 500;
+    color: var(--text);
+  }
+  .agent-desc {
+    color: var(--text-dim);
+    font-size: 15px;
+  }
+
+  /* ---- COMPARISON TABLE ---- */
+  .comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 32px 0;
+    font-size: 15px;
+  }
+  .comparison-table th {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    text-align: left;
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-2);
+  }
+  .comparison-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-1);
+    color: var(--text-mid);
+    vertical-align: top;
+  }
+  .comparison-table tr:last-child td { border-bottom: none; }
+  .comparison-table .metric { color: var(--text); font-weight: 500; }
+
+  /* ---- LAYERS GRID ---- */
+  .layers-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 32px 0;
+  }
+  @media (max-width: 640px) {
+    .layers-grid { grid-template-columns: 1fr; }
+  }
+  .layer-card {
+    background: var(--surface-2);
+    border: 1px solid var(--border-1);
+    border-radius: 12px;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .layer-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+  }
+  .layer-card:nth-child(1)::before { background: var(--accent); }
+  .layer-card:nth-child(2)::before { background: var(--teal); }
+  .layer-card:nth-child(3)::before { background: var(--purple); }
+  .layer-card:nth-child(4)::before { background: var(--green); }
+
+  .layer-card .layer-num {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+  .layer-card h4 {
+    font-family: var(--font-heading);
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: var(--text);
+  }
+  .layer-card p {
+    font-size: 14px;
+    color: var(--text-dim);
+    margin-bottom: 12px;
+    line-height: 1.6;
+  }
+  .layer-card .layer-stat {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  .layer-card:nth-child(1) .layer-stat { background: var(--accent-dim); color: var(--accent); }
+  .layer-card:nth-child(2) .layer-stat { background: var(--teal-dim); color: var(--teal); }
+  .layer-card:nth-child(3) .layer-stat { background: rgba(196, 181, 253, 0.12); color: var(--purple); }
+  .layer-card:nth-child(4) .layer-stat { background: rgba(134, 239, 172, 0.12); color: var(--green); }
+
+  /* ---- FLOW DIAGRAM ---- */
+  .flow-container {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin: 36px 0;
+  }
+  .flow-step {
+    background: var(--surface-2);
+    border: 1px solid var(--border-2);
+    border-radius: 10px;
+    padding: 14px 20px;
+    font-size: 14px;
+    text-align: center;
+    color: var(--text);
+    min-width: 120px;
+  }
+  .flow-step small {
+    display: block;
+    font-size: 11px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: var(--font-mono);
+  }
+  .flow-arrow {
+    font-size: 20px;
+    color: var(--accent);
+    font-weight: bold;
+  }
+  .flow-step.highlight {
+    border-color: var(--teal);
+    background: var(--teal-dim);
+  }
+
+  /* ---- INSIGHT CARDS ---- */
+  .insight-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 32px 0;
+  }
+  @media (max-width: 640px) {
+    .insight-grid { grid-template-columns: 1fr; }
+  }
+  .insight-card {
+    background: var(--surface-1);
+    border: 1px solid var(--border-1);
+    border-radius: 12px;
+    padding: 24px;
+  }
+  .insight-card .insight-icon {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    margin-bottom: 12px;
+    color: var(--accent);
+  }
+  .insight-card p {
+    font-size: 15px;
+    color: var(--text-mid);
+    line-height: 1.6;
+    margin-bottom: 0;
+  }
+  .insight-card p strong { color: var(--text); }
+
+  /* ---- TIMELINE ---- */
+  .timeline {
+    position: relative;
+    margin: 48px 0;
+    padding-left: 40px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 14px;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: linear-gradient(
+      var(--accent),
+      var(--accent) 30%,
+      var(--red) 50%,
+      var(--teal) 75%,
+      var(--teal)
+    );
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 36px;
+  }
+  .timeline-item:last-child { margin-bottom: 0; }
+  .timeline-dot {
+    position: absolute;
+    left: -32px;
+    top: 6px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+  }
+  .timeline-item.v1 .timeline-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent-glow); }
+  .timeline-item.review .timeline-dot { background: var(--red); }
+  .timeline-item.v2 .timeline-dot { background: var(--red); }
+  .timeline-item.v3 .timeline-dot { background: var(--teal); box-shadow: 0 0 8px rgba(94, 234, 212, 0.2); }
+  .timeline-item.current .timeline-dot {
+    background: var(--teal);
+    box-shadow: 0 0 12px rgba(94, 234, 212, 0.3);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 8px rgba(94, 234, 212, 0.2); }
+    50% { box-shadow: 0 0 20px rgba(94, 234, 212, 0.4); }
+  }
+  .timeline-date {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-bottom: 6px;
+  }
+  .timeline-title {
+    font-weight: 500;
+    font-size: 17px;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .timeline-desc {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ---- DIVIDER ---- */
+  .divider {
+    border: none;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-2), transparent);
+    margin: 60px 0;
+  }
+
+  /* ---- STRIKETHROUGH TEXT ---- */
+  .struck {
+    text-decoration: line-through;
+    color: var(--text-dim);
+    opacity: 0.6;
+  }
+
+  /* ---- FOOTER ---- */
+  .site-footer {
+    text-align: center;
+    padding: 60px 24px 40px;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-dim);
+  }
+  .site-footer .footer-line {
+    margin-bottom: 4px;
+  }
+  .site-footer a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 600px) {
+    .hero-ascii { font-size: 8px; }
+    .section { padding: 60px 0; }
+    .pipeline { font-size: 11px; padding: 20px; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .version-card { padding: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ HERO ============ -->
+<section class="hero">
+  <div class="hero-ascii" aria-hidden="true">
+         _______________
+        /               \
+       /   ___________   \
+      |   |  MEMORY   |   |
+      |   |  ||||||||  |   |
+      |   |  ||||||||  |   |
+      |   |  ||||||||  |   |
+      |   |___________|   |
+      |    ___________    |
+      |   |  SESSION  |   |
+      |   |  ========  |   |
+      |   |___________|   |
+       \                 /
+        \_______________/
+        |   |   |   |   |
+        |   |   |   |   |
+    ====+===+===+===+====
+    L1  L2  L3  L4  OUT</div>
+  <div class="hero-label">Unified Automatic Memory Pipeline</div>
+  <h1>U<span>A</span>MP</h1>
+  <p class="hero-sub">How Claude Code's memory system evolved from 4-agent pipelines to zero-config persistence</p>
+</section>
+
+<!-- ============ SECTION 1: THE PROBLEM ============ -->
+<section class="section" id="problem">
+  <div class="container">
+    <div class="section-label">Section 01</div>
+    <h2>The Problem</h2>
+    <p>Claude Code sessions are ephemeral. When a session ends, everything learned &mdash; decisions, context, relationships &mdash; vanishes. The next session starts cold.</p>
+    <p>For someone running infrastructure across <strong>multiple PCs</strong>, managing <strong>4 nonprofit boards</strong>, operating a <strong>NAS with Docker</strong>, and maintaining a personal knowledge vault, this is unacceptable. Every session restart means re-explaining the same architecture, the same conventions, the same project state.</p>
+    <p>The question: <strong>how do you make Claude remember everything, automatically, across sessions and machines?</strong></p>
+
+    <div class="stat-row">
+      <div class="stat-card negative">
+        <span class="value">0</span>
+        <span class="label">Context retained between sessions (default)</span>
+      </div>
+      <div class="stat-card">
+        <span class="value">2</span>
+        <span class="label">Machines sharing the same setup</span>
+      </div>
+      <div class="stat-card">
+        <span class="value">1,363</span>
+        <span class="label">Native sessions generated</span>
+      </div>
+      <div class="stat-card">
+        <span class="value">331 MB</span>
+        <span class="label">Native JSONL transcript data</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 2: UAMP v1 ============ -->
+<section class="section" id="v1">
+  <div class="container">
+    <div class="section-label">Section 02</div>
+    <h2>UAMP v1 &mdash; The Full Pipeline</h2>
+    <p><strong>March 2026.</strong> The original design was ambitious: 4 specialized agents running automatically, capturing every tool call and distilling it into persistent knowledge.</p>
+
+    <div class="version-card v1">
+      <span class="version-tag v1">V1 — MARCH 2026</span>
+      <h3>The 4-Agent Architecture</h3>
+      <ul class="agent-list">
+        <li>
+          <span class="agent-num">01</span>
+          <div>
+            <span class="agent-name">claude-mem plugin</span> &mdash;
+            <span class="agent-desc">PostToolUse hook. Runs Haiku on every tool call to classify observations. Writes to SQLite.</span>
+          </div>
+        </li>
+        <li>
+          <span class="agent-num">02</span>
+          <div>
+            <span class="agent-name">Export agent</span> &mdash;
+            <span class="agent-desc">Stop hook. Reads claude-mem SQLite, produces Obsidian-formatted markdown in the vault. 315 lines of JS.</span>
+          </div>
+        </li>
+        <li>
+          <span class="agent-num">03</span>
+          <div>
+            <span class="agent-name">obsidian-git</span> &mdash;
+            <span class="agent-desc">10-minute auto-commit cycle. Syncs vault changes from all sources (Code, Desktop, manual edits).</span>
+          </div>
+        </li>
+        <li>
+          <span class="agent-num">04</span>
+          <div>
+            <span class="agent-name">Nightly scheduled task</span> &mdash;
+            <span class="agent-desc">22:00 run. Opus-powered knowledge extraction, auto-memory updates, SPEC changelog generation.</span>
+          </div>
+        </li>
+      </ul>
+    </div>
+
+    <div class="pipeline"><span class="accent">Tool call</span> <span class="dim">──▸</span> claude-mem classifies (Haiku) <span class="dim">──▸</span> Export to Obsidian <span class="dim">──▸</span> Git sync <span class="dim">──▸</span> Nightly extraction (Opus)
+   <span class="dim">│</span>                          <span class="dim">│</span>                        <span class="dim">│</span>                   <span class="dim">│</span>
+   <span class="dim">│</span>  PostToolUse hook         <span class="dim">│</span>  Stop hook (315 lines)   <span class="dim">│</span>  obsidian-git       <span class="dim">│</span>  Scheduled task
+   <span class="dim">│</span>  ~739 calls/day           <span class="dim">│</span>  SQLite → Markdown       <span class="dim">│</span>  10-min cycle        <span class="dim">│</span>  4 nightly jobs
+   <span class="dim">▼</span>                          <span class="dim">▼</span>                        <span class="dim">▼</span>                   <span class="dim">▼</span>
+<span class="accent">SQLite DB</span>               <span class="accent">vault/sessions/</span>          <span class="accent">GitHub</span>              <span class="accent">vault/knowledge/</span></div>
+
+    <div class="stat-row">
+      <div class="stat-card negative">
+        <span class="value">$17</span>
+        <span class="label">Monthly cost</span>
+      </div>
+      <div class="stat-card negative">
+        <span class="value">~739</span>
+        <span class="label">Haiku calls per day</span>
+      </div>
+      <div class="stat-card negative">
+        <span class="value">35-40%</span>
+        <span class="label">Observation overlap</span>
+      </div>
+      <div class="stat-card negative">
+        <span class="value">360</span>
+        <span class="label">Lines of hook code</span>
+      </div>
+    </div>
+
+    <p>It worked. But a 4-agent expert review found the fundamental problem: <strong>35-40% of observations overlapped with what native auto-memory already captured for free.</strong> Sessions were bloated with meta-operations. The pipeline was, in the reviewers' words, "over-engineered for the problem it solves."</p>
+  </div>
+</section>
+
+<!-- ============ SECTION 3: UAMP v2 ============ -->
+<section class="section" id="v2">
+  <div class="container">
+    <div class="section-label">Section 03</div>
+    <h2>UAMP v2 &mdash; The Simplification</h2>
+    <p><strong>April 2, 2026.</strong> Radical simplification. Rip out everything except what Claude Code provides natively.</p>
+
+    <div class="version-card v2">
+      <span class="version-tag v2">V2 — APRIL 2026</span>
+      <h3>The Purge</h3>
+
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th>Component</th>
+            <th>V1</th>
+            <th>V2</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="metric">claude-mem PostToolUse</td>
+            <td>Active (all tool calls)</td>
+            <td><span class="struck">Disabled entirely</span></td>
+          </tr>
+          <tr>
+            <td class="metric">Export agent</td>
+            <td>315-line Stop hook</td>
+            <td><span class="struck">Removed</span></td>
+          </tr>
+          <tr>
+            <td class="metric">Nightly task</td>
+            <td>4 Opus-powered jobs</td>
+            <td><span class="struck">Removed</span></td>
+          </tr>
+          <tr>
+            <td class="metric">Session persistence</td>
+            <td>SQLite + Obsidian export</td>
+            <td>Native auto-memory only</td>
+          </tr>
+          <tr>
+            <td class="metric">Monthly cost</td>
+            <td>$17</td>
+            <td>$0</td>
+          </tr>
+          <tr>
+            <td class="metric">Hook code</td>
+            <td>360 lines</td>
+            <td>45 lines</td>
+          </tr>
+          <tr>
+            <td class="metric">Fragility</td>
+            <td>6/10</td>
+            <td>2/10</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <p>Clean. Zero cost. Two tiny hooks (vault-pull + session-end) totaling 45 lines. But something was lost.</p>
+    <p>Each session started with <strong>only CLAUDE.md context</strong>. No awareness of what happened yesterday. No nuanced decisions preserved. No relationship context. The 80% that auto-memory covered was fine. The 20% it missed &mdash; the why behind decisions, the cross-project connections &mdash; was gone.</p>
+
+    <div class="stat-row">
+      <div class="stat-card positive">
+        <span class="value">$0</span>
+        <span class="label">Monthly cost</span>
+      </div>
+      <div class="stat-card positive">
+        <span class="value">45</span>
+        <span class="label">Lines of hook code</span>
+      </div>
+      <div class="stat-card negative">
+        <span class="value">0%</span>
+        <span class="label">Cross-session continuity</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 4: UAMP v3 ============ -->
+<section class="section" id="v3">
+  <div class="container">
+    <div class="section-label">Section 04</div>
+    <h2>UAMP v3 &mdash; The Unified Approach</h2>
+    <p><strong>April 11, 2026.</strong> The current architecture. Re-enabled claude-mem, but with a narrow focus: capture only meaningful work (Edit, Write, Bash, MCP calls), skip navigation noise (Read, Grep, Glob). Four persistence layers, three independent context sources at session start.</p>
+
+    <div class="version-card v3">
+      <span class="version-tag v3">V3 — CURRENT</span>
+      <h3>Four Persistence Layers</h3>
+    </div>
+
+    <div class="layers-grid">
+      <div class="layer-card">
+        <div class="layer-num">LAYER 1</div>
+        <h4>Native Auto-Memory</h4>
+        <p>Facts per project, symlinked to vault/memory/. Auto-loaded every session. Zero cost. Covers feedback, project state, references.</p>
+        <span class="layer-stat">52 files &bull; 100% retrieval</span>
+      </div>
+      <div class="layer-card">
+        <div class="layer-num">LAYER 2</div>
+        <h4>CLAUDE.md + SPEC.md</h4>
+        <p>Convention chain loaded bottom-up. Project status via SPEC.md changelog. The changelog IS the session handoff.</p>
+        <span class="layer-stat">28 files &bull; 1,129 lines</span>
+      </div>
+      <div class="layer-card">
+        <div class="layer-num">LAYER 3</div>
+        <h4>Claude-Mem</h4>
+        <p>PostToolUse captures Edit/Write/Bash/MCP calls. SessionStart injects top observations. Cross-session SQLite searchable via MCP.</p>
+        <span class="layer-stat">~$0.05/session &bull; Haiku</span>
+      </div>
+      <div class="layer-card">
+        <div class="layer-num">LAYER 4</div>
+        <h4>Vault</h4>
+        <p>Obsidian knowledge base, GitHub-synced. Curated entries for permanent reference. Graph-aware search via Graphthulhu MCP.</p>
+        <span class="layer-stat">26+ entries &bull; on-demand</span>
+      </div>
+    </div>
+
+    <div class="pipeline"><span class="teal">SessionStart</span>
+  <span class="dim">├──</span> vault-pull.js <span class="dim">(16 lines — git pull vault)</span>
+  <span class="dim">├──</span> claude-mem injects last 12 observations
+  <span class="dim">└──</span> native auto-memory loaded <span class="dim">(52 files)</span>
+
+<span class="teal">During Session</span>
+  <span class="dim">├──</span> CLAUDE.md chain <span class="dim">(28 files, always loaded)</span>
+  <span class="dim">├──</span> claude-mem PostToolUse <span class="dim">(Edit/Write/Bash/MCP only)</span>
+  <span class="dim">├──</span> Graphthulhu MCP <span class="dim">(vault search on-demand)</span>
+  <span class="dim">└──</span> claude-mem MCP <span class="dim">(cross-session search)</span>
+
+<span class="teal">End of Session</span>
+  <span class="dim">├──</span> <span class="accent">/reflect</span> <span class="dim">→ SPEC.md reconciliation + knowledge detection</span>
+  <span class="dim">├──</span> <span class="accent">/ship</span> <span class="dim">→ git commit+push (ClaudeHub + vault)</span>
+  <span class="dim">└──</span> session-end.js <span class="dim">(29 lines, async git commit+push)</span></div>
+  </div>
+</section>
+
+<!-- ============ SECTION 5: SESSION WORKFLOW ============ -->
+<section class="section" id="workflow">
+  <div class="container">
+    <div class="section-label">Section 05</div>
+    <h2>The Session Workflow</h2>
+    <p>The daily rhythm that replaced the automated pipeline. Two independent skills, deliberately unbundled.</p>
+
+    <div class="flow-container">
+      <div class="flow-step">
+        Work
+        <small>edit / build / research</small>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step highlight">
+        /reflect
+        <small>SPEC.md + knowledge</small>
+      </div>
+      <span class="flow-arrow">&rarr;</span>
+      <div class="flow-step highlight">
+        /ship
+        <small>git commit + push</small>
+      </div>
+    </div>
+
+    <p><strong>/reflect</strong> proposes SPEC.md changelog entries, detects knowledge worth capturing as vault entries, and checks if CLAUDE.md conventions need updating. It is the intelligence layer.</p>
+    <p><strong>/ship</strong> commits and pushes to both ClaudeHub and vault repos. It is pure mechanics.</p>
+    <p>Key design decision: these are <strong>separate skills</strong>, not bundled. UAMP v1 failed precisely because bundling created coupled failure modes. When the export hook broke, git sync broke too. Independent skills = independent failure.</p>
+
+    <div class="version-card v3" style="margin-top: 32px">
+      <span class="version-tag v3">DESIGN PRINCIPLE</span>
+      <h3>Decouple Intelligence from Mechanics</h3>
+      <p style="color: var(--text-mid); margin-bottom: 0;">/reflect can fail without breaking /ship. /ship can fail without losing /reflect's analysis. The vault still auto-commits via obsidian-git as a fallback. Each component operates independently. No cascading failures.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ SECTION 6: LESSONS ============ -->
+<section class="section" id="lessons">
+  <div class="container">
+    <div class="section-label">Section 06</div>
+    <h2>What Actually Works</h2>
+    <p>Six lessons from three architectures, extracted through expert reviews and daily use.</p>
+
+    <div class="insight-grid">
+      <div class="insight-card">
+        <div class="insight-icon">//</div>
+        <p><strong>Native auto-memory covers 80%</strong> of cross-session needs at zero cost. Don't build what the platform gives you for free.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">&gt;_</div>
+        <p><strong>SPEC.md changelog IS the session handoff.</strong> The next session reads it first. No separate handoff mechanism needed.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">db</div>
+        <p><strong>claude-mem's value is the 20%</strong> that auto-memory misses: nuanced decisions, relationship context, things that aren't in any file.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">^^</div>
+        <p><strong>Skills read their own feedback.</strong> Each skill has a feedback.md. The system improves itself across sessions.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">[]</div>
+        <p><strong>Vault knowledge entries are the permanent record.</strong> Everything else is working cache. Design for this hierarchy.</p>
+      </div>
+      <div class="insight-card">
+        <div class="insight-icon">&lt;&gt;</div>
+        <p><strong>Split /reflect from /ship.</strong> Independent failure modes. Never bundle intelligence with mechanics.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider">
+
+<!-- ============ SECTION 7: TIMELINE ============ -->
+<section class="section" id="timeline">
+  <div class="container">
+    <div class="section-label">Section 07</div>
+    <h2>The Journey</h2>
+
+    <div class="timeline">
+      <div class="timeline-item v1">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">March 2026</div>
+        <div class="timeline-title">v1 designed and deployed</div>
+        <div class="timeline-desc">4-agent pipeline: claude-mem PostToolUse, 315-line export hook, obsidian-git, nightly Opus extraction. Full automatic capture. $17/month.</div>
+      </div>
+
+      <div class="timeline-item v1">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Late March 2026</div>
+        <div class="timeline-title">Three-agent engineering review</div>
+        <div class="timeline-desc">Hook reliability fixes. SessionEnd replaced with Stop hooks (SessionEnd doesn't fire on /exit or Ctrl+C). Async git. Stale hooks removed.</div>
+      </div>
+
+      <div class="timeline-item review">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">March 30, 2026</div>
+        <div class="timeline-title">Expert review finds 35-40% overlap</div>
+        <div class="timeline-desc">4-agent critical review + devil's advocate concludes: over-engineered for the problem it solves. Native auto-memory covers most of what claude-mem captures.</div>
+      </div>
+
+      <div class="timeline-item v2">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">April 2, 2026</div>
+        <div class="timeline-title">v2 simplification</div>
+        <div class="timeline-desc">Removed: export hook, claude-mem PostToolUse, nightly task, /wrap-up. Cost: $17 &rarr; $0. Hook code: 360 &rarr; 45 lines. Fragility: 6/10 &rarr; 2/10.</div>
+      </div>
+
+      <div class="timeline-item v3">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">April 11, 2026</div>
+        <div class="timeline-title">v3 unified architecture</div>
+        <div class="timeline-desc">Adversarial review of full memory system. Claude-mem re-enabled with narrow skip list. /reflect skill created. /save-session deprecated (4% usage). Split /ship and /reflect.</div>
+      </div>
+
+      <div class="timeline-item current">
+        <div class="timeline-dot"></div>
+        <div class="timeline-date">Current</div>
+        <div class="timeline-title">Stable production</div>
+        <div class="timeline-desc">4 persistence layers. 3 context sources at session start. $0.05/session. 52 auto-memory files. 28 CLAUDE.md files. 26+ vault knowledge entries.</div>
+      </div>
+    </div>
+
+    <!-- Final comparison -->
+    <table class="comparison-table" style="margin-top: 48px;">
+      <thead>
+        <tr>
+          <th>Metric</th>
+          <th>V1</th>
+          <th>V2</th>
+          <th>V3</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="metric">Monthly cost</td>
+          <td>$17</td>
+          <td>$0</td>
+          <td>~$1.50</td>
+        </tr>
+        <tr>
+          <td class="metric">Hook code</td>
+          <td>360 lines</td>
+          <td>45 lines</td>
+          <td>45 lines</td>
+        </tr>
+        <tr>
+          <td class="metric">Fragility</td>
+          <td>6/10</td>
+          <td>2/10</td>
+          <td>2/10</td>
+        </tr>
+        <tr>
+          <td class="metric">Cross-session memory</td>
+          <td>Full (over-captured)</td>
+          <td>None</td>
+          <td>Targeted (Edit/Write/Bash/MCP)</td>
+        </tr>
+        <tr>
+          <td class="metric">Context at session start</td>
+          <td>1 source</td>
+          <td>2 sources</td>
+          <td>3 sources</td>
+        </tr>
+        <tr>
+          <td class="metric">Session handoff</td>
+          <td>Automatic (fragile)</td>
+          <td>CLAUDE.md only</td>
+          <td>SPEC.md changelog + claude-mem</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="footer-line">Built with Claude Code &mdash; April 2026</div>
+  <div class="footer-line"><a href="https://github.com/mrjuul">mrjuul</a></div>
+</footer>
+
+<!-- ============ SCROLL ANIMATIONS ============ -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const sections = document.querySelectorAll('.section');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('visible');
+        }
+      });
+    }, {
+      threshold: 0.08,
+      rootMargin: '0px 0px -40px 0px'
+    });
+    sections.forEach(s => observer.observe(s));
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,860 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClaudeHub Cheat Sheet</title>
+<meta property="og:title" content="ClaudeHub Cheat Sheet">
+<meta property="og:description" content="Every command, skill, agent, hook, and rule at a glance — the complete ClaudeHub quick reference.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/cheatsheet/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/cheatsheet/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#c4a1ff">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a14;
+    --surface: #0f1019;
+    --surface2: #151720;
+    --surface3: #1a1d2a;
+    --border: #1e2133;
+    --border2: #282d40;
+    --text: #e1e4ed;
+    --dim: #7f849a;
+    --accent: #c4a1ff;
+    --accent-dim: #9b7dd4;
+    --accent2: #7dd3fc;
+    --accent2-dim: #5ba8cc;
+    --green: #86efac;
+    --green-dim: #2a3a2e;
+    --red: #fca5a5;
+    --red-dim: #3a2a2a;
+    --orange: #fdba74;
+    --orange-dim: #3a3020;
+    --yellow: #fde68a;
+    --purple-bg: rgba(196,161,255,0.06);
+    --blue-bg: rgba(125,211,252,0.06);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .container {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* ── Hero ── */
+  .hero {
+    text-align: center;
+    padding: 72px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+
+  .hero-ascii {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    line-height: 1.3;
+    color: var(--accent-dim);
+    margin-bottom: 24px;
+    opacity: 0.7;
+    white-space: pre;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 42px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  .hero .subtitle {
+    color: var(--dim);
+    font-size: 15px;
+    margin-bottom: 12px;
+  }
+
+  .hero .date {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2-dim);
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Sections ── */
+  section {
+    margin-bottom: 48px;
+    opacity: 0;
+    transform: translateY(16px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+  }
+
+  section.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px;
+    color: var(--accent2);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  h2 .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent-dim);
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 2px 8px;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Tables ── */
+  .ref-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    margin-bottom: 8px;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .ref-table thead th {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--dim);
+    background: var(--surface2);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .ref-table td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+
+  .ref-table tr:last-child td { border-bottom: none; }
+
+  .ref-table tr:hover { background: var(--surface2); }
+
+  .cmd {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    font-size: 12.5px;
+    white-space: nowrap;
+  }
+
+  .path {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent2);
+    font-size: 12px;
+  }
+
+  .dim { color: var(--dim); }
+
+  /* ── Tags / Badges ── */
+  .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    padding: 2px 7px;
+    border-radius: 3px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    display: inline-block;
+  }
+
+  .tag-v1 { background: var(--green-dim); color: var(--green); border: 1px solid #345; }
+  .tag-v0 { background: var(--orange-dim); color: var(--orange); border: 1px solid #453; }
+  .tag-dep { background: var(--red-dim); color: var(--red); border: 1px solid #433; text-decoration: line-through; }
+  .tag-plugin { background: var(--surface3); color: var(--dim); border: 1px solid var(--border2); }
+  .tag-allow { background: var(--green-dim); color: var(--green); border: 1px solid #345; }
+  .tag-deny { background: var(--red-dim); color: var(--red); border: 1px solid #433; }
+  .tag-scope {
+    background: var(--purple-bg);
+    color: var(--accent);
+    border: 1px solid rgba(196,161,255,0.2);
+  }
+  .tag-blue {
+    background: var(--blue-bg);
+    color: var(--accent2);
+    border: 1px solid rgba(125,211,252,0.2);
+  }
+
+  /* ── Grid layouts ── */
+  .grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+
+  .grid-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px;
+  }
+
+  .card h3 {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--accent2);
+    margin-bottom: 12px;
+  }
+
+  .card ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .card li {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12.5px;
+    padding: 4px 0;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .card li .dim {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+  }
+
+  .bullet {
+    color: var(--accent-dim);
+    font-size: 8px;
+  }
+
+  /* ── Key paths box ── */
+  .paths-grid {
+    display: grid;
+    grid-template-columns: 140px 1fr;
+    gap: 4px 16px;
+    font-size: 13px;
+  }
+
+  .paths-grid .label {
+    font-family: 'DM Sans', sans-serif;
+    color: var(--dim);
+    text-align: right;
+    padding: 3px 0;
+  }
+
+  .paths-grid .value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--accent2);
+    padding: 3px 0;
+  }
+
+  /* ── Workflow box ── */
+  .workflow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding: 8px 0;
+  }
+
+  .workflow .step {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--accent);
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    padding: 6px 14px;
+  }
+
+  .workflow .arrow {
+    color: var(--dim);
+    font-size: 16px;
+  }
+
+  .doc-stack {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0;
+  }
+
+  .doc-stack .doc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--border2);
+  }
+
+  .doc-stack .doc:nth-child(1) { background: rgba(196,161,255,0.1); color: var(--accent); }
+  .doc-stack .doc:nth-child(3) { background: rgba(125,211,252,0.1); color: var(--accent2); }
+  .doc-stack .doc:nth-child(5) { background: rgba(253,186,116,0.1); color: var(--orange); }
+
+  /* ── Footer ── */
+  footer {
+    text-align: center;
+    padding: 32px 0;
+    border-top: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.04em;
+  }
+
+  /* ── Strikethrough for deprecated ── */
+  .deprecated { text-decoration: line-through; color: var(--dim); }
+
+  /* ── Responsive ── */
+  @media (max-width: 700px) {
+    .grid-3 { grid-template-columns: 1fr; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .hero h1 { font-size: 30px; }
+    .hero-ascii { font-size: 9px; }
+    .ref-table { font-size: 12px; }
+    .ref-table td, .ref-table thead th { padding: 7px 10px; }
+    .paths-grid { grid-template-columns: 1fr; }
+    .paths-grid .label { text-align: left; }
+  }
+
+  /* ── Nav ── */
+  .toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 48px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .toc a {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--dim);
+    text-decoration: none;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+
+  .toc a:hover {
+    color: var(--accent);
+    border-color: var(--accent-dim);
+    background: var(--surface2);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Hero -->
+  <header class="hero">
+    <div class="hero-ascii">
+  ___ _                _      _  _       _
+ / __| |__ _ _  _ __ | |___ | || |_  _ | |__
+| (__| / _` | || / _`|| / -_)| __ | || || '_ \
+ \___|_\__,_|\_,_\__,_|_\___||_||_|\_,_||_.__/
+    &gt;_  cheatsheet v2  |  web edition
+    </div>
+    <h1>ClaudeHub Cheat Sheet</h1>
+    <p class="subtitle">Commands, skills, agents, hooks &amp; rules &mdash; everything at a glance</p>
+    <p class="date">Updated 2026-04-13</p>
+  </header>
+
+  <!-- TOC -->
+  <nav class="toc">
+    <a href="#commands">Commands</a>
+    <a href="#skills">Skills</a>
+    <a href="#builtins">Built-ins</a>
+    <a href="#agents">Agents</a>
+    <a href="#hooks">Hooks</a>
+    <a href="#rules">Rules</a>
+    <a href="#domains">Domains</a>
+    <a href="#reference">Reference</a>
+    <a href="#keys">Keys</a>
+  </nav>
+
+  <!-- Section 1: Slash Commands -->
+  <section id="commands">
+    <h2><span class="section-num">01</span> Slash Commands</h2>
+    <table class="ref-table">
+      <thead><tr><th>Command</th><th>Description</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="cmd">/health-check</span></td>
+          <td>Infrastructure health: MCP servers, GitHub auth, vault git, Dinero</td>
+          <td class="dim">Status table OK / WARN / CRIT</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/audit-usage</span></td>
+          <td>Tool telemetry analysis: top tools, unused MCPs, denied calls</td>
+          <td><span class="path">vault/telemetry/tool-calls.jsonl</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/what-changed</span></td>
+          <td>CLAUDE.md, rules, skill changes since last commit</td>
+          <td class="dim">Flags cross-project impact</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/context-check</span></td>
+          <td>Show loaded CLAUDE.md chain, MCP servers, permissions, domain</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/measure-hierarchy</span></td>
+          <td>Token cost of CLAUDE.md hierarchy for current cwd</td>
+          <td class="dim">Lines, chars, tokens</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/toggle-workspace</span></td>
+          <td>Toggle all Google Workspace MCPs on/off</td>
+          <td class="dim">Requires session restart</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/expert-review</span></td>
+          <td>Run expert-review skill on a document</td>
+          <td></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 2: Skills -->
+  <section id="skills">
+    <h2><span class="section-num">02</span> Skills <span class="tag tag-blue">16</span></h2>
+    <table class="ref-table">
+      <thead><tr><th>Skill</th><th>Description</th><th>Args</th><th>Maturity</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="cmd">/board-email</span></td>
+          <td>Org emails, Danish formal tone, role-aware routing</td>
+          <td><span class="dim">[org-name]</span></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/financial-auditor</span></td>
+          <td>Audit finances, cross-ref Dinero. Two-tier materiality</td>
+          <td><span class="dim">&lt;org&gt; [period]</span></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/humanizer</span></td>
+          <td>Rewrite AI text naturally. Danish &amp; English</td>
+          <td></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/knowledge</span></td>
+          <td>Rich vault entries with tables, diagrams, wiki-links</td>
+          <td></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/mcp-health</span></td>
+          <td>Ping all MCP servers, report status</td>
+          <td></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/kb-audit</span></td>
+          <td>Vault audit: stale entries, tag consistency, coverage gaps</td>
+          <td></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/feedback</span></td>
+          <td>Log skill corrections to feedback/log.jsonl</td>
+          <td><span class="dim">&lt;skill&gt; &lt;issue&gt;</span></td>
+          <td><span class="tag tag-v1">v1</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/deep-research</span></td>
+          <td>Multi-source parallel research with quality scoring</td>
+          <td><span class="dim">topic [--mode=quick|comprehensive]</span></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/expert-review</span></td>
+          <td>Expert panel critique, configurable teams, consensus</td>
+          <td><span class="dim">file [--quick] [--team=path]</span></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/adversarial-analysis</span></td>
+          <td>Bias-reduced qualitative analysis with stress-testing</td>
+          <td></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/reflect</span></td>
+          <td>SPEC.md reconciliation + knowledge capture. Run before /ship</td>
+          <td></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/ship</span></td>
+          <td>Git commit+push session work (ClaudeHub + vault)</td>
+          <td></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/showcase</span></td>
+          <td>Session work &rarr; published HTML showcase page</td>
+          <td><span class="dim">[file|topic]</span></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/injection-detector</span></td>
+          <td>Scan context for prompt injection patterns</td>
+          <td><span class="dim">email|web|api|all</span></td>
+          <td><span class="tag tag-v0">v0</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/simplify</span></td>
+          <td>Review code for reuse, quality, efficiency</td>
+          <td class="dim">Auto after edits</td>
+          <td><span class="tag tag-plugin">plugin</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">/claude-api</span></td>
+          <td>Help with Claude API / Anthropic SDK / Agent SDK</td>
+          <td class="dim">Auto on imports</td>
+          <td><span class="tag tag-plugin">plugin</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd deprecated">/save-session</span></td>
+          <td class="deprecated">DEPRECATED &mdash; use /reflect + /ship</td>
+          <td></td>
+          <td><span class="tag tag-dep">dep</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 3: Built-in Claude Code Commands -->
+  <section id="builtins">
+    <h2><span class="section-num">03</span> Built-in Claude Code Commands</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Session</h3>
+        <ul>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/help</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/clear</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/compact</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/fast</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Context</h3>
+        <ul>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/add-dir</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/context</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/cost</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/debug</span></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Workflow</h3>
+        <ul>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/review</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/init</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">/batch</span></li>
+          <li><span class="bullet">&#9656;</span> <span class="cmd">Shift+Tab</span> <span class="dim">plan mode</span></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: Agents -->
+  <section id="agents">
+    <h2><span class="section-num">04</span> Agents <span class="tag tag-blue">5</span></h2>
+    <table class="ref-table">
+      <thead><tr><th>Agent</th><th>Description</th><th>Scope</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="cmd">ops</span></td>
+          <td>Infrastructure health, MCP, Docker, NAS diagnostics</td>
+          <td><span class="tag tag-scope">tech/</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">secretary</span></td>
+          <td>Board meeting prep, agendas, financials, Asana, correspondence</td>
+          <td><span class="tag tag-scope">orgs/</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">config-auditor</span></td>
+          <td>Config hygiene: CLAUDE.md size, skill duplication, permissions</td>
+          <td><span class="tag tag-blue">any</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">researcher</span></td>
+          <td>Cross-org research via Google Workspace, Asana, Drive</td>
+          <td><span class="tag tag-scope">orgs/</span></td>
+        </tr>
+        <tr>
+          <td><span class="cmd">reviewer</span></td>
+          <td>Code/doc review against CLAUDE.md conventions, security</td>
+          <td><span class="tag tag-scope">tech/</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 5: Hook Rules -->
+  <section id="hooks">
+    <h2><span class="section-num">05</span> Hook Rules <span class="tag tag-blue">7 rules + 3 whitelists</span></h2>
+    <table class="ref-table">
+      <thead><tr><th>#</th><th>Rule</th><th>Type</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="dim">W1</td>
+          <td>Vault writes allowed from any workspace</td>
+          <td><span class="tag tag-allow">allow</span></td>
+        </tr>
+        <tr>
+          <td class="dim">W2</td>
+          <td>Filesystem reads allowed everywhere</td>
+          <td><span class="tag tag-allow">allow</span></td>
+        </tr>
+        <tr>
+          <td class="dim">W3</td>
+          <td>Skills directory accessible from everywhere</td>
+          <td><span class="tag tag-allow">allow</span></td>
+        </tr>
+        <tr>
+          <td class="dim">1</td>
+          <td>Email tool must match cwd org domain</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+        <tr>
+          <td class="dim">2</td>
+          <td>SSH blocked in orgs/ and personal/</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+        <tr>
+          <td class="dim">3</td>
+          <td>Google Workspace blocked in tech/</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+        <tr>
+          <td class="dim">4</td>
+          <td>sshpass / iptables / nmap / wsl blocked in orgs/ and personal/</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+        <tr>
+          <td class="dim">5</td>
+          <td>Org MCP servers blocked in personal/</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+        <tr>
+          <td class="dim">6</td>
+          <td>Windows-MCP infra blocked in orgs/</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+        <tr>
+          <td class="dim">7</td>
+          <td>Hardcoded NAS credentials blocked everywhere</td>
+          <td><span class="tag tag-deny">deny</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 6: Rules Files -->
+  <section id="rules">
+    <h2><span class="section-num">06</span> Rules Files <span class="tag tag-blue">5 always loaded</span></h2>
+    <table class="ref-table">
+      <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="path">email-routing.md</span></td>
+          <td>Strict account mapping per org domain &mdash; never cross accounts</td>
+        </tr>
+        <tr>
+          <td><span class="path">containment.md</span></td>
+          <td>No filesystem/cmd/push in same turn as untrusted content</td>
+        </tr>
+        <tr>
+          <td><span class="path">security.md</span></td>
+          <td>No hardcoded secrets, confirm before delete / email / push</td>
+        </tr>
+        <tr>
+          <td><span class="path">mcp-hygiene.md</span></td>
+          <td>State tool + reason, max 3 chained MCP calls without confirmation</td>
+        </tr>
+        <tr>
+          <td><span class="path">source-availability.md</span></td>
+          <td>Verify sources reachable, never produce silently partial results</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Section 7: Workspace Domains -->
+  <section id="domains">
+    <h2><span class="section-num">07</span> Workspace Domains</h2>
+    <div class="grid-3">
+      <div class="card">
+        <h3>tech/</h3>
+        <ul>
+          <li><span class="tag tag-allow" style="font-size:9px">allow</span> SSH, Windows-MCP, Bash</li>
+          <li><span class="tag tag-deny" style="font-size:9px">deny</span> Google Workspace, Gmail</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>orgs/</h3>
+        <ul>
+          <li><span class="tag tag-allow" style="font-size:9px">allow</span> GWorkspace, Dinero, Asana</li>
+          <li><span class="tag tag-deny" style="font-size:9px">deny</span> SSH, nmap, Win-MCP</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>personal/</h3>
+        <ul>
+          <li><span class="tag tag-allow" style="font-size:9px">allow</span> Personal Gmail only</li>
+          <li><span class="tag tag-deny" style="font-size:9px">deny</span> SSH, nmap, org MCPs</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 8: Quick Reference -->
+  <section id="reference">
+    <h2><span class="section-num">08</span> Quick Reference</h2>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Key Paths</h3>
+        <div class="paths-grid">
+          <span class="label">ClaudeHub</span>
+          <span class="value">~/ClaudeHub/</span>
+          <span class="label">Vault</span>
+          <span class="value">~/vault/</span>
+          <span class="label">Skills</span>
+          <span class="value">~/.claude/skills/</span>
+          <span class="label">Commands</span>
+          <span class="value">~/.claude/commands/</span>
+          <span class="label">Agents</span>
+          <span class="value">{tech,orgs}/.claude/agents/</span>
+          <span class="label">Rules</span>
+          <span class="value">ClaudeHub/.claude/rules/</span>
+          <span class="label">Hook</span>
+          <span class="value">~/.claude/settings.json</span>
+          <span class="label">Memory</span>
+          <span class="value">~/.claude/projects/*/memory/</span>
+        </div>
+      </div>
+      <div class="card">
+        <h3>Session Workflow</h3>
+        <div class="workflow">
+          <span class="step">/reflect</span>
+          <span class="arrow">&rarr;</span>
+          <span class="step">/ship</span>
+        </div>
+        <h3 style="margin-top:16px">Documentation Stack</h3>
+        <div class="doc-stack">
+          <span class="doc">CLAUDE.md</span>
+          <span class="arrow">&rarr;</span>
+          <span class="doc">SPEC.md</span>
+          <span class="arrow">&rarr;</span>
+          <span class="doc">.planning/</span>
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:var(--dim)">
+          Conventions &rarr; Living spec &rarr; Multi-phase staging
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 9: Keyboard Shortcuts -->
+  <section id="keys">
+    <h2><span class="section-num">09</span> Keyboard Shortcuts</h2>
+    <table class="ref-table">
+      <thead><tr><th>Shortcut</th><th>Action</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><span class="cmd">Shift+Tab</span></td>
+          <td>Toggle plan mode</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">Ctrl+C</span></td>
+          <td>Cancel current operation</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">Ctrl+R</span></td>
+          <td>Search command history</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">Tab</span></td>
+          <td>Accept autocomplete</td>
+        </tr>
+        <tr>
+          <td><span class="cmd">Up / Down</span></td>
+          <td>Navigate history</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</div>
+
+<footer>
+  ClaudeHub &mdash; mrjuul &mdash; Updated 2026-04-13 &mdash; Built with Claude Code
+</footer>
+
+<script>
+// Scroll reveal animation
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) {
+      entry.target.classList.add('visible');
+    }
+  });
+}, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+document.querySelectorAll('section').forEach(el => observer.observe(el));
+
+// Make hero visible immediately
+document.querySelector('.hero').style.opacity = '1';
+</script>
+</body>
+</html>
