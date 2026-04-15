@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Compounding Memory — A 4-Layer Architecture for Claude Code</title>
+<meta property="og:title" content="Compounding Memory — A 4-Layer Architecture for Claude Code">
+<meta property="og:description" content="How to design long-term memory for AI coding agents — combining procedural, episodic, and semantic layers with Karpathy's LLM Wiki pattern.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/compounding-memory/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/compounding-memory/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#22d3ee">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #080c12;
+  --surface: #0e1420;
+  --surface-raised: #131b2a;
+  --border: #1a2538;
+  --border-bright: #243348;
+  --text: #dde4ec;
+  --text-dim: #7d8da0;
+  --text-faint: #3d4f66;
+  --accent: #22d3ee;
+  --accent-dim: rgba(34, 211, 238, 0.15);
+  --accent-glow: rgba(34, 211, 238, 0.08);
+  --warn: #f59e0b;
+  --success: #34d399;
+  --error: #f87171;
+  --font-display: 'DM Serif Display', serif;
+  --font-body: 'DM Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.7;
+  font-size: 16px;
+  min-height: 100vh;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(34, 211, 238, 0.04), transparent),
+    radial-gradient(circle at 20% 80%, rgba(34, 211, 238, 0.02), transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 0 24px;
+  position: relative;
+  z-index: 1;
+}
+
+/* Hero */
+.hero {
+  padding: 80px 0 60px;
+  text-align: center;
+}
+
+.hero-ascii {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--accent);
+  opacity: 0.6;
+  margin-bottom: 32px;
+  white-space: pre;
+  display: inline-block;
+  text-align: left;
+}
+
+.hero h1 {
+  font-family: var(--font-display);
+  font-size: clamp(2rem, 5vw, 3.2rem);
+  font-weight: 400;
+  line-height: 1.15;
+  margin-bottom: 16px;
+  background: linear-gradient(135deg, var(--text) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.hero .subtitle {
+  font-size: 1.15rem;
+  color: var(--text-dim);
+  max-width: 600px;
+  margin: 0 auto 28px;
+  font-weight: 300;
+}
+
+.hero .meta-line {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-faint);
+  display: flex;
+  gap: 24px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero .meta-line span { display: inline-flex; align-items: center; gap: 6px; }
+.hero .meta-line .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); }
+
+/* Sections */
+section {
+  padding: 48px 0;
+  border-top: 1px solid var(--border);
+  animation: fadeUp 0.5s ease both;
+}
+
+section:first-of-type { border-top: none; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  color: var(--accent);
+  margin-bottom: 12px;
+}
+
+h2 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 400;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+h3 {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin: 28px 0 12px;
+  color: var(--text);
+}
+
+p { margin-bottom: 16px; color: var(--text-dim); }
+p strong { color: var(--text); font-weight: 500; }
+
+/* Cards */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+  border-color: var(--border-bright);
+  box-shadow: 0 0 24px var(--accent-glow);
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.card-grid .card { margin-bottom: 0; }
+
+.card .card-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.card .card-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  margin-bottom: 8px;
+  color: var(--text);
+}
+
+.card .card-text { font-size: 0.9rem; color: var(--text-dim); margin: 0; }
+
+/* Layer diagram */
+.layer-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.layer {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px 24px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 12px;
+  align-items: center;
+  position: relative;
+  transition: all 0.2s;
+}
+
+.layer:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.layer-info { display: flex; flex-direction: column; gap: 4px; }
+
+.layer-name {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text);
+}
+
+.layer-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.layer-badge {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 10px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.badge-permanent { background: rgba(34, 211, 238, 0.12); color: var(--accent); }
+.badge-current { background: rgba(52, 211, 153, 0.12); color: var(--success); }
+.badge-recent { background: rgba(245, 158, 11, 0.12); color: var(--warn); }
+.badge-longterm { background: rgba(168, 85, 247, 0.12); color: #a855f7; }
+
+.layer-arrow {
+  text-align: center;
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  padding: 4px 0;
+  font-family: var(--font-mono);
+}
+
+/* Tables */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 0.9rem;
+}
+
+th {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--accent);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-bright);
+  font-weight: 500;
+}
+
+td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  vertical-align: top;
+}
+
+tr:hover td { background: var(--accent-glow); }
+td:first-child { color: var(--text); font-weight: 500; }
+
+/* Code blocks */
+.code-block {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  color: var(--text-dim);
+}
+
+.code-block .comment { color: var(--text-faint); }
+.code-block .keyword { color: var(--accent); }
+.code-block .string { color: var(--success); }
+.code-block .number { color: var(--warn); }
+
+/* Stat row */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.stat {
+  text-align: center;
+  padding: 20px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+
+.stat-value {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  color: var(--accent);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.stat-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--text-faint);
+}
+
+/* Flow diagram */
+.flow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin: 20px 0;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+}
+
+.flow-step {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 16px;
+  border-radius: 8px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.flow-step.accent {
+  border-color: var(--accent);
+  background: var(--accent-dim);
+  color: var(--accent);
+}
+
+.flow-arrow { color: var(--text-faint); font-size: 1rem; }
+
+/* Callout */
+.callout {
+  background: var(--accent-dim);
+  border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  padding: 16px 20px;
+  margin: 24px 0;
+  font-size: 0.9rem;
+  color: var(--text-dim);
+}
+
+.callout strong { color: var(--accent); }
+
+/* Tag demos */
+.tag-demo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 20px;
+}
+
+.tag {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 4px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text-dim);
+}
+
+.tag.closed { border-color: var(--accent); color: var(--accent); }
+.tag.open { border-color: var(--text-faint); color: var(--text-dim); }
+
+/* Phase timeline */
+.timeline {
+  position: relative;
+  margin: 24px 0;
+  padding-left: 32px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 11px;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 24px;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: -32px;
+  top: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.timeline-dot.done { border-color: var(--success); }
+.timeline-dot.done::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--success); }
+.timeline-dot.next { border-color: var(--accent); }
+.timeline-dot.next::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.timeline-dot.pending { border-color: var(--text-faint); }
+
+.timeline-title {
+  font-weight: 600;
+  color: var(--text);
+  font-size: 0.95rem;
+  margin-bottom: 4px;
+}
+
+.timeline-desc {
+  font-size: 0.85rem;
+  color: var(--text-dim);
+}
+
+.timeline-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-left: 8px;
+}
+
+.tag-done { background: rgba(52, 211, 153, 0.12); color: var(--success); }
+.tag-next { background: var(--accent-dim); color: var(--accent); }
+.tag-pending { background: rgba(61, 79, 102, 0.3); color: var(--text-faint); }
+
+/* Footer */
+footer {
+  padding: 48px 0;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-faint);
+}
+
+footer a { color: var(--accent); text-decoration: none; }
+footer a:hover { text-decoration: underline; }
+
+/* Responsive */
+@media (max-width: 640px) {
+  .hero { padding: 48px 0 36px; }
+  .hero-ascii { font-size: 8px; }
+  h2 { font-size: 1.5rem; }
+  .layer { grid-template-columns: 1fr; }
+  .layer-badge { justify-self: start; }
+  .stat-row { grid-template-columns: repeat(2, 1fr); }
+  .flow { font-size: 0.75rem; }
+  .hero .meta-line { gap: 12px; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<!-- Hero -->
+<header class="hero">
+<pre class="hero-ascii">
+    ┌─────────┐  ┌─────────┐  ┌─────────┐
+    │ CLAUDE  │  │  auto   │  │ claude  │
+    │   .md   │──│ memory  │──│  -mem   │
+    └────┬────┘  └────┬────┘  └────┬────┘
+         │            │            │
+         └────────────┼────────────┘
+                      │
+              ┌───────┴───────┐
+              │  vault/wiki/  │
+              │   index.md    │
+              │  ┌──┐┌──┐┌──┐│
+              │  │Te││Or││Me││
+              │  └──┘└──┘└──┘│
+              └───────────────┘
+</pre>
+<h1>Compounding Memory</h1>
+<p class="subtitle">A 4-layer architecture for Claude Code — from ghost town vault to semantic memory that makes every session smarter</p>
+<div class="meta-line">
+  <span><span class="dot"></span> April 2026</span>
+  <span>Foundation-first design</span>
+  <span>Karpathy-adapted</span>
+</div>
+</header>
+
+<!-- Section 1: The Problem -->
+<section>
+<div class="section-label">01 — The Problem</div>
+<h2>Four Layers, One Broken</h2>
+
+<p>Claude Code has a sophisticated persistence system: <strong>four independent memory layers</strong> that load context at session start. Three of them work. The fourth — the semantic layer — is a ghost town.</p>
+
+<div class="stat-row">
+  <div class="stat"><div class="stat-value">991</div><div class="stat-label">Observations</div></div>
+  <div class="stat"><div class="stat-value">122</div><div class="stat-label">Sessions</div></div>
+  <div class="stat"><div class="stat-value">46</div><div class="stat-label">Knowledge Entries</div></div>
+  <div class="stat"><div class="stat-value">0%</div><div class="stat-label">Auto-Retrieved</div></div>
+</div>
+
+<p>The episodic layers capture <strong>991 observations across 122 sessions</strong>. The procedural layer enforces conventions every session. But the vault — intended as the long-term knowledge base — has 46 high-quality entries that <strong>never surface automatically</strong>. It's a write-only graveyard.</p>
+
+<p>The previous redesign attempt tried to fix this by wiring up retrieval hooks. It failed because it addressed the <strong>wrong problem</strong>. You can't retrieve what doesn't exist in a retrievable form. The real gaps: no ingestion pipeline, no consistent conventions, no maintenance cycle.</p>
+</section>
+
+<!-- Section 2: The Karpathy Insight -->
+<section>
+<div class="section-label">02 — The Insight</div>
+<h2>Karpathy's LLM Wiki Pattern</h2>
+
+<p>In April 2026, Andrej Karpathy published a pattern for <strong>LLM-maintained knowledge bases</strong>. The core idea: instead of fancy vector databases or RAG pipelines, use the LLM itself to organize knowledge into interlinked markdown files with auto-maintained indexes.</p>
+
+<div class="card">
+  <div class="card-label">Three-Layer Model</div>
+  <div class="flow">
+    <span class="flow-step">raw/</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step accent">wiki/</span>
+    <span class="flow-arrow">→</span>
+    <span class="flow-step">schema</span>
+  </div>
+  <p class="card-text" style="margin-top: 12px;"><strong>Raw sources</strong> (immutable inputs) are processed by the LLM into <strong>wiki entries</strong> (organized, linked, indexed markdown). The <strong>schema</strong> (CLAUDE.md) defines conventions, structure, and workflows. The LLM handles chunking, relationship-building, and index maintenance.</p>
+</div>
+
+<p>The key finding: at <strong>hundreds to thousands of pages</strong> with good indexes, this filesystem approach outperforms vector search. One user turned 383 scattered files into a compact wiki and dropped token usage by <strong>95%</strong>.</p>
+
+<div class="callout">
+  <strong>The scale question, answered:</strong> Filesystem with indexes handles hundreds-thousands of documents. Vector search becomes necessary at millions. For a personal knowledge base powering a CLI tool, indexes win on simplicity, cost, and debuggability.
+</div>
+</section>
+
+<!-- Section 3: Why Filesystem Beats Vector -->
+<section>
+<div class="section-label">03 — Architecture Decision</div>
+<h2>Why Filesystem Beats Vector Search</h2>
+
+<p>The instinct is to reach for embeddings and similarity search. But at personal-knowledge scale, the tradeoffs don't favor it.</p>
+
+<table>
+  <thead>
+    <tr><th>Aspect</th><th>LLM Wiki (Filesystem)</th><th>Vector RAG</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Search method</td>
+      <td>Read indexes, follow wiki-links. Understands relationships because they're explicit.</td>
+      <td>Embedding similarity. Finds "seems related" but misses structured connections.</td>
+    </tr>
+    <tr>
+      <td>Infrastructure</td>
+      <td>Markdown files. That's it.</td>
+      <td>Embedding model + vector DB + chunking pipeline.</td>
+    </tr>
+    <tr>
+      <td>Maintenance</td>
+      <td>Run a lint. The LLM fixes inconsistencies.</td>
+      <td>Re-embed on every change. Stale embeddings silently degrade.</td>
+    </tr>
+    <tr>
+      <td>Cost</td>
+      <td>Tokens only (reading indexes).</td>
+      <td>Ongoing compute + storage + embedding API calls.</td>
+    </tr>
+    <tr>
+      <td>Debuggability</td>
+      <td>Open the file. Read the index. Follow the link.</td>
+      <td>Why did similarity return this? Hard to inspect.</td>
+    </tr>
+    <tr>
+      <td>Scale ceiling</td>
+      <td>Thousands of pages.</td>
+      <td>Millions of documents.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The decision: <strong>index-based retrieval with graph enhancement</strong>. An auto-maintained <code>index.md</code> is the primary lookup. Graphthulhu (Obsidian's graph MCP) handles deep traversal for complex queries. If the vault ever exceeds 5,000 entries, revisit.</p>
+</section>
+
+<!-- Section 4: The 4-Layer Architecture -->
+<section>
+<div class="section-label">04 — The Architecture</div>
+<h2>Four Layers, Four Time Horizons</h2>
+
+<p>Each memory layer serves a different <strong>time horizon</strong> and cognitive function. The key insight: they're not redundant — they're complementary. Like how human memory has working memory, episodic memory, and semantic memory serving different purposes.</p>
+
+<div class="layer-stack">
+  <div class="layer">
+    <div class="layer-info">
+      <span class="layer-name">CLAUDE.md chain + SPEC.md</span>
+      <span class="layer-desc">"How to work in this context" — conventions, rules, patterns. Written by human, loaded every session.</span>
+    </div>
+    <span class="layer-badge badge-permanent">Permanent</span>
+  </div>
+  <div class="layer-arrow">▼ authority decreases, time horizon widens</div>
+  <div class="layer">
+    <div class="layer-info">
+      <span class="layer-name">Auto-memory</span>
+      <span class="layer-desc">"What's true right now" — user preferences, project phases, active corrections. Always loaded, fast access.</span>
+    </div>
+    <span class="layer-badge badge-current">Current</span>
+  </div>
+  <div class="layer-arrow">▼</div>
+  <div class="layer">
+    <div class="layer-info">
+      <span class="layer-name">Claude-mem</span>
+      <span class="layer-desc">"What happened recently" — observations from last 10 sessions. Timeline of decisions, discoveries, changes.</span>
+    </div>
+    <span class="layer-badge badge-recent">Recent</span>
+  </div>
+  <div class="layer-arrow">▼ consolidates upward into ▼</div>
+  <div class="layer">
+    <div class="layer-info">
+      <span class="layer-name">Vault Wiki</span>
+      <span class="layer-desc">"What I've learned over time" — deep knowledge, architectures, research, profiles. Compounds with every session.</span>
+    </div>
+    <span class="layer-badge badge-longterm">Long-term</span>
+  </div>
+</div>
+
+<h3>The Authority Model</h3>
+<p>When layers disagree, authority resolves it:</p>
+<table>
+  <thead><tr><th>Layer</th><th>Loads</th><th>Authority</th><th>Writes</th></tr></thead>
+  <tbody>
+    <tr><td>CLAUDE.md</td><td>100% always</td><td>Highest — conventions win</td><td>Human via /reflect</td></tr>
+    <tr><td>Auto-memory</td><td>100% always</td><td>High — current state wins</td><td>Claude (automatic)</td></tr>
+    <tr><td>Vault wiki</td><td>On-demand (index-matched)</td><td>Deepest — compounds</td><td>/ingest, /consolidate</td></tr>
+    <tr><td>Claude-mem</td><td>Top-N scored</td><td>Lowest — raw observations</td><td>Haiku (automatic)</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <strong>The overlap problem, solved:</strong> Auto-memory and claude-mem capture similar facts (~70-80% overlap). But they serve different purposes. Auto-memory is the "current state cache" (always loaded). Claude-mem is the "timeline" (searchable history). Neither compounds — that's the wiki's job.
+</div>
+</section>
+
+<!-- Section 5: Convention System -->
+<section>
+<div class="section-label">05 — The Convention System</div>
+<h2>Tags, Relationships, Entry Anatomy</h2>
+
+<p>Conventions are the foundation everything else depends on. Without consistent structure, retrieval is guesswork. Without relationships, entries are isolated documents. The schema defines three systems.</p>
+
+<h3>Hierarchical Tag Taxonomy</h3>
+
+<p>Two <strong>closed sets</strong> (mandatory, finite) provide the structural skeleton. One <strong>open set</strong> (grows organically) captures specifics.</p>
+
+<div class="tag-demo">
+  <span class="tag closed">domain/tech</span>
+  <span class="tag closed">domain/org</span>
+  <span class="tag closed">domain/personal</span>
+  <span class="tag closed">domain/meta</span>
+</div>
+
+<div class="tag-demo">
+  <span class="tag closed">type/decision</span>
+  <span class="tag closed">type/reference</span>
+  <span class="tag closed">type/pattern</span>
+  <span class="tag closed">type/architecture</span>
+  <span class="tag closed">type/howto</span>
+  <span class="tag closed">type/incident</span>
+  <span class="tag closed">type/profile</span>
+</div>
+
+<div class="tag-demo">
+  <span class="tag open">memory</span>
+  <span class="tag open">mcp</span>
+  <span class="tag open">security</span>
+  <span class="tag open">nas</span>
+  <span class="tag open">docker</span>
+  <span class="tag open">finance</span>
+  <span class="tag open">agents</span>
+  <span class="tag open">...</span>
+</div>
+
+<p>Every entry gets exactly 1 <code>domain/</code> + 1 <code>type/</code> + up to 3 topics. Domain and type drive the directory structure and retrieval logic. Topics grow freely — no approval needed for new ones.</p>
+
+<h3>Frontmatter Relationships</h3>
+
+<p>Relationships live in YAML frontmatter as arrays of entry filenames. No plugin dependency — Graphthulhu reads these via <code>query_properties</code>.</p>
+
+<div class="code-block">
+<span class="comment">---</span>
+<span class="keyword">title</span>: Memory Architecture Decisions
+<span class="keyword">domain</span>: <span class="string">meta</span>
+<span class="keyword">type</span>: <span class="string">decision</span>
+<span class="keyword">tags</span>: [<span class="string">memory</span>, <span class="string">architecture</span>]
+<span class="keyword">references</span>: [<span class="string">agentic-memory-landscape</span>, <span class="string">agent-memory-architecture</span>]
+<span class="keyword">supersedes</span>: [<span class="string">memory-v2-decisions</span>]
+<span class="keyword">status</span>: <span class="string">active</span>
+<span class="comment">---</span>
+
+<span class="comment">> Four-layer persistence system — v3 active, v4 designing</span>
+</div>
+
+<p>Start with 4 relationship types. Add more when wiki density demands it:</p>
+
+<table>
+  <thead><tr><th>Relationship</th><th>Meaning</th></tr></thead>
+  <tbody>
+    <tr><td>references</td><td>Cites or draws from another entry</td></tr>
+    <tr><td>supersedes</td><td>Replaces an older entry</td></tr>
+    <tr><td>supports</td><td>Evidence that reinforces another entry</td></tr>
+    <tr><td>related</td><td>General connection (fallback)</td></tr>
+  </tbody>
+</table>
+</section>
+
+<!-- Section 6: Ingestion Paths -->
+<section>
+<div class="section-label">06 — Ingestion</div>
+<h2>Two Paths In, Same Quality Out</h2>
+
+<p>The vault has two distinct input channels. Both produce the same quality wiki entries — well-tagged, linked, indexed. The difference is the source, not the output.</p>
+
+<div class="card-grid">
+  <div class="card">
+    <div class="card-label">Path A — External</div>
+    <div class="card-title">raw/ → /ingest → wiki/</div>
+    <p class="card-text">Human-sourced content: web clippings, meeting notes (Granola), research articles, NotebookLM exports, manual brain dumps. Dropped into <code>raw/</code>, processed by the <code>/ingest</code> skill into wiki entries.</p>
+  </div>
+  <div class="card">
+    <div class="card-label">Path B — Internal</div>
+    <div class="card-title">claude-mem → /consolidate → wiki/</div>
+    <p class="card-text">Machine-sourced observations auto-captured during sessions. The <code>/consolidate</code> skill queries the SQLite database, clusters observations by topic, and synthesizes them into wiki entries.</p>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>The shared principle:</strong> Nothing enters <code>wiki/</code> without LLM organization. Raw observations aren't knowledge — they become knowledge when clustered, synthesized, and linked.
+</div>
+
+<h3>The Processing Pipeline</h3>
+
+<div class="flow">
+  <span class="flow-step">Content arrives</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Extract entities</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Check index</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step accent">Create or Update</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Add wiki-links</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step">Update indexes</span>
+</div>
+
+<p>The LLM decides how to chunk content. A single article might become 5 wiki entries with cross-references. Or it might update 3 existing entries with new information. The index always stays current.</p>
+</section>
+
+<!-- Section 7: Retrieval -->
+<section>
+<div class="section-label">07 — Retrieval</div>
+<h2>Index-Based Retrieval with Graph Enhancement</h2>
+
+<p>At session start, the retrieval hook reads the master index, detects the domain from the working directory, and injects relevant entry summaries into context. Full entries are read on demand.</p>
+
+<div class="code-block">
+<span class="comment"># SessionStart retrieval flow</span>
+<span class="number">1.</span> Read <span class="string">wiki/index.md</span>                     <span class="comment">(~5KB, always)</span>
+<span class="number">2.</span> Detect domain from cwd:
+   <span class="keyword">~/ClaudeHub/tech/*</span>    → read <span class="string">wiki/tech/_index.md</span>
+   <span class="keyword">~/ClaudeHub/orgs/*</span>    → read <span class="string">wiki/orgs/_index.md</span>
+   <span class="keyword">~/vault/*</span>             → read <span class="string">wiki/meta/_index.md</span>
+<span class="number">3.</span> Match SPEC.md keywords against entries  <span class="comment">(top 3-5)</span>
+<span class="number">4.</span> Inject entry summaries                  <span class="comment">(~2-4KB)</span>
+<span class="number">5.</span> On-demand: Graphthulhu for deep reads    <span class="comment">(when needed)</span>
+</div>
+
+<h3>Token Budget</h3>
+
+<table>
+  <thead><tr><th>Component</th><th>Before</th><th>After</th><th>Delta</th></tr></thead>
+  <tbody>
+    <tr><td>CLAUDE.md chain</td><td>~4KB</td><td>~4KB</td><td>—</td></tr>
+    <tr><td>Auto-memory</td><td>~3KB</td><td>~3KB</td><td>—</td></tr>
+    <tr><td>Claude-mem</td><td>~8KB (50 flat)</td><td>~6KB (30 scored)</td><td>-2KB</td></tr>
+    <tr><td>Vault wiki</td><td>0KB</td><td>~4KB</td><td>+4KB</td></tr>
+    <tr><td><strong>Total</strong></td><td><strong>~15KB</strong></td><td><strong>~17KB</strong></td><td><strong>+2KB</strong></td></tr>
+  </tbody>
+</table>
+
+<p><strong>+2KB for dramatically higher-quality semantic memory.</strong> The vault goes from 0% coverage to context-matched knowledge injection. Claude-mem improves from flat recency to weighted scoring — fewer observations, higher signal.</p>
+</section>
+
+<!-- Section 8: Build Phases -->
+<section>
+<div class="section-label">08 — Build Phases</div>
+<h2>Foundation Before Hooks</h2>
+
+<p>The critical ordering: conventions must exist before ingestion can produce well-formed entries. Entries must exist before retrieval has something to surface. Consolidation and maintenance come last — they improve a working system, not build one.</p>
+
+<div class="timeline">
+  <div class="timeline-item">
+    <div class="timeline-dot done"></div>
+    <div class="timeline-title">Phase 0a-c: Convention System <span class="timeline-tag tag-done">Complete</span></div>
+    <div class="timeline-desc">Tag taxonomy, relationship vocabulary, entry anatomy, vault/CLAUDE.md wiki schema. Graphthulhu audit confirmed frontmatter-only relationships work.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-dot next"></div>
+    <div class="timeline-title">Phase 0d: Migration <span class="timeline-tag tag-next">Next</span></div>
+    <div class="timeline-desc">Create wiki/ directory structure. Migrate 46 existing entries with convention-compliant frontmatter. Build master index.md and domain sub-indexes.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-dot pending"></div>
+    <div class="timeline-title">Phase 1: Ingestion Pipeline <span class="timeline-tag tag-pending">1-2 sessions</span></div>
+    <div class="timeline-desc">Build /ingest skill. Process raw/ inputs into wiki entries. Test with existing clippings and meeting notes.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-dot pending"></div>
+    <div class="timeline-title">Phase 2: Retrieval Hook <span class="timeline-tag tag-pending">1 session</span></div>
+    <div class="timeline-desc">SessionStart vault injection. Domain detection from working directory. Context-matched summary injection.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-dot pending"></div>
+    <div class="timeline-title">Phase 3: Scored Injection <span class="timeline-tag tag-pending">1 session</span></div>
+    <div class="timeline-desc">Replace flat recency with ADR-002 weighted scoring. Enable semantic search. Document authority model.</div>
+  </div>
+  <div class="timeline-item">
+    <div class="timeline-dot pending"></div>
+    <div class="timeline-title">Phase 4: Consolidation + Maintenance <span class="timeline-tag tag-pending">1-2 sessions</span></div>
+    <div class="timeline-desc">Build /consolidate (claude-mem → wiki). Enhance /kb-audit with Karpathy-style lint. Integrate Graphthulhu health checks.</div>
+  </div>
+</div>
+
+<div class="callout">
+  <strong>The end state:</strong> Every session's learnings feed into wiki entries that improve future sessions. Knowledge compounds like interest — each session makes the next one smarter.
+</div>
+</section>
+
+</div>
+
+<footer>
+<div class="container">
+  <p>mrjuul.github.io/showcase &middot; Built with Claude Code &middot; April 2026</p>
+</div>
+</footer>
+
+</body>
+</html>
