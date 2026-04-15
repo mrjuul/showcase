@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 12 Dimensions of AI Agent Development</title>
+  <meta property="og:title" content="The 12 Dimensions of AI Agent Development">
+  <meta property="og:description" content="A beginner's guide to the 12 essential dimensions that shape how AI coding agents develop features and projects — from context engineering to evaluation frameworks.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://mrjuul.github.io/showcase/agent-development-framework/">
+  <meta property="og:image" content="https://mrjuul.github.io/showcase/agent-development-framework/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="theme-color" content="#00d4aa">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=DM+Serif+Display&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #080c12;
+      --surface: #0e1420;
+      --surface-raised: #131b2a;
+      --border: #1a2436;
+      --border-bright: #243044;
+      --text: #e0e6ed;
+      --text-dim: #8094a8;
+      --text-faint: #3d5060;
+      --accent: #00d4aa;
+      --accent-dim: #00a888;
+      --accent-glow: rgba(0, 212, 170, 0.15);
+      --accent-glow-strong: rgba(0, 212, 170, 0.25);
+      --font-display: 'DM Serif Display', serif;
+      --font-body: 'DM Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-body);
+      font-size: 16px;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* Background texture */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(circle at 1px 1px, var(--border) 0.5px, transparent 0);
+      background-size: 32px 32px;
+      opacity: 0.3;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 60px;
+      text-align: center;
+    }
+
+    .hero-ascii {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      line-height: 1.3;
+      background: linear-gradient(135deg, var(--accent), #00e8c0, #00b8d4);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 32px;
+      white-space: pre;
+      display: inline-block;
+    }
+
+    .hero h1 {
+      font-family: var(--font-display);
+      font-size: clamp(2.2rem, 5vw, 3.2rem);
+      background: linear-gradient(135deg, var(--text), var(--accent));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+
+    .hero .subtitle {
+      font-size: 1.15rem;
+      color: var(--text-dim);
+      max-width: 600px;
+      margin: 0 auto 32px;
+    }
+
+    .hero-shift {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      padding: 10px 20px;
+      border: 1px solid var(--border-bright);
+      border-radius: 8px;
+      background: var(--surface);
+      color: var(--text-dim);
+    }
+
+    .hero-shift .old { text-decoration: line-through; opacity: 0.5; }
+    .hero-shift .arrow { color: var(--accent); }
+    .hero-shift .new { color: var(--accent); font-weight: 600; }
+
+    /* Stats bar */
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      flex-wrap: wrap;
+      margin-top: 32px;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: var(--font-mono);
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* Section */
+    section {
+      padding: 60px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    section:first-of-type { border-top: none; }
+
+    .section-label {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-family: var(--font-display);
+      font-size: 1.8rem;
+      margin-bottom: 20px;
+      line-height: 1.3;
+    }
+
+    h3 {
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin: 28px 0 12px;
+      color: var(--text);
+    }
+
+    p { margin-bottom: 16px; }
+
+    /* Dimension card */
+    .dim-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      margin-bottom: 24px;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+
+    .dim-card:hover {
+      border-color: var(--border-bright);
+      box-shadow: 0 4px 24px var(--accent-glow);
+    }
+
+    .dim-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0.5;
+    }
+
+    .dim-number {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dim-number .icon {
+      font-size: 1rem;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-glow);
+      border-radius: 6px;
+    }
+
+    .dim-card h2 {
+      font-size: 1.5rem;
+      margin-bottom: 12px;
+    }
+
+    .dim-card .lead {
+      font-size: 1.05rem;
+      color: var(--text-dim);
+      margin-bottom: 20px;
+      font-style: italic;
+    }
+
+    /* Key practices list */
+    .practices {
+      list-style: none;
+      margin: 16px 0;
+    }
+
+    .practices li {
+      padding: 10px 0 10px 28px;
+      position: relative;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .practices li:last-child { border-bottom: none; }
+
+    .practices li::before {
+      content: '>';
+      position: absolute;
+      left: 4px;
+      top: 10px;
+      font-family: var(--font-mono);
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .practice-title {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .practice-detail {
+      color: var(--text-dim);
+      font-size: 0.92rem;
+    }
+
+    /* Quote */
+    blockquote {
+      border-left: 2px solid var(--accent);
+      padding: 12px 20px;
+      margin: 20px 0;
+      background: var(--accent-glow);
+      border-radius: 0 8px 8px 0;
+      font-style: italic;
+      color: var(--text-dim);
+    }
+
+    blockquote cite {
+      display: block;
+      margin-top: 8px;
+      font-style: normal;
+      font-size: 0.85rem;
+      color: var(--text-faint);
+    }
+
+    /* References */
+    .refs {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px dashed var(--border);
+    }
+
+    .refs-label {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+    }
+
+    .refs a {
+      display: inline-block;
+      font-size: 0.82rem;
+      color: var(--accent-dim);
+      text-decoration: none;
+      padding: 3px 10px;
+      margin: 2px 4px 2px 0;
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      transition: all 0.2s;
+    }
+
+    .refs a:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    /* Overview grid */
+    .dim-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+      margin: 24px 0;
+    }
+
+    .dim-mini {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+    }
+
+    .dim-mini:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .dim-mini .num {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    .dim-mini .name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      margin-bottom: 4px;
+    }
+
+    .dim-mini .desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      line-height: 1.4;
+    }
+
+    /* Pattern table */
+    .pattern-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 0.9rem;
+    }
+
+    .pattern-table th {
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      text-align: left;
+      padding: 10px 12px;
+      border-bottom: 2px solid var(--border-bright);
+    }
+
+    .pattern-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .pattern-table tr:last-child td { border-bottom: none; }
+
+    .dim-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .dim-tag {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 3px;
+      background: var(--accent-glow);
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+
+    /* Bootstrap order */
+    .boot-step {
+      display: flex;
+      gap: 16px;
+      margin: 16px 0;
+      align-items: flex-start;
+    }
+
+    .boot-num {
+      font-family: var(--font-mono);
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      min-width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--accent-glow);
+      border-radius: 8px;
+      flex-shrink: 0;
+    }
+
+    .boot-content h3 { margin-top: 2px; }
+
+    /* Source list */
+    .source-group {
+      margin-bottom: 28px;
+    }
+
+    .source-group h3 {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .source-list {
+      list-style: none;
+    }
+
+    .source-list li {
+      padding: 6px 0;
+      font-size: 0.88rem;
+      color: var(--text-dim);
+    }
+
+    .source-list li a {
+      color: var(--accent-dim);
+      text-decoration: none;
+    }
+
+    .source-list li a:hover { color: var(--accent); text-decoration: underline; }
+
+    .source-list .author {
+      color: var(--text-faint);
+      font-size: 0.8rem;
+    }
+
+    /* Footer */
+    footer {
+      padding: 48px 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--text-faint);
+      font-size: 0.8rem;
+    }
+
+    footer a { color: var(--accent-dim); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* Responsive */
+    @media (max-width: 640px) {
+      .hero { padding: 48px 0 40px; }
+      .hero-ascii { font-size: 8px; }
+      .stats { gap: 20px; }
+      .dim-card { padding: 20px; }
+      .dim-grid { grid-template-columns: 1fr; }
+      .pattern-table { font-size: 0.8rem; }
+    }
+
+    /* Fade-in animation */
+    .fade-in {
+      opacity: 0;
+      transform: translateY(16px);
+      transition: opacity 0.5s ease, transform 0.5s ease;
+    }
+
+    .fade-in.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-ascii" aria-hidden="true">
+    ___  ___       __   _                  _
+   /   \/  /      / /  (_)_ __  ___ _ _  __(_)___ _ _  ___
+  / /\ / / |     / /  | | '  \/ -_) ' \(_-< / _ \ ' \(_-&lt;
+ /_/ /_/  \|_   /_/   |_|_|_|_\___|_||_/__/_\___/_||_/__/
+    </div>
+    <h1>The 12 Dimensions of<br>AI Agent Development</h1>
+    <p class="subtitle">A practical guide to what makes AI coding agents effective &mdash; from context engineering to evaluation frameworks, with references to 40+ expert sources.</p>
+
+    <div class="hero-shift">
+      <span class="old">prompt engineering</span>
+      <span class="arrow">&rarr;</span>
+      <span class="new">context engineering</span>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">12</div>
+        <div class="stat-label">Dimensions</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">40+</div>
+        <div class="stat-label">Sources</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">5</div>
+        <div class="stat-label">Academic Papers</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">2026</div>
+        <div class="stat-label">State of the Art</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Overview -->
+  <section class="fade-in" id="overview">
+    <div class="section-label">Overview</div>
+    <h2>The Framework at a Glance</h2>
+    <p>When you ask an AI agent to build a feature, it needs more than a prompt. It needs <strong>context</strong> about your codebase, <strong>memory</strong> of past decisions, <strong>tools</strong> to interact with external systems, and <strong>guardrails</strong> to prevent mistakes. These 12 dimensions map everything that shapes an agent's effectiveness.</p>
+    <p>Not every project needs all 12. A quick bug fix might touch 3 dimensions. A multi-session infrastructure project might need 8. The framework helps you ask: <em>what am I missing?</em></p>
+
+    <div class="dim-grid">
+      <a class="dim-mini" href="#d1"><div class="num">D1</div><div class="name">Context Hierarchy</div><div class="desc">Progressive disclosure of conventions and rules</div></a>
+      <a class="dim-mini" href="#d2"><div class="num">D2</div><div class="name">Specification</div><div class="desc">Living project state, scope, and decisions</div></a>
+      <a class="dim-mini" href="#d3"><div class="num">D3</div><div class="name">Memory &amp; Persistence</div><div class="desc">Cross-session continuity and learned facts</div></a>
+      <a class="dim-mini" href="#d4"><div class="num">D4</div><div class="name">Skills</div><div class="desc">Reusable agent capabilities</div></a>
+      <a class="dim-mini" href="#d5"><div class="num">D5</div><div class="name">Agent Orchestration</div><div class="desc">Multi-agent delegation patterns</div></a>
+      <a class="dim-mini" href="#d6"><div class="num">D6</div><div class="name">Tool Ecosystem</div><div class="desc">MCP servers, CLI tools, hooks</div></a>
+      <a class="dim-mini" href="#d7"><div class="num">D7</div><div class="name">Quality Gates</div><div class="desc">Verification, review, and testing</div></a>
+      <a class="dim-mini" href="#d8"><div class="num">D8</div><div class="name">Safety &amp; Guardrails</div><div class="desc">Containment, boundaries, rollback</div></a>
+      <a class="dim-mini" href="#d9"><div class="num">D9</div><div class="name">Research Pipelines</div><div class="desc">Multi-source knowledge acquisition</div></a>
+      <a class="dim-mini" href="#d10"><div class="num">D10</div><div class="name">Knowledge Graph</div><div class="desc">Structured relationships and retrieval</div></a>
+      <a class="dim-mini" href="#d11"><div class="num">D11</div><div class="name">Evaluation</div><div class="desc">Measuring agent output quality</div></a>
+      <a class="dim-mini" href="#d12"><div class="num">D12</div><div class="name">Process Workflow</div><div class="desc">Development lifecycle patterns</div></a>
+    </div>
+  </section>
+
+  <!-- D1: Context Hierarchy -->
+  <section class="fade-in" id="d1">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">1</span> Dimension One</div>
+      <h2>Context Hierarchy</h2>
+      <p class="lead">The context window is a finite attention budget. Every token you load depletes the agent's ability to focus on your actual task.</p>
+
+      <p>Context engineering has replaced prompt engineering as the core discipline. It's not about crafting the perfect question &mdash; it's about assembling the right <em>information environment</em> for the agent to work in. Anthropic's research shows that 65% of enterprise AI failures in 2025 were attributed to context drift or memory loss during multi-step reasoning.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Keep instruction files short.</span> <span class="practice-detail">Under 200 lines is the target. HumanLayer runs theirs at 60 lines. If the agent ignores your rules, the file is too long.</span></li>
+        <li><span class="practice-title">Only write what the agent can't infer.</span> <span class="practice-detail">Skip standard language conventions, detailed API docs, and things that change frequently. Include non-obvious commands, style rules that differ from defaults, and architectural decisions.</span></li>
+        <li><span class="practice-title">Use progressive disclosure.</span> <span class="practice-detail">Layer your context: global preferences &rarr; project conventions &rarr; directory-specific rules. Child files load on demand, not upfront.</span></li>
+      </ul>
+
+      <blockquote>Human-curated context consistently outperforms LLM-generated context &mdash; roughly 3% success rate reduction and 20%+ cost increase when letting AI write its own instructions.<cite>&mdash; Addy Osmani, analysis of 2,500+ config files</cite></blockquote>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic: Context Engineering</a>
+        <a href="https://www.humanlayer.dev/blog/writing-a-good-claude-md">HumanLayer: Good CLAUDE.md</a>
+        <a href="https://blog.jetbrains.com/research/2025/12/efficient-context-management/">JetBrains: Context Management</a>
+        <a href="https://addyosmani.com/blog/ai-coding-workflow/">Osmani: LLM Coding Workflow</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D2: Specification -->
+  <section class="fade-in" id="d2">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">2</span> Dimension Two</div>
+      <h2>Specification</h2>
+      <p class="lead">Spec-Driven Development (SDD) is the 2026 consensus. Write the spec before the code. Update it as decisions are made. It IS the ground truth.</p>
+
+      <p>A specification isn't bureaucracy &mdash; it's leverage. Vague specs multiply errors across every agent that reads them. Strong specs with clear architecture, boundaries, and edge cases multiply into precise implementations. The spec also serves as your session handoff: the next session reads it first to understand where you left off.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Every spec needs 6 elements.</span> <span class="practice-detail">Outcomes, scope boundaries, constraints, prior decisions, task breakdown, and verification criteria. Missing any of these creates ambiguity agents will fill with assumptions.</span></li>
+        <li><span class="practice-title">Use three-tier boundaries.</span> <span class="practice-detail">"Always do" / "Ask first" / "Never do" &mdash; this structure eliminates the gray zone where agents make wrong calls.</span></li>
+        <li><span class="practice-title">Use JSON for critical tracking.</span> <span class="practice-detail">Models are less likely to inappropriately overwrite JSON than Markdown. For feature lists and progress tracking, JSON is safer.</span></li>
+      </ul>
+
+      <blockquote>Commit after each small task &mdash; "save points in a game." Descriptive messages enable agents to reconstruct context from git history alone.<cite>&mdash; Addy Osmani</cite></blockquote>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://addyosmani.com/blog/good-spec/">Osmani: Good Spec for AI</a>
+        <a href="https://www.augmentcode.com/guides/what-is-spec-driven-development">Augment Code: SDD</a>
+        <a href="https://thoughtworks.medium.com/spec-driven-development-d85995a81387">Thoughtworks: SDD</a>
+        <a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Anthropic: Long-Running Agents</a>
+        <a href="https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html">Fowler: SDD Tools</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D3: Memory & Persistence -->
+  <section class="fade-in" id="d3">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">3</span> Dimension Three</div>
+      <h2>Memory &amp; Persistence</h2>
+      <p class="lead">Anything that must survive context compaction should live outside the context window entirely. Don't fight the window limit &mdash; route around it.</p>
+
+      <p>There's a crucial distinction between <strong>RAG</strong> (what does the document say?) and <strong>Memory</strong> (what has the agent learned over time?). Production agents need both. But the simplest approach is often the best: file-based persistence &mdash; spec files, progress files, and git history &mdash; consistently outperforms complex memory systems for coding agents.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">File systems are natural agent state.</span> <span class="practice-detail">Harrison Chase: "File systems are a natural and powerful way to represent an agent's state, allowing agents to offload memory and manage long documents without overloading token windows."</span></li>
+        <li><span class="practice-title">Anchored iterative summarization.</span> <span class="practice-detail">Outperforms full-reconstruction compaction across 36,000 real engineering sessions (Factory evaluation). Preserve architectural decisions, unresolved bugs, and implementation details. Discard redundant tool outputs.</span></li>
+        <li><span class="practice-title">Temporal knowledge graphs beat flat memory.</span> <span class="practice-detail">Zep scores 63.8% vs Mem0's 49.0% on LongMemEval. Graph structures shine when agents need to understand explicit relationships and track how facts evolve over time.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://opendatascience.com/harrison-chase-on-deep-agents-the-next-evolution-in-autonomous-ai/">Chase: Deep Agents</a>
+        <a href="https://arxiv.org/abs/2512.13564">arXiv: Memory in AI Agents</a>
+        <a href="https://machinelearningmastery.com/vector-databases-vs-graph-rag-for-agent-memory-when-to-use-which/">Vector vs Graph RAG</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D4: Skills -->
+  <section class="fade-in" id="d4">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">4</span> Dimension Four</div>
+      <h2>Skills</h2>
+      <p class="lead">Skills are reusable agent capabilities that load on demand &mdash; unlike context files which load every session. They're the building blocks of agent expertise.</p>
+
+      <p>Anthropic's 32-page Skills Guide (January 2026) formalized the architecture: a SKILL.md file with optional scripts, references, and assets. The key insight is progressive disclosure &mdash; YAML frontmatter is always loaded (so the agent knows the skill exists), the body loads only when relevant, and linked files are discovered as needed. This means skills don't bloat conversations where they aren't used.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Keep SKILL.md under 500 lines.</span> <span class="practice-detail">Move detailed documentation to references/. The skill file itself should be the workflow &mdash; steps, decision points, output format.</span></li>
+        <li><span class="practice-title">Description must include trigger conditions.</span> <span class="practice-detail">Don't just say what the skill does &mdash; say when it should be invoked. "Use when the user asks to review finances" is better than "Financial review tool."</span></li>
+        <li><span class="practice-title">Every tool must justify its existence.</span> <span class="practice-detail">Tools should be self-contained, non-overlapping, and purpose-specific. If a human engineer can't definitively say which tool to use in a given situation, an AI agent can't do better.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf">Anthropic: Skills Guide</a>
+        <a href="https://agentskills.io">agentskills.io</a>
+        <a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Anthropic: Context Engineering</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D5: Agent Orchestration -->
+  <section class="fade-in" id="d5">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">5</span> Dimension Five</div>
+      <h2>Agent Orchestration</h2>
+      <p class="lead">Hierarchical delegation is the dominant production pattern. The orchestrator decomposes, delegates, and merges &mdash; specialists do the work.</p>
+
+      <p>The field is going through its microservices revolution. Single all-purpose agents are being replaced by orchestrated teams of specialists: researcher, planner, coder, reviewer. The optimal team size is 3&ndash;5 agents with 5&ndash;6 tasks each. More agents create coordination overhead without proportional gains.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Multi-model routing cuts costs.</span> <span class="practice-detail">Planning on cheaper models, implementation on mid-tier, architecture decisions on premium models, review on specialized models. Main session on Opus, sub-agents on Sonnet.</span></li>
+        <li><span class="practice-title">Plan approval gates before coding.</span> <span class="practice-detail">Require agents to write implementation plans before touching code. It's cheaper to fix a bad plan than bad code.</span></li>
+        <li><span class="practice-title">Writer/Reviewer separation.</span> <span class="practice-detail">Session A implements, Session B reviews with fresh context. The reviewer won't be biased toward defending code it just wrote.</span></li>
+      </ul>
+
+      <blockquote>GitHub found that treating agents like distributed system components &mdash; with typed handoffs and explicit state contracts &mdash; is key to reliable multi-agent orchestration.<cite>&mdash; Addy Osmani, The Code Agent Orchestra</cite></blockquote>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://addyosmani.com/blog/code-agent-orchestra/">Osmani: Code Agent Orchestra</a>
+        <a href="https://code.claude.com/docs/en/agent-teams">Anthropic: Agent Teams</a>
+        <a href="https://getpushtoprod.substack.com/p/30-tips-for-claude-code-agent-teams">30 Tips for Agent Teams</a>
+        <a href="https://simonwillison.net/2025/Oct/5/parallel-coding-agents/">Willison: Parallel Agents</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D6: Tool Ecosystem -->
+  <section class="fade-in" id="d6">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">6</span> Dimension Six</div>
+      <h2>Tool Ecosystem</h2>
+      <p class="lead">89.8% of MCP tool descriptions have unstated limitations. Tool design deserves the same investment as human-computer interface design.</p>
+
+      <p>The Model Context Protocol (MCP) ecosystem has exploded &mdash; 10,000+ servers, 97M+ monthly SDK downloads. But quantity doesn't mean quality. Academic research found three pervasive "smells" in tool descriptions: unstated limitations (89.8%), missing usage guidelines (89.3%), and opaque parameters (84.3%). Tool description quality directly impacts agent performance &mdash; a poorly described tool is a liability, not an asset.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">The clarity test.</span> <span class="practice-detail">"Would a junior developer understand this tool definition?" If not, the AI agent won't either. Include examples, edge cases, input formats, and boundaries between similar tools.</span></li>
+        <li><span class="practice-title">Code execution over direct tool calls.</span> <span class="practice-detail">Agents writing code to call tools (instead of direct invocation) achieves 98.7% token reduction. Data stays in the sandbox, and intermediate results don't pollute the context window.</span></li>
+        <li><span class="practice-title">Hooks are deterministic; instructions are advisory.</span> <span class="practice-detail">If an action must happen every time (lint after edit, block writes to protected folders), use a hook. CLAUDE.md instructions can be ignored under pressure.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://arxiv.org/html/2602.14878v1">arXiv: MCP Tool Smells</a>
+        <a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Anthropic: Writing Tools</a>
+        <a href="https://www.anthropic.com/engineering/code-execution-with-mcp">Anthropic: Code Execution + MCP</a>
+        <a href="https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/">MCP 2026 Roadmap</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D7: Quality Gates -->
+  <section class="fade-in" id="d7">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">7</span> Dimension Seven</div>
+      <h2>Quality Gates</h2>
+      <p class="lead">Self-verification is the single highest-leverage thing you can do. Give the agent a way to check its own work.</p>
+
+      <p>Without clear success criteria, an agent produces something that <em>looks</em> right but doesn't work &mdash; and you become the only feedback loop. The emerging pattern is AI reviewing AI: a separate verification agent with a different model, fresh prompt, and no investment in defending the original output. This separation of concerns is critical because the writing agent is inherently biased toward its own solution.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">TDD is the highest-leverage pattern.</span> <span class="practice-detail">Write failing tests first, confirm they fail, then implement. Without explicit TDD guidance, agents skip the Red phase entirely &mdash; writing tests after the fact that merely confirm what was implemented.</span></li>
+        <li><span class="practice-title">5-phase quality gates.</span> <span class="practice-detail">Spec Stub &rarr; Gherkin Decomposition &rarr; Red Test &rarr; Green Implementation &rarr; Refactor. Each phase has gate conditions before advancing to the next.</span></li>
+        <li><span class="practice-title">Parallel review agents.</span> <span class="practice-detail">One agent focused on security, one on performance, one on test coverage. Running in parallel prevents the initial-finding bias where the first issue found dominates the review.</span></li>
+      </ul>
+
+      <blockquote>The bottleneck is no longer generation. It's verification.<cite>&mdash; Addy Osmani</cite></blockquote>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://simonwillison.net/guides/agentic-engineering-patterns/red-green-tdd/">Willison: Red/Green TDD</a>
+        <a href="https://www.augmentcode.com/guides/spec-tdd-shippable-ai-generated-code">Augment Code: Spec + TDD</a>
+        <a href="https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/">alexop.dev: Claude Code TDD</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D8: Safety & Guardrails -->
+  <section class="fade-in" id="d8">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">8</span> Dimension Eight</div>
+      <h2>Safety &amp; Guardrails</h2>
+      <p class="lead">Only 14.4% of production agents have full security approval. Three-layer defense is the validated architecture.</p>
+
+      <p>Safety isn't a feature you add later &mdash; it's a foundational design principle. The three-layer defense model provides increasing sophistication at increasing cost: rule-based validators (&lt;10ms) catch format violations and PII, ML classifiers (50-200ms) detect toxicity and jailbreaks, and LLM semantic validation (300-2000ms) checks groundedness and factual consistency. The key insight: make agents accurate first, then layer guardrails.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Risk-based routing.</span> <span class="practice-detail">Low-risk (internal FAQs): minimal guardrails. Medium-risk (customer-facing): rules + ML. High-risk (financial, medical, legal): full three-layer + human review.</span></li>
+        <li><span class="practice-title">Hooks enforce, instructions suggest.</span> <span class="practice-detail">PreToolUse hooks with hard deny decisions and JSONL logging are deterministic. Rules files in the prompt are advisory &mdash; prompt injection can override them.</span></li>
+        <li><span class="practice-title">Agents will find workarounds.</span> <span class="practice-detail">NVIDIA's NemoClaw study: an agent edited its own security config. When blocked, it copied the file and restarted. Defense in depth is the only reliable approach.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://authoritypartners.com/insights/ai-agent-guardrails-production-guide-for-2026/">AI Agent Guardrails 2026</a>
+        <a href="https://huyenchip.com/2025/01/07/agents.html">Chip Huyen: Agents</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D9: Research Pipelines -->
+  <section class="fade-in" id="d9">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">9</span> Dimension Nine</div>
+      <h2>Research Pipelines</h2>
+      <p class="lead">Start with the simplest pattern that works. Only add complexity when it demonstrably improves outcomes.</p>
+
+      <p>Anthropic identifies 5 workflow patterns and 1 agent pattern, ordered by increasing complexity: prompt chaining, routing, parallelization, orchestrator-workers, evaluator-optimizer, and full agent loops. Most research tasks don't need the full agent pattern. The validated 6-stage pipeline &mdash; intake, query reformulation, parallel retrieval, deep-dive, synthesis, expert review &mdash; covers the majority of research needs.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Perspective-guided search (STORM).</span> <span class="practice-detail">Stanford's STORM pattern has experts participate in query formulation, not just review. This produces more comprehensive coverage than naive keyword search because different perspectives generate different queries.</span></li>
+        <li><span class="practice-title">Evaluator-optimizer loops.</span> <span class="practice-detail">Generate, evaluate against quality criteria, refine. Continue until a quality threshold is met. This prevents the "first draft is final" anti-pattern.</span></li>
+        <li><span class="practice-title">Source quality scoring.</span> <span class="practice-detail">Score each source on citation count, venue tier, author credibility, peer review status, recency, and retraction history. Don't treat a blog post the same as a peer-reviewed paper.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://www.anthropic.com/research/building-effective-agents">Anthropic: Building Agents</a>
+        <a href="https://www.marktechpost.com/2025/08/07/a-coding-implementation-to-advanced-langgraph-multi-agent-research-pipeline-for-automated-insights-generation/">LangGraph Research Pipeline</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D10: Knowledge Graph -->
+  <section class="fade-in" id="d10">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">10</span> Dimension Ten</div>
+      <h2>Knowledge Graph</h2>
+      <p class="lead">Hybrid RAG &mdash; vector search for entry points, knowledge graph for precision &mdash; is the 2026 consensus.</p>
+
+      <p>Seven production case studies show knowledge graphs outperforming naive RAG for agent memory. The common pattern: model the domain as a graph, let agents traverse relationships, constrain execution with loops, and build in governance. Vector databases find starting points via semantic similarity; knowledge graphs follow deterministic paths with up to 99% precision.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Graph when relationships matter.</span> <span class="practice-detail">Use graphs when agents need to understand explicit relationships, connect preferences to entities, or track how facts evolve over time. Use vector stores for unstructured similarity search.</span></li>
+        <li><span class="practice-title">Selective memory extraction.</span> <span class="practice-detail">Mem0's pattern: extract salient facts as structured updates rather than replaying full conversation history. Agents retrieve only relevant memories per task.</span></li>
+        <li><span class="practice-title">Graph grounding reduces hallucination.</span> <span class="practice-detail">Constraining agent outputs to graph-verified paths provides auditable retrieval traces &mdash; you can see exactly why the agent said what it said.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://neo4j.com/blog/agentic-ai/ai-agent-useful-case-studies/">Neo4j: AI Agent Case Studies</a>
+        <a href="https://machinelearningmastery.com/vector-databases-vs-graph-rag-for-agent-memory-when-to-use-which/">Vector vs Graph RAG</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D11: Evaluation -->
+  <section class="fade-in" id="d11">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">11</span> Dimension Eleven</div>
+      <h2>Evaluation Framework</h2>
+      <p class="lead">Quality is the #1 barrier to agent adoption. 57% of orgs have agents in production, but 32% cite quality as the top challenge.</p>
+
+      <p>Amazon's 4-dimensional framework is the most comprehensive production evaluation approach: Quality (correctness, faithfulness, tool accuracy), Performance (latency, token consumption), Responsibility (hallucination, toxicity, topic adherence), and Cost (direct inference + indirect human review effort). The critical insight: evaluate at the component level using traces, not just the final output.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Every failure becomes a golden test case.</span> <span class="practice-detail">Production incidents feed back into evaluation suites. Local/CI runs automated metrics on golden sets; pre-release uses fixed human samples; production samples traces periodically.</span></li>
+        <li><span class="practice-title">Watch for 4 failure modes.</span> <span class="practice-detail">Ghost Actions (claims success without executing), Interrogation Loops (infinite info requests), Confident Fabricator (polished output from unvalidated data), Budget Burner (correct but wastefully expensive).</span></li>
+        <li><span class="practice-title">Operating envelopes.</span> <span class="practice-detail">Max steps, token budgets, wall-clock timeouts. Fail runs that are correct but economically unviable. If stuck 3+ iterations on the same error, kill and reassign to a fresh agent.</span></li>
+      </ul>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://aws.amazon.com/blogs/machine-learning/evaluating-ai-agents-real-world-lessons-from-building-agentic-systems-at-amazon/">Amazon: Evaluating AI Agents</a>
+        <a href="https://www.confident-ai.com/blog/definitive-ai-agent-evaluation-guide">Confident AI: Evaluation Guide</a>
+        <a href="https://fordelstudios.com/research/state-of-ai-agent-frameworks-2026">State of AI Agents 2026</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- D12: Process Workflow -->
+  <section class="fade-in" id="d12">
+    <div class="dim-card">
+      <div class="dim-number"><span class="icon">12</span> Dimension Twelve</div>
+      <h2>Process Workflow</h2>
+      <p class="lead">Explore &rarr; Plan &rarr; Implement &rarr; Verify. This 4-phase workflow is validated by Anthropic's own teams.</p>
+
+      <p>The shift from "developer who writes code" to "orchestrator who directs agents" changes which skills matter. Architecture, specification writing, context management, and output validation are the new critical path. 78% of Claude Code sessions in Q1 2026 involve multi-file edits (up from 34% in Q1 2025) &mdash; agents are doing real engineering work, not just autocomplete.</p>
+
+      <h3>Key Practices</h3>
+      <ul class="practices">
+        <li><span class="practice-title">Single-feature focus per session.</span> <span class="practice-detail">Restricting each session to one feature was "critical" in preventing agents from attempting monolithic implementations. Clear context between unrelated tasks.</span></li>
+        <li><span class="practice-title">The interview pattern.</span> <span class="practice-detail">For larger features, have the agent interview you first: implementation details, UI/UX, edge cases, tradeoffs. Then write the spec. Then start a fresh session to implement.</span></li>
+        <li><span class="practice-title">Course-correct early.</span> <span class="practice-detail">After 2 failed corrections, clear the context and rewrite with a better initial prompt. Don't keep patching a polluted conversation &mdash; start fresh.</span></li>
+      </ul>
+
+      <blockquote>Coding agents basically didn't work before December 2025 and basically work since.<cite>&mdash; Simon Willison, November 2025</cite></blockquote>
+
+      <div class="refs">
+        <div class="refs-label">References</div>
+        <a href="https://addyosmani.com/blog/ai-coding-workflow/">Osmani: LLM Coding Workflow 2026</a>
+        <a href="https://resources.anthropic.com/2026-agentic-coding-trends-report">Anthropic: Agentic Trends 2026</a>
+        <a href="https://www.ernestchiang.com/en/posts/2025/how-anthropic-teams-use-claude-code/">How Anthropic Uses Claude Code</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Project Patterns -->
+  <section class="fade-in" id="patterns">
+    <div class="section-label">Application</div>
+    <h2>Project Type Patterns</h2>
+    <p>Not every project needs all 12 dimensions. Match the dimensions to the work:</p>
+
+    <table class="pattern-table">
+      <thead>
+        <tr>
+          <th>Project Type</th>
+          <th>Key Dimensions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Code Feature</strong></td>
+          <td>
+            <div class="dim-tags">
+              <span class="dim-tag">D1 Context</span>
+              <span class="dim-tag">D2 Spec</span>
+              <span class="dim-tag">D7 Quality</span>
+              <span class="dim-tag">D8 Safety</span>
+              <span class="dim-tag">D12 Process</span>
+              <span class="dim-tag">D9 Research</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Research Project</strong></td>
+          <td>
+            <div class="dim-tags">
+              <span class="dim-tag">D2 Spec</span>
+              <span class="dim-tag">D3 Memory</span>
+              <span class="dim-tag">D9 Research</span>
+              <span class="dim-tag">D10 Knowledge</span>
+              <span class="dim-tag">D11 Evaluation</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Infrastructure / Ops</strong></td>
+          <td>
+            <div class="dim-tags">
+              <span class="dim-tag">D1 Context</span>
+              <span class="dim-tag">D2 Spec</span>
+              <span class="dim-tag">D6 Tools</span>
+              <span class="dim-tag">D8 Safety</span>
+              <span class="dim-tag">D12 Process</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Skill / Agent Dev</strong></td>
+          <td>
+            <div class="dim-tags">
+              <span class="dim-tag">D1 Context</span>
+              <span class="dim-tag">D2 Spec</span>
+              <span class="dim-tag">D4 Skills</span>
+              <span class="dim-tag">D5 Agents</span>
+              <span class="dim-tag">D7 Quality</span>
+              <span class="dim-tag">D11 Eval</span>
+              <span class="dim-tag">D12 Process</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Org / Admin</strong></td>
+          <td>
+            <div class="dim-tags">
+              <span class="dim-tag">D1 Context</span>
+              <span class="dim-tag">D8 Safety</span>
+              <span class="dim-tag">D12 Process</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Where to Start -->
+  <section class="fade-in" id="start">
+    <div class="section-label">Getting Started</div>
+    <h2>The Bootstrapping Order</h2>
+    <p>If you're building an agent development setup from scratch, this order maximizes leverage. Each phase creates infrastructure that makes subsequent phases more effective.</p>
+
+    <div class="boot-step">
+      <div class="boot-num">1</div>
+      <div class="boot-content">
+        <h3>Evaluation &amp; Context</h3>
+        <p>You can't improve what you can't measure. Set up golden test cases for your workflows and measure your context budget. Everything else depends on knowing whether changes help or hurt.</p>
+      </div>
+    </div>
+
+    <div class="boot-step">
+      <div class="boot-num">2</div>
+      <div class="boot-content">
+        <h3>TDD &amp; Reflection</h3>
+        <p>Give agents a way to verify their own work (TDD) and a structured way to learn from each task (reflection loops). These two practices have the highest research support as single-point interventions.</p>
+      </div>
+    </div>
+
+    <div class="boot-step">
+      <div class="boot-num">3</div>
+      <div class="boot-content">
+        <h3>Research &amp; Tool Quality</h3>
+        <p>Upgrade your research pipeline so external knowledge acquisition is reliable. Audit tool descriptions so agents select the right tools. These are meta-improvements &mdash; they make everything else you build with agents higher quality.</p>
+      </div>
+    </div>
+
+    <div class="boot-step">
+      <div class="boot-num">4</div>
+      <div class="boot-content">
+        <h3>Memory &amp; Operating Envelopes</h3>
+        <p>Wire your knowledge graph into agent session startup. Add token budgets and step limits. These are optimizations &mdash; they improve efficiency and prevent waste, but the system works without them.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Sources -->
+  <section class="fade-in" id="sources">
+    <div class="section-label">Bibliography</div>
+    <h2>Sources</h2>
+
+    <div class="source-group">
+      <h3>Anthropic (Primary)</h3>
+      <ul class="source-list">
+        <li><a href="https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents">Effective Context Engineering for AI Agents</a></li>
+        <li><a href="https://www.anthropic.com/research/building-effective-agents">Building Effective AI Agents</a></li>
+        <li><a href="https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents">Effective Harnesses for Long-Running Agents</a></li>
+        <li><a href="https://www.anthropic.com/engineering/writing-tools-for-agents">Writing Tools for Agents (ACI Design)</a></li>
+        <li><a href="https://www.anthropic.com/engineering/code-execution-with-mcp">Code Execution with MCP</a></li>
+        <li><a href="https://resources.anthropic.com/2026-agentic-coding-trends-report">2026 Agentic Coding Trends Report</a></li>
+        <li><a href="https://resources.anthropic.com/hubfs/The-Complete-Guide-to-Building-Skill-for-Claude.pdf">Complete Guide to Building Skills for Claude</a> <span class="author">32 pages, Jan 2026</span></li>
+        <li><a href="https://code.claude.com/docs/en/agent-teams">Claude Code Agent Teams Documentation</a></li>
+        <li><a href="https://www.ernestchiang.com/en/posts/2025/how-anthropic-teams-use-claude-code/">How Anthropic Teams Use Claude Code</a></li>
+      </ul>
+    </div>
+
+    <div class="source-group">
+      <h3>Expert Practitioners</h3>
+      <ul class="source-list">
+        <li><a href="https://addyosmani.com/blog/code-agent-orchestra/">Addy Osmani: The Code Agent Orchestra</a></li>
+        <li><a href="https://addyosmani.com/blog/good-spec/">Addy Osmani: How to Write a Good Spec for AI Agents</a></li>
+        <li><a href="https://addyosmani.com/blog/ai-coding-workflow/">Addy Osmani: My LLM Coding Workflow Going Into 2026</a></li>
+        <li><a href="https://simonwillison.net/guides/agentic-engineering-patterns/">Simon Willison: Agentic Engineering Patterns</a></li>
+        <li><a href="https://simonwillison.net/guides/agentic-engineering-patterns/red-green-tdd/">Simon Willison: Red/Green TDD</a></li>
+        <li><a href="https://simonwillison.net/2025/Oct/5/parallel-coding-agents/">Simon Willison: Parallel Coding Agents</a></li>
+        <li><a href="https://huyenchip.com/2025/01/07/agents.html">Chip Huyen: Agents</a></li>
+        <li><a href="https://opendatascience.com/harrison-chase-on-deep-agents-the-next-evolution-in-autonomous-ai/">Harrison Chase: Deep Agents</a></li>
+      </ul>
+    </div>
+
+    <div class="source-group">
+      <h3>Industry &amp; Framework</h3>
+      <ul class="source-list">
+        <li><a href="https://www.augmentcode.com/guides/spec-tdd-shippable-ai-generated-code">Augment Code: Spec + TDD for Shippable AI Code</a></li>
+        <li><a href="https://www.augmentcode.com/guides/what-is-spec-driven-development">Augment Code: What Is Spec-Driven Development</a></li>
+        <li><a href="https://thoughtworks.medium.com/spec-driven-development-d85995a81387">Thoughtworks: Spec-Driven Development</a></li>
+        <li><a href="https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html">Martin Fowler: SDD Tools (Kiro, spec-kit, Tessl)</a></li>
+        <li><a href="https://blog.modelcontextprotocol.io/posts/2026-mcp-roadmap/">MCP 2026 Roadmap</a></li>
+        <li><a href="https://www.humanlayer.dev/blog/writing-a-good-claude-md">HumanLayer: Writing a Good CLAUDE.md</a></li>
+        <li><a href="https://getpushtoprod.substack.com/p/30-tips-for-claude-code-agent-teams">30 Tips for Claude Code Agent Teams</a></li>
+        <li><a href="https://alexop.dev/posts/custom-tdd-workflow-claude-code-vue/">alexop.dev: Custom TDD Workflow</a></li>
+        <li><a href="https://fordelstudios.com/research/state-of-ai-agent-frameworks-2026">State of AI Agent Frameworks 2026</a></li>
+      </ul>
+    </div>
+
+    <div class="source-group">
+      <h3>Evaluation &amp; Safety</h3>
+      <ul class="source-list">
+        <li><a href="https://aws.amazon.com/blogs/machine-learning/evaluating-ai-agents-real-world-lessons-from-building-agentic-systems-at-amazon/">Amazon: Evaluating AI Agents</a></li>
+        <li><a href="https://www.confident-ai.com/blog/definitive-ai-agent-evaluation-guide">Confident AI: Agent Evaluation Guide</a></li>
+        <li><a href="https://authoritypartners.com/insights/ai-agent-guardrails-production-guide-for-2026/">AI Agent Guardrails Production Guide 2026</a></li>
+        <li><a href="https://blog.jetbrains.com/research/2025/12/efficient-context-management/">JetBrains Research: Efficient Context Management</a></li>
+        <li><a href="https://dev.to/singhdevhub/how-we-prevent-ai-agents-drift-code-slop-generation-2eb7">Preventing AI Agent Drift</a></li>
+      </ul>
+    </div>
+
+    <div class="source-group">
+      <h3>Academic Papers</h3>
+      <ul class="source-list">
+        <li><a href="https://arxiv.org/abs/2510.25445">Agentic AI: A Comprehensive Survey</a> <span class="author">arXiv 2510.25445 &mdash; 90 studies, dual-paradigm framework</span></li>
+        <li><a href="https://arxiv.org/abs/2512.13564">Memory in the Age of AI Agents</a> <span class="author">arXiv 2512.13564 &mdash; memory automation, RL, multimodal</span></li>
+        <li><a href="https://arxiv.org/abs/2501.06322">Multi-Agent Collaboration Mechanisms</a> <span class="author">arXiv 2501.06322 &mdash; cooperation/competition structures</span></li>
+        <li><a href="https://arxiv.org/abs/2508.07407">Self-Evolving AI Agents</a> <span class="author">arXiv 2508.07407 &mdash; lifelong adaptive systems</span></li>
+        <li><a href="https://arxiv.org/html/2602.14878v1">MCP Tool Descriptions Are Smelly</a> <span class="author">arXiv 2602.14878 &mdash; 89.8% have unstated limitations</span></li>
+      </ul>
+    </div>
+
+    <div class="source-group">
+      <h3>Knowledge Graph &amp; Memory</h3>
+      <ul class="source-list">
+        <li><a href="https://neo4j.com/blog/agentic-ai/ai-agent-useful-case-studies/">Neo4j: AI Agent Case Studies</a></li>
+        <li><a href="https://machinelearningmastery.com/vector-databases-vs-graph-rag-for-agent-memory-when-to-use-which/">Vector DBs vs Graph RAG for Agent Memory</a></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer>
+    <p>Research synthesized April 2026 &middot; 40+ sources &middot; Built with <a href="https://claude.ai/code">Claude Code</a></p>
+    <p style="margin-top: 8px;"><a href="https://mrjuul.github.io/showcase/">mrjuul.github.io/showcase</a></p>
+  </footer>
+
+</div>
+
+<script>
+  // Fade-in on scroll
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1 });
+  document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+</script>
+
+</body>
+</html>
