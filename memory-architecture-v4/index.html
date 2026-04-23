@@ -1,0 +1,1471 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Memory Architecture v4 — An edition</title>
+<meta name="description" content="Four persistence layers, one ingestion pipeline, eight skills. A map of a personal memory system built over twenty sessions." />
+
+<meta property="og:title" content="Memory Architecture v4 — An edition" />
+<meta property="og:description" content="Four persistence layers, one ingestion pipeline, eight skills. A map of a personal memory system built over twenty sessions." />
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://mrjuul.github.io/showcase/memory-architecture-v4/" />
+<meta property="og:image" content="https://mrjuul.github.io/showcase/memory-architecture-v4/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="theme-color" content="#F4B860" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Newsreader:ital,opsz,wght@0,6..72,300..700;1,6..72,300..700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+
+<style>
+/* =========================================================
+   Memory Architecture v4 — editorial monograph
+   Palette: warm ink + aged paper + amber authority tiers
+   ========================================================= */
+
+:root{
+  --ink:          #12100E;
+  --ink-2:        #1A1712;
+  --ink-3:        #221D16;
+  --rule:         #3A3328;
+  --rule-soft:    #2A251E;
+  --paper:        #E8E0D0;
+  --paper-dim:    #B8AE9B;
+  --paper-faint:  #7A7365;
+
+  --tier-1:       #F4B860;  /* CLAUDE.md — brightest */
+  --tier-2:       #C89456;
+  --tier-3:       #8A6B3F;
+  --tier-4:       #4D3E2A;  /* claude-mem — dimmest */
+
+  --vermillion:   #D94F2A;
+  --vermillion-d: #A83915;
+  --moss:         #6B7A4E;
+
+  --f-display: "Fraunces", "Times New Roman", serif;
+  --f-body:    "Newsreader", "Georgia", serif;
+  --f-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+  --measure: 34rem;
+}
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; background:var(--ink); color:var(--paper); }
+html{ scroll-behavior:smooth; }
+body{
+  font-family:var(--f-body);
+  font-size:18px;
+  line-height:1.55;
+  font-feature-settings:"kern","liga","onum","pnum";
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; animation-iteration-count:1 !important; transition-duration:0.001ms !important; scroll-behavior:auto !important; }
+}
+
+a{ color:inherit; text-decoration:none; border-bottom:1px solid var(--rule); }
+a:hover{ border-bottom-color:var(--tier-1); }
+::selection{ background:var(--vermillion); color:var(--paper); }
+
+.mono{ font-family:var(--f-mono); font-size:0.82em; letter-spacing:0.01em; }
+.smallcaps{
+  font-family:var(--f-display);
+  font-variant:all-small-caps;
+  letter-spacing:0.14em;
+  font-weight:500;
+  color:var(--paper-dim);
+}
+.rule{ border:0; border-top:1px solid var(--rule); margin:0; }
+.rule-hair{ border:0; border-top:1px solid var(--rule-soft); margin:0; }
+
+/* =================== LAYOUT GRID =================== */
+.page{
+  max-width:1440px;
+  margin:0 auto;
+  padding:0 clamp(1.5rem, 4vw, 5rem);
+}
+.grid{
+  display:grid;
+  grid-template-columns:repeat(12, 1fr);
+  column-gap:clamp(1rem, 2vw, 2rem);
+}
+.body-col{ grid-column:2 / span 6; max-width:var(--measure); }
+.margin-col{ grid-column:9 / span 4; }
+@media (max-width: 900px){
+  .grid{ grid-template-columns:1fr; }
+  .body-col, .margin-col{ grid-column:1; max-width:100%; }
+}
+
+/* =================== MASTHEAD =================== */
+.masthead{
+  padding-top:2.5rem;
+  padding-bottom:3rem;
+  border-bottom:1px solid var(--rule);
+}
+.masthead-row{
+  display:flex; justify-content:space-between; align-items:baseline;
+  gap:2rem; flex-wrap:wrap;
+  font-family:var(--f-mono);
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:0.14em;
+  color:var(--paper-faint);
+}
+.masthead-row .dot{ display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--vermillion); margin-right:0.5rem; vertical-align:middle; transform:translateY(-1px); }
+
+/* =================== HERO / SECTION I =================== */
+.section{
+  position:relative;
+  padding:clamp(4rem, 9vh, 8rem) 0;
+  border-bottom:1px solid var(--rule);
+}
+.section-head{
+  display:grid;
+  grid-template-columns:repeat(12, 1fr);
+  column-gap:clamp(1rem, 2vw, 2rem);
+  align-items:end;
+  margin-bottom:3rem;
+}
+.numeral{
+  grid-column:1 / span 3;
+  font-family:var(--f-display);
+  font-weight:300;
+  font-variation-settings:"opsz" 144, "SOFT" 50;
+  font-size:clamp(8rem, 18vw, 16rem);
+  line-height:0.8;
+  color:var(--paper);
+  letter-spacing:-0.04em;
+  margin:0;
+  position:relative;
+}
+.numeral::after{
+  content:""; position:absolute; right:-0.6rem; top:0.2em;
+  width:8px; height:8px; border-radius:50%; background:var(--vermillion);
+}
+.section-title{
+  grid-column:5 / span 7;
+  font-family:var(--f-display);
+  font-variation-settings:"opsz" 72, "SOFT" 30;
+  font-weight:400;
+  font-size:clamp(2rem, 4vw, 3.25rem);
+  line-height:1.05;
+  letter-spacing:-0.015em;
+  margin:0;
+  color:var(--paper);
+}
+.section-title em{ font-style:italic; color:var(--tier-1); font-weight:300; }
+.section-kicker{
+  grid-column:5 / span 7;
+  margin-bottom:1rem;
+}
+@media (max-width: 900px){
+  .numeral{ grid-column:1 / -1; font-size:6rem; }
+  .section-title, .section-kicker{ grid-column:1 / -1; }
+}
+
+.lede{
+  font-family:var(--f-body);
+  font-size:clamp(1.15rem, 1.4vw, 1.35rem);
+  line-height:1.5;
+  color:var(--paper);
+  font-weight:360;
+}
+.lede .drop{
+  font-family:var(--f-display);
+  font-variation-settings:"opsz" 144, "SOFT" 20;
+  float:left;
+  font-size:4.2em;
+  line-height:0.82;
+  padding-right:0.12em;
+  padding-top:0.08em;
+  color:var(--tier-1);
+  font-weight:400;
+}
+
+p{ margin:0 0 1.1em; }
+p.spacer{ height:1.4em; margin:0; }
+
+.pull{
+  font-family:var(--f-display);
+  font-style:italic;
+  font-variation-settings:"opsz" 72, "SOFT" 50;
+  font-size:1.35rem;
+  line-height:1.35;
+  color:var(--paper);
+  border-left:2px solid var(--vermillion);
+  padding:0.1em 0 0.1em 1.2em;
+  margin:2rem 0;
+}
+.pull cite{
+  display:block;
+  font-family:var(--f-mono);
+  font-style:normal;
+  font-size:0.7rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  margin-top:0.8em;
+}
+
+/* =================== MARGINALIA =================== */
+.marginalia{
+  font-family:var(--f-body);
+  font-size:0.88rem;
+  line-height:1.45;
+  color:var(--paper-dim);
+  padding-top:0.4rem;
+  border-top:1px solid var(--rule);
+  margin-top:0.4rem;
+}
+.marginalia .label{
+  display:block;
+  font-family:var(--f-mono);
+  font-size:0.65rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  margin-bottom:0.6rem;
+}
+.marginalia strong{ color:var(--paper); font-weight:600; }
+
+/* =================== AUTHORITY STACK =================== */
+.stack{
+  margin-top:3rem;
+  border-top:1px solid var(--rule);
+}
+.stratum{
+  display:grid;
+  grid-template-columns:6ch 1fr 1.2fr 14ch;
+  column-gap:clamp(1rem,2.5vw, 3rem);
+  align-items:baseline;
+  padding:1.8rem 0 1.8rem 0;
+  border-bottom:1px solid var(--rule);
+  position:relative;
+  cursor:pointer;
+  transition:background 220ms ease;
+}
+.stratum::before{
+  content:""; position:absolute; left:0; right:0; top:0; bottom:0;
+  background:linear-gradient(90deg, var(--tier) 0%, transparent 45%);
+  opacity:var(--bar-opacity);
+  pointer-events:none;
+  transition:opacity 220ms ease;
+}
+.stratum > *{ position:relative; }
+.stratum:hover{ background:var(--ink-2); }
+.stratum:hover::before{ opacity:calc(var(--bar-opacity) * 1.6); }
+.stratum[aria-expanded="true"] .s-detail{ max-height:800px; opacity:1; padding-top:1rem; }
+
+.s-rank{
+  font-family:var(--f-mono);
+  font-size:0.78rem;
+  letter-spacing:0.14em;
+  color:var(--tier);
+  opacity:0.9;
+  align-self:start;
+  padding-top:0.35rem;
+}
+.s-title{
+  font-family:var(--f-display);
+  font-variation-settings:"opsz" 72, "SOFT" 40;
+  font-weight:400;
+  font-size:clamp(1.5rem, 2.5vw, 2.2rem);
+  line-height:1.1;
+  color:var(--paper);
+  margin:0;
+}
+.s-title .dim{ color:var(--paper-faint); font-weight:300; font-style:italic; font-size:0.7em; margin-left:0.6em; }
+.s-gloss{
+  font-family:var(--f-body);
+  font-size:1.02rem;
+  line-height:1.45;
+  color:var(--paper-dim);
+  margin:0;
+}
+.s-weight{
+  font-family:var(--f-mono);
+  font-size:0.72rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  text-align:right;
+  color:var(--tier);
+  align-self:start;
+  padding-top:0.45rem;
+}
+.s-detail{
+  grid-column:2 / span 3;
+  max-height:0; opacity:0; overflow:hidden;
+  transition:max-height 320ms ease, opacity 220ms ease, padding 320ms ease;
+}
+.s-detail dl{
+  display:grid;
+  grid-template-columns:14ch 1fr;
+  column-gap:2rem; row-gap:0.5rem;
+  margin:0 0 1rem;
+  font-size:0.95rem;
+}
+.s-detail dt{
+  font-family:var(--f-mono);
+  font-size:0.7rem;
+  letter-spacing:0.16em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  padding-top:0.25em;
+}
+.s-detail dd{ margin:0; color:var(--paper); }
+.s-detail .ex{
+  font-family:var(--f-mono); font-size:0.82rem;
+  background:var(--ink-3); color:var(--paper-dim);
+  padding:0.9rem 1.1rem; border-left:2px solid var(--tier);
+  margin-top:0.8rem;
+}
+
+.stratum[data-tier="1"]{ --tier:var(--tier-1); --bar-opacity:0.22; }
+.stratum[data-tier="2"]{ --tier:var(--tier-2); --bar-opacity:0.16; }
+.stratum[data-tier="3"]{ --tier:var(--tier-3); --bar-opacity:0.11; }
+.stratum[data-tier="4"]{ --tier:var(--tier-4); --bar-opacity:0.08; }
+
+@media (max-width:800px){
+  .stratum{ grid-template-columns:6ch 1fr; row-gap:0.6rem; }
+  .s-gloss{ grid-column:1 / -1; }
+  .s-weight{ display:none; }
+  .s-detail{ grid-column:1 / -1; }
+}
+
+.disagree-note{
+  margin-top:2.5rem;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  column-gap:2rem;
+  align-items:start;
+}
+.disagree-note .box{
+  border:1px solid var(--rule);
+  padding:1.4rem 1.6rem;
+  position:relative;
+}
+.disagree-note .box h4{
+  font-family:var(--f-mono);
+  font-size:0.72rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  margin:0 0 0.6rem;
+  font-weight:500;
+}
+.disagree-note .box p{ margin:0; font-size:0.98rem; line-height:1.5; }
+.disagree-note .signal{ border-color:var(--vermillion); }
+.disagree-note .signal h4{ color:var(--vermillion); }
+@media (max-width:700px){ .disagree-note{ grid-template-columns:1fr; row-gap:1rem; } }
+
+/* =================== SECTION II — DATA FLOW =================== */
+.flow-wrap{
+  margin-top:2rem;
+  position:relative;
+  background:
+    radial-gradient(ellipse at 10% 20%, rgba(244,184,96,0.04), transparent 55%),
+    radial-gradient(ellipse at 90% 80%, rgba(217,79,42,0.04), transparent 55%);
+  padding:clamp(1rem, 3vw, 2.5rem) 0;
+}
+.flow-svg{ width:100%; height:auto; display:block; }
+.flow-svg text{ font-family:var(--f-mono); fill:var(--paper-dim); }
+.flow-svg .node-label{ font-size:11px; letter-spacing:0.04em; }
+.flow-svg .node-sub{ font-size:9px; fill:var(--paper-faint); }
+.flow-svg .col-label{
+  font-family:var(--f-display); font-style:italic;
+  font-size:13px; fill:var(--paper-dim); letter-spacing:0.02em;
+}
+.flow-svg .path{
+  fill:none; stroke:var(--tier-3); stroke-width:1.1;
+  stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
+  opacity:0.55;
+}
+.flow-svg.play .path{
+  animation:drawPath 2.4s cubic-bezier(.3,.1,.2,1) forwards;
+}
+.flow-svg.play .path:nth-of-type(2){ animation-delay:.1s; }
+.flow-svg.play .path:nth-of-type(3){ animation-delay:.2s; }
+.flow-svg.play .path:nth-of-type(4){ animation-delay:.3s; }
+.flow-svg.play .path:nth-of-type(5){ animation-delay:.4s; }
+.flow-svg.play .path:nth-of-type(6){ animation-delay:.5s; }
+.flow-svg.play .trunk{ animation:drawPath 1.6s .7s ease forwards; }
+.flow-svg.play .branch{ animation:drawPath 1.4s 1.6s ease forwards; }
+@keyframes drawPath{ to{ stroke-dashoffset:0; } }
+.flow-svg .node{
+  fill:var(--ink-2); stroke:var(--rule); stroke-width:1;
+  transition:fill 180ms, stroke 180ms;
+}
+.flow-svg .node.ingest{ fill:var(--vermillion); stroke:var(--vermillion-d); }
+.flow-svg .node.wiki{ fill:var(--ink-3); stroke:var(--tier-2); }
+.flow-svg .node.source{ fill:var(--ink-2); stroke:var(--tier-3); }
+.flow-svg .node.raw{ fill:var(--ink-3); stroke:var(--tier-3); stroke-dasharray:2 2; }
+.flow-svg g.group:hover .node{ stroke:var(--tier-1); }
+.flow-svg .ingest-label{ fill:var(--paper); font-weight:700; font-size:12px; letter-spacing:0.08em; }
+.flow-svg .advisory{
+  stroke:var(--vermillion); stroke-dasharray:4 4; stroke-width:1; fill:none; opacity:0.7;
+}
+.flow-svg .advisory-label{ fill:var(--vermillion); font-size:9px; letter-spacing:0.14em; text-transform:uppercase; }
+
+/* =================== SECTION III — CONSTELLATION =================== */
+.constellation{
+  margin-top:2rem;
+  position:relative;
+  background:var(--ink-2);
+  border:1px solid var(--rule);
+  aspect-ratio: 16 / 10;
+  min-height:420px;
+  overflow:hidden;
+}
+#constellation-svg{ width:100%; height:100%; display:block; cursor:default; }
+.c-node circle{ transition:r 180ms, fill 180ms, stroke 180ms; }
+.c-node.hover circle{ stroke:var(--tier-1) !important; }
+.c-label{
+  font-family:var(--f-mono);
+  font-size:11px; letter-spacing:0.04em;
+  fill:var(--paper); pointer-events:none;
+  text-anchor:middle;
+}
+.c-edge{ stroke:var(--rule); stroke-width:1; fill:none; opacity:0.6; }
+.c-edge.writes{ stroke:var(--tier-2); }
+.c-edge.calls{ stroke:var(--vermillion); stroke-dasharray:3 3; }
+.c-tip{
+  position:absolute; top:1rem; right:1rem;
+  width:clamp(260px, 32%, 340px);
+  background:var(--ink);
+  border:1px solid var(--rule);
+  padding:1.1rem 1.3rem;
+  font-size:0.9rem; line-height:1.45;
+  pointer-events:none;
+  opacity:0; transition:opacity 160ms;
+}
+.c-tip.show{ opacity:1; }
+.c-tip h5{
+  font-family:var(--f-mono);
+  font-size:0.88rem; letter-spacing:0.06em;
+  margin:0 0 0.4rem;
+  color:var(--tier-1);
+  font-weight:500;
+}
+.c-tip .purpose{ font-family:var(--f-body); color:var(--paper); margin-bottom:0.6rem; }
+.c-tip dl{ margin:0; display:grid; grid-template-columns:8ch 1fr; gap:0.2rem 0.8rem; font-size:0.8rem; }
+.c-tip dt{ font-family:var(--f-mono); font-size:0.65rem; letter-spacing:0.14em; text-transform:uppercase; color:var(--paper-faint); padding-top:0.2em; }
+.c-tip dd{ margin:0; color:var(--paper-dim); }
+.c-legend{
+  position:absolute; bottom:1rem; left:1.3rem;
+  font-family:var(--f-mono); font-size:0.68rem;
+  letter-spacing:0.14em; text-transform:uppercase;
+  color:var(--paper-faint);
+  display:flex; gap:1.4rem; flex-wrap:wrap;
+}
+.c-legend span::before{
+  content:""; display:inline-block; width:18px; height:1px; margin-right:6px; vertical-align:middle;
+}
+.c-legend .writes::before{ background:var(--tier-2); }
+.c-legend .calls::before{ border-top:1px dashed var(--vermillion); height:0; }
+
+/* =================== SECTION IV — MATRIX =================== */
+.matrix{
+  margin-top:2rem;
+  border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);
+}
+.matrix-row{
+  display:grid;
+  grid-template-columns:10ch 1fr 14ch 1fr;
+  column-gap:clamp(1rem,2vw,2rem);
+  padding:1.3rem 0;
+  border-bottom:1px solid var(--rule-soft);
+  align-items:baseline;
+}
+.matrix-row:last-child{ border-bottom:0; }
+.matrix-row.head{
+  border-bottom:1px solid var(--rule);
+  padding-bottom:0.8rem;
+}
+.matrix-row.head > *{
+  font-family:var(--f-mono);
+  font-size:0.7rem;
+  letter-spacing:0.18em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+}
+.m-type{
+  font-family:var(--f-display);
+  font-variation-settings:"opsz" 48, "SOFT" 30;
+  font-size:1.2rem; font-weight:500;
+  color:var(--paper);
+}
+.m-type::before{
+  content:""; display:inline-block; width:6px; height:6px;
+  background:var(--tier-2); margin-right:0.8ch; vertical-align:middle;
+  transform:translateY(-2px);
+}
+.matrix-row.pattern .m-type::before{ background:var(--vermillion); }
+.m-crit{ font-size:0.98rem; line-height:1.45; color:var(--paper); }
+.m-badge{ text-align:left; }
+.m-badge .yes{
+  display:inline-block;
+  font-family:var(--f-mono);
+  font-size:0.72rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--tier-1);
+  border:1px solid var(--tier-3);
+  padding:0.28em 0.75em;
+}
+.m-badge .no{
+  display:inline-block;
+  font-family:var(--f-mono);
+  font-size:0.72rem;
+  letter-spacing:0.14em;
+  text-transform:uppercase;
+  color:var(--vermillion);
+  border:1px solid var(--vermillion-d);
+  padding:0.28em 0.75em;
+}
+.m-slug{
+  font-family:var(--f-mono);
+  font-size:0.82rem;
+  color:var(--paper-dim);
+}
+.m-slug::before{ content:"→ "; color:var(--paper-faint); }
+
+@media (max-width: 900px){
+  .matrix-row{ grid-template-columns:1fr 1fr; row-gap:0.4rem; }
+  .matrix-row.head{ display:none; }
+  .m-crit{ grid-column:1 / -1; }
+  .m-slug{ grid-column:1 / -1; }
+}
+
+.matrix-note{
+  margin-top:2rem;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:2rem;
+  align-items:start;
+}
+@media (max-width:700px){ .matrix-note{ grid-template-columns:1fr; } }
+
+/* =================== SECTION V — TIMELINE =================== */
+.timeline-wrap{
+  margin-top:3rem;
+  display:grid;
+  grid-template-columns:1fr 280px;
+  column-gap:clamp(1.5rem,3vw,3rem);
+  align-items:start;
+}
+@media (max-width: 1000px){ .timeline-wrap{ grid-template-columns:1fr; row-gap:2.5rem; } }
+
+.timeline{
+  position:relative;
+  padding:2rem 0 1rem;
+  overflow-x:auto;
+}
+.timeline svg{ display:block; min-width:780px; width:100%; }
+.timeline .spine{ stroke:var(--rule); stroke-width:1; fill:none; }
+.timeline .seg{
+  stroke:var(--tier-3); stroke-width:2; fill:none;
+  stroke-dasharray:var(--len); stroke-dashoffset:var(--len);
+}
+.timeline.play .seg{ animation:drawPath 2s ease forwards; }
+.timeline .seg.miss{ stroke:var(--vermillion); }
+.timeline .seg.abort{ stroke:var(--vermillion-d); stroke-dasharray:6 3 !important; stroke-dashoffset:0; }
+.timeline .dot{ fill:var(--ink); stroke:var(--tier-2); stroke-width:1.5; }
+.timeline .dot.ship{ fill:var(--tier-1); stroke:var(--tier-1); }
+.timeline .dot.miss{ fill:var(--ink); stroke:var(--vermillion); }
+.timeline .dot.done{ fill:var(--vermillion); stroke:var(--vermillion); r:7; }
+.timeline .stage-label{ font-family:var(--f-mono); font-size:10px; fill:var(--paper-dim); letter-spacing:0.06em; }
+.timeline .stage-sub{ font-family:var(--f-body); font-style:italic; font-size:11px; fill:var(--paper-faint); }
+.timeline .date-label{ font-family:var(--f-mono); font-size:9px; fill:var(--paper-faint); letter-spacing:0.1em; }
+
+.metrics{
+  border:1px solid var(--rule);
+  padding:1.6rem 1.6rem 1.2rem;
+  background:var(--ink-2);
+}
+.metrics h4{
+  font-family:var(--f-mono); font-size:0.7rem;
+  letter-spacing:0.2em; text-transform:uppercase;
+  color:var(--paper-faint); margin:0 0 1.2rem; font-weight:500;
+}
+.metrics dl{ margin:0; }
+.metrics dt{
+  font-family:var(--f-body); font-size:0.82rem;
+  color:var(--paper-dim); margin-top:1rem;
+}
+.metrics dt:first-of-type{ margin-top:0; }
+.metrics dd{
+  margin:0.15rem 0 0;
+  font-family:var(--f-display);
+  font-variation-settings:"opsz" 72, "SOFT" 30;
+  font-weight:400;
+  font-size:2.1rem;
+  line-height:1.05;
+  color:var(--paper);
+  letter-spacing:-0.01em;
+}
+.metrics dd .unit{ font-family:var(--f-body); font-size:0.7em; color:var(--paper-faint); margin-left:0.5ch; font-variant:all-small-caps; letter-spacing:0.12em; }
+.metrics .breakdown{
+  font-family:var(--f-mono); font-size:0.7rem;
+  letter-spacing:0.06em; color:var(--paper-faint);
+  margin-top:0.3rem;
+}
+.metrics .sep{
+  border:0; border-top:1px solid var(--rule-soft); margin:1.4rem 0;
+}
+
+.closing{
+  margin-top:4rem;
+  padding:3.5rem 0 1rem;
+  border-top:1px solid var(--rule);
+  text-align:left;
+}
+.closing blockquote{
+  margin:0;
+  font-family:var(--f-display);
+  font-style:italic;
+  font-variation-settings:"opsz" 144, "SOFT" 80;
+  font-weight:300;
+  font-size:clamp(1.6rem, 3vw, 2.5rem);
+  line-height:1.25;
+  color:var(--paper);
+  max-width:46ch;
+}
+.closing blockquote::before{
+  content:"";
+  display:block;
+  width:48px; height:1px; background:var(--vermillion);
+  margin-bottom:1.5rem;
+}
+
+/* =================== COLOPHON =================== */
+.colophon{
+  padding:3rem 0 4rem;
+  font-family:var(--f-mono);
+  font-size:0.72rem;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--paper-faint);
+  display:flex; justify-content:space-between; gap:2rem; flex-wrap:wrap;
+  border-top:1px solid var(--rule);
+}
+.colophon .left{ max-width:48ch; text-transform:none; letter-spacing:0.02em; font-family:var(--f-body); font-style:italic; color:var(--paper-dim); font-size:0.88rem; }
+
+/* =================== REVEAL =================== */
+.reveal{
+  opacity:0; transform:translateY(18px);
+  transition:opacity 700ms cubic-bezier(.2,.7,.2,1), transform 700ms cubic-bezier(.2,.7,.2,1);
+}
+.reveal.in{ opacity:1; transform:none; }
+.reveal.d1{ transition-delay:80ms; }
+.reveal.d2{ transition-delay:160ms; }
+.reveal.d3{ transition-delay:240ms; }
+
+:focus-visible{ outline:2px solid var(--tier-1); outline-offset:3px; }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+<!-- =================== MASTHEAD =================== -->
+<header class="masthead">
+  <div class="masthead-row">
+    <div><span class="dot"></span>An edition — one of one</div>
+    <div>Memory Architecture v4</div>
+    <div>Filed 2026 · 04 · 23</div>
+  </div>
+  <div style="height:4rem"></div>
+  <div class="grid">
+    <h1 style="grid-column:1 / span 10; margin:0; font-family:var(--f-display); font-variation-settings:'opsz' 144,'SOFT' 80; font-weight:300; font-size:clamp(3rem, 8vw, 7rem); line-height:0.92; letter-spacing:-0.035em; color:var(--paper);">
+      A map of a<br/>
+      <em style="font-style:italic; color:var(--tier-1); font-weight:300;">personal memory</em><br/>
+      system.
+    </h1>
+    <aside class="marginalia reveal" style="grid-column:11 / span 2; margin-top:0; border-top:0;">
+      <span class="label">Premise</span>
+      Four persistence layers, one ingestion pipeline, eight skills. Built across twenty sessions; shipped to steady state on the twenty-first.
+    </aside>
+  </div>
+  <div style="height:2.5rem"></div>
+  <div class="grid">
+    <p class="body-col reveal d1" style="grid-column:2 / span 7; font-size:1.18rem; line-height:1.5; color:var(--paper-dim); max-width:var(--measure);">
+      This document is the view from the top — an as-built map of how conventions, facts, durable knowledge, and raw observations compose into something a future reader (including future-Claude arriving with no context) can orient in under five minutes. Read it the way you would read a field guide: begin at the hierarchy, follow the pipeline, check the skills, then the promotion paths, then the record of how we got here.
+    </p>
+  </div>
+</header>
+
+<!-- =================== I. HIERARCHY =================== -->
+<section class="section" id="s1" aria-labelledby="s1-title">
+  <header class="section-head">
+    <p class="numeral reveal" aria-hidden="true">I</p>
+    <p class="section-kicker smallcaps reveal d1">The Authority Hierarchy</p>
+    <h2 class="section-title reveal d2" id="s1-title">Four layers, ranked. <em>Disagreement is a promotion signal.</em></h2>
+  </header>
+
+  <div class="grid">
+    <div class="body-col reveal">
+      <p class="lede"><span class="drop">W</span>hen two layers disagree about a fact or a convention, the higher-ranked layer wins — but the conflict itself is the point. It tells you the lower layer is stale, or that the convention needs clarifying, or that a one-off exception ought to be written down. Authority isn't just ordering. It is the engine of the system's self-correction.</p>
+      <p>Layers are arranged below by permanence and deliberation: edited slowly at the top, harvested automatically at the bottom. Bright is loud. Dim is raw. Hover a stratum to open it.</p>
+    </div>
+
+    <aside class="marginalia reveal d2" style="grid-column:9 / span 3;">
+      <span class="label">Read as</span>
+      Geological strata. Older and heavier above, faster and noisier below. A fact buried at tier 4 earns its way up by proving useful across sessions.
+    </aside>
+  </div>
+
+  <div class="stack reveal d1" role="list">
+
+    <div class="stratum" data-tier="1" role="listitem" tabindex="0" aria-expanded="false">
+      <div class="s-rank">TIER I</div>
+      <div>
+        <h3 class="s-title">CLAUDE.md chain <span class="dim">— permanent conventions</span></h3>
+      </div>
+      <p class="s-gloss">Edited deliberately; loaded as an ancestor-walk every session. What wins when everything else is wrong.</p>
+      <div class="s-weight">Highest authority</div>
+      <div class="s-detail">
+        <dl>
+          <dt>Lives in</dt><dd class="mono">~/.claude/CLAUDE.md + per-project CLAUDE.md</dd>
+          <dt>Written by</dt><dd>The user, deliberately. Versioned in git.</dd>
+          <dt>Retrieved via</dt><dd>Ancestor walk at session start — each parent folder contributes.</dd>
+          <dt>Example</dt><dd><em>"Never hardcode secrets — use ${ENV_VAR}."</em></dd>
+        </dl>
+        <p class="ex">If a claude-mem observation says "used direct API connection for a quick test" while CLAUDE.md says "always route through MCP gateway" — the gateway wins. The observation is a one-off, not a convention change.</p>
+      </div>
+    </div>
+
+    <div class="stratum" data-tier="2" role="listitem" tabindex="0" aria-expanded="false">
+      <div class="s-rank">TIER II</div>
+      <div>
+        <h3 class="s-title">Auto-memory <span class="dim">— current user facts</span></h3>
+      </div>
+      <p class="s-gloss">MEMORY.md, injected every session. Rolling updates as the facts of the user's life evolve.</p>
+      <div class="s-weight">Current state</div>
+      <div class="s-detail">
+        <dl>
+          <dt>Lives in</dt><dd class="mono">~/.claude/projects/&lt;path&gt;/memory/ → vault/memory/</dd>
+          <dt>Written by</dt><dd>Claude automatically, as session facts accumulate.</dd>
+          <dt>Retrieved via</dt><dd>MEMORY.md read at every SessionStart (100%).</dd>
+          <dt>Example</dt><dd><em>"User is treasurer at Kultursamvirket; chairman at Frontløberne."</em></dd>
+        </dl>
+        <p class="ex">Auto-memory says "treasurer at Kultursamvirket"; a wiki entry says "was treasurer until 2024" — auto-memory wins as current state, and the wiki entry needs updating.</p>
+      </div>
+    </div>
+
+    <div class="stratum" data-tier="3" role="listitem" tabindex="0" aria-expanded="false">
+      <div class="s-rank">TIER III</div>
+      <div>
+        <h3 class="s-title">Vault wiki <span class="dim">— durable knowledge</span></h3>
+      </div>
+      <p class="s-gloss">Seventy Obsidian entries, Karpathy-pattern. Single source of truth per concept, append-on-merge, semantic over chronological.</p>
+      <div class="s-weight">Durable</div>
+      <div class="s-detail">
+        <dl>
+          <dt>Lives in</dt><dd class="mono">~/vault/wiki/&lt;domain&gt;/&lt;slug&gt;.md</dd>
+          <dt>Written by</dt><dd>Only <code class="mono">/ingest</code>. No direct writes permitted.</dd>
+          <dt>Retrieved via</dt><dd>Path A + Path C SessionStart hooks; Graphthulhu MCP on demand.</dd>
+          <dt>Example</dt><dd><em>"karpathy-llm-wiki-pattern.md — the originating model for this architecture."</em></dd>
+        </dl>
+        <p class="ex">A wiki entry says "Sonarr uses flaresolverr"; an observation says "indexer failed, flaresolverr disabled." Decide whether to update the wiki (state changed) or log the incident (transient). Either way, the disagreement is the input.</p>
+      </div>
+    </div>
+
+    <div class="stratum" data-tier="4" role="listitem" tabindex="0" aria-expanded="false">
+      <div class="s-rank">TIER IV</div>
+      <div>
+        <h3 class="s-title">Claude-mem <span class="dim">— raw observations</span></h3>
+      </div>
+      <p class="s-gloss">3,847 cross-session observations auto-harvested by PostToolUse hook. Searchable, injected at SessionStart, lowest authority.</p>
+      <div class="s-weight">Lowest — raw log</div>
+      <div class="s-detail">
+        <dl>
+          <dt>Lives in</dt><dd class="mono">~/.claude-mem/claude-mem.db + vault/claude-mem/ mirror</dd>
+          <dt>Written by</dt><dd>PostToolUse hook, automatic, narrow skip list.</dd>
+          <dt>Retrieved via</dt><dd>SessionStart plugin injection; MCP search on demand.</dd>
+          <dt>Example</dt><dd><em>"Tried forcing Sonarr to rescan; reload resolved it."</em></dd>
+        </dl>
+        <p class="ex">Observations are symptom data. They earn their way up the stack only by being analyzed, clustered via <code class="mono">/consolidate</code>, and promoted through <code class="mono">/ingest</code> into the wiki.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="disagree-note grid reveal" style="grid-column:1 / -1; margin-top:2.5rem;">
+    <div class="box signal" style="grid-column:2 / span 5;">
+      <h4>Disagreement is a promotion signal</h4>
+      <p>A conflict between layers does not mean "pick the right one and move on." It means the lower layer is asking to be lifted: the fact is worth promoting, the exception worth documenting, the convention worth clarifying. The system self-corrects because authority is ranked.</p>
+    </div>
+    <div class="box" style="grid-column:8 / span 4;">
+      <h4>The rule, stated once</h4>
+      <p><strong style="color:var(--tier-1);">CLAUDE.md &gt; auto-memory &gt; wiki &gt; claude-mem.</strong> Higher wins on conflict. Lower promotes by proving itself across sessions.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- =================== II. DATA FLOW =================== -->
+<section class="section" id="s2" aria-labelledby="s2-title">
+  <header class="section-head">
+    <p class="numeral reveal" aria-hidden="true">II</p>
+    <p class="section-kicker smallcaps reveal d1">The Ingestion Pipeline</p>
+    <h2 class="section-title reveal d2" id="s2-title">Six channels narrow into one skill, <em>then fan out by domain.</em></h2>
+  </header>
+
+  <div class="grid">
+    <div class="body-col reveal">
+      <p class="lede"><span class="drop">E</span>verything that lands in the wiki arrives through <code class="mono">/ingest</code>. One skill, one v4 frontmatter schema, one advisory rubric. There are no backdoors. Channel separation lets each source apply its own triage without branching logic inside the core promoter.</p>
+    </div>
+    <aside class="marginalia reveal d2" style="grid-column:9 / span 3;">
+      <span class="label">Automated vs manual</span>
+      Sources → <strong>raw/</strong> is partly automatic: clippings, meeting notes, and claude-mem observations land without intervention. raw/ → <strong>wiki/</strong> is always manual — the queue drains when you run <code class="mono">/ingest</code>.
+    </aside>
+  </div>
+
+  <div class="flow-wrap reveal d1" id="flow-wrap">
+    <svg class="flow-svg" id="flow-svg" viewBox="0 0 1200 520" preserveAspectRatio="xMidYMid meet" aria-label="Data flow diagram">
+      <!-- column labels -->
+      <text x="90"  y="30" class="col-label">Sources</text>
+      <text x="340" y="30" class="col-label">raw/ channels</text>
+      <text x="680" y="30" class="col-label">Promote</text>
+      <text x="1040" y="30" class="col-label">wiki/</text>
+
+      <!-- SOURCES (col 1) -->
+      <g class="group">
+        <rect class="node source" x="20"  y="60"  width="180" height="42" rx="2"/>
+        <text x="110" y="86" text-anchor="middle" class="node-label">Web articles</text>
+      </g>
+      <g class="group">
+        <rect class="node source" x="20"  y="120" width="180" height="42" rx="2"/>
+        <text x="110" y="146" text-anchor="middle" class="node-label">Granola meetings</text>
+      </g>
+      <g class="group">
+        <rect class="node source" x="20"  y="180" width="180" height="42" rx="2"/>
+        <text x="110" y="206" text-anchor="middle" class="node-label">/deep-research</text>
+      </g>
+      <g class="group">
+        <rect class="node source" x="20"  y="240" width="180" height="42" rx="2"/>
+        <text x="110" y="266" text-anchor="middle" class="node-label">Session insight</text>
+      </g>
+      <g class="group">
+        <rect class="node source" x="20"  y="300" width="180" height="42" rx="2"/>
+        <text x="110" y="320" text-anchor="middle" class="node-label">Claude-mem obs.</text>
+        <text x="110" y="334" text-anchor="middle" class="node-sub">auto-harvested</text>
+      </g>
+      <g class="group">
+        <rect class="node source" x="20"  y="360" width="180" height="42" rx="2"/>
+        <text x="110" y="386" text-anchor="middle" class="node-label">Manual drop</text>
+      </g>
+
+      <!-- RAW (col 2) -->
+      <g class="group">
+        <rect class="node raw" x="270" y="60"  width="190" height="42" rx="2"/>
+        <text x="365" y="86" text-anchor="middle" class="node-label mono">raw/clippings/</text>
+      </g>
+      <g class="group">
+        <rect class="node raw" x="270" y="120" width="190" height="42" rx="2"/>
+        <text x="365" y="146" text-anchor="middle" class="node-label mono">raw/granola/</text>
+      </g>
+      <g class="group">
+        <rect class="node raw" x="270" y="180" width="190" height="42" rx="2"/>
+        <text x="365" y="206" text-anchor="middle" class="node-label mono">raw/research/</text>
+      </g>
+      <g class="group">
+        <rect class="node raw" x="270" y="240" width="190" height="42" rx="2"/>
+        <text x="365" y="266" text-anchor="middle" class="node-label mono">raw/session/</text>
+      </g>
+      <g class="group">
+        <rect class="node raw" x="270" y="300" width="190" height="42" rx="2"/>
+        <text x="365" y="326" text-anchor="middle" class="node-label mono">raw/consolidation/</text>
+      </g>
+      <g class="group">
+        <rect class="node raw" x="270" y="360" width="190" height="42" rx="2"/>
+        <text x="365" y="386" text-anchor="middle" class="node-label mono">raw/manual/</text>
+      </g>
+
+      <!-- connector paths source → raw -->
+      <path class="path" d="M 200 81  L 270 81" style="--len:75"/>
+      <path class="path" d="M 200 141 L 270 141" style="--len:75"/>
+      <path class="path" d="M 200 201 L 270 201" style="--len:75"/>
+      <path class="path" d="M 200 261 C 235 261, 235 261, 270 261" style="--len:75"/>
+      <path class="path" d="M 200 321 L 270 321" style="--len:75"/>
+      <path class="path" d="M 200 381 L 270 381" style="--len:75"/>
+
+      <!-- trunk: raw → /ingest -->
+      <path class="trunk" d="
+        M 460  81 C 540 81, 560 220, 640 220
+        M 460 141 C 540 141, 560 220, 640 220
+        M 460 201 C 540 201, 560 220, 640 220
+        M 460 261 C 540 261, 560 220, 640 220
+        M 460 321 C 540 321, 560 220, 640 220
+        M 460 381 C 540 381, 560 220, 640 220"
+        fill="none" stroke="var(--tier-2)" stroke-width="1.2" opacity="0.7"
+        stroke-dasharray="1500" stroke-dashoffset="1500"
+      />
+
+      <!-- INGEST NODE -->
+      <g class="group">
+        <rect class="node ingest" x="640" y="190" width="150" height="62" rx="3"/>
+        <text x="715" y="214" text-anchor="middle" class="ingest-label">/INGEST</text>
+        <text x="715" y="234" text-anchor="middle" class="node-sub" style="fill:var(--paper); opacity:0.85;">schema · triage · merge</text>
+      </g>
+
+      <!-- advisory loop -->
+      <path class="advisory" d="M 715 252 C 715 290, 820 310, 900 290 C 970 275, 960 220, 900 215 C 830 210, 790 215, 790 215" />
+      <rect x="880" y="300" width="160" height="22" fill="var(--ink)" stroke="var(--vermillion)" stroke-width="0.5"/>
+      <text x="960" y="315" text-anchor="middle" class="advisory-label">advisory · /memory-eval</text>
+
+      <!-- branch: /ingest → wiki -->
+      <path class="branch" d="
+        M 790 220 C 870 220, 880 95,  990 95
+        M 790 220 C 870 220, 880 160, 990 160
+        M 790 220 C 870 220, 880 225, 990 225
+        M 790 220 C 870 220, 880 290, 990 290"
+        fill="none" stroke="var(--tier-1)" stroke-width="1.2" opacity="0.85"
+        stroke-dasharray="900" stroke-dashoffset="900"
+      />
+
+      <!-- WIKI (col 4) -->
+      <g class="group">
+        <rect class="node wiki" x="990" y="74"  width="180" height="42" rx="2"/>
+        <text x="1080" y="100" text-anchor="middle" class="node-label mono">wiki/tech/</text>
+      </g>
+      <g class="group">
+        <rect class="node wiki" x="990" y="139" width="180" height="42" rx="2"/>
+        <text x="1080" y="165" text-anchor="middle" class="node-label mono">wiki/orgs/</text>
+      </g>
+      <g class="group">
+        <rect class="node wiki" x="990" y="204" width="180" height="42" rx="2"/>
+        <text x="1080" y="230" text-anchor="middle" class="node-label mono">wiki/personal/</text>
+      </g>
+      <g class="group">
+        <rect class="node wiki" x="990" y="269" width="180" height="42" rx="2"/>
+        <text x="1080" y="295" text-anchor="middle" class="node-label mono">wiki/meta/</text>
+      </g>
+
+      <!-- footer note -->
+      <text x="20" y="470" class="col-label" style="font-size:11px; font-style:normal; font-family:var(--f-mono); letter-spacing:0.14em; text-transform:uppercase;">Legend</text>
+      <line x1="90" y1="466" x2="130" y2="466" stroke="var(--tier-2)" stroke-width="1.2"/>
+      <text x="140" y="470" class="col-label" style="font-size:11px; font-style:normal;">trunk → /ingest</text>
+      <line x1="300" y1="466" x2="340" y2="466" stroke="var(--tier-1)" stroke-width="1.2"/>
+      <text x="350" y="470" class="col-label" style="font-size:11px; font-style:normal;">fan-out → wiki</text>
+      <line x1="490" y1="466" x2="530" y2="466" stroke="var(--vermillion)" stroke-width="1.2" stroke-dasharray="4 4"/>
+      <text x="540" y="470" class="col-label" style="font-size:11px; font-style:normal;">advisory (never blocks)</text>
+    </svg>
+  </div>
+
+  <div class="grid" style="margin-top:2.5rem;">
+    <p class="pull reveal" style="grid-column:2 / span 7;">
+      One skill. One schema. One rubric that scores and annotates but never blocks.
+      <cite>— the standing rule, stated at steady state</cite>
+    </p>
+  </div>
+</section>
+
+
+<!-- =================== III. CONSTELLATION =================== -->
+<section class="section" id="s3" aria-labelledby="s3-title">
+  <header class="section-head">
+    <p class="numeral reveal" aria-hidden="true">III</p>
+    <p class="section-kicker smallcaps reveal d1">The Skill Constellation</p>
+    <h2 class="section-title reveal d2" id="s3-title">Eight skills, <em>with loyalties.</em></h2>
+  </header>
+
+  <div class="grid">
+    <div class="body-col reveal">
+      <p class="lede"><span class="drop">N</span>inety percent of daily operation runs on three skills: <code class="mono">/knowledge</code> at the end of an insight-rich session, <code class="mono">/ingest</code> periodically to drain the queue, <code class="mono">/reflect</code> and <code class="mono">/ship</code> to close. The rest are specialists — <code class="mono">/consolidate</code> when observations have accumulated enough to cluster; <code class="mono">/vault-lint</code> when you suspect drift; <code class="mono">/memory-eval</code> when the rubric itself is under calibration.</p>
+    </div>
+    <aside class="marginalia reveal d2" style="grid-column:9 / span 3;">
+      <span class="label">Read as</span>
+      Hover a node to see what it writes, what triggers it, and its one-line purpose. Solid edges are writes. Dashed edges are advisory calls.
+    </aside>
+  </div>
+
+  <div class="constellation reveal d1">
+    <svg id="constellation-svg" viewBox="0 0 1000 560" preserveAspectRatio="xMidYMid meet" aria-label="Skill relationship graph"></svg>
+    <div class="c-tip" id="c-tip" role="status" aria-live="polite">
+      <h5 id="tip-name">Hover a skill</h5>
+      <p class="purpose" id="tip-purpose">Nodes are skills. Edges show what calls what, and what writes where.</p>
+      <dl>
+        <dt>Writes</dt><dd id="tip-writes">—</dd>
+        <dt>Trigger</dt><dd id="tip-trigger">—</dd>
+      </dl>
+    </div>
+    <div class="c-legend">
+      <span class="writes">writes to / emits</span>
+      <span class="calls">advisory call</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- =================== IV. MATRIX =================== -->
+<section class="section" id="s4" aria-labelledby="s4-title">
+  <header class="section-head">
+    <p class="numeral reveal" aria-hidden="true">IV</p>
+    <p class="section-kicker smallcaps reveal d1">The 2026 · 04 · 23 Unlock</p>
+    <h2 class="section-title reveal d2" id="s4-title">Type-aware promotion. <em>Most knowledge earns its keep in one session.</em></h2>
+  </header>
+
+  <div class="grid">
+    <div class="body-col reveal">
+      <p class="lede"><span class="drop">T</span>he original <code class="mono">promotion_necessity</code> anchor asked a single universal question — <em>is this a recurring pattern across three-or-more sessions?</em> — and encoded Karpathy's wiki model as if it were a general truth. It wasn't. It rejected legitimate single-session decisions, unique references, analyzed incidents, executable howtos, named architectures, and active profiles.</p>
+      <p>After twenty sessions of process work producing <strong>zero net wiki entries</strong>, the rubric was relaxed to accept what the user actually generates. Pattern retains the recurrence requirement. The other six types each have their own path.</p>
+    </div>
+    <aside class="marginalia reveal d2" style="grid-column:9 / span 3;">
+      <span class="label">Why this matters</span>
+      The old rule would have rejected most entries in the wiki as it stands today — including the entries that enabled the rule to be revised. A type-aware anchor lets the architecture be an existence proof of its own criterion.
+    </aside>
+  </div>
+
+  <div class="matrix reveal d1">
+    <div class="matrix-row head">
+      <div>Type</div>
+      <div>"Worth wiki real estate?" means</div>
+      <div>Single-session</div>
+      <div>Example slug</div>
+    </div>
+
+    <div class="matrix-row pattern">
+      <div class="m-type">pattern</div>
+      <div class="m-crit">≥3 observations cite the same recurring concern across sessions.</div>
+      <div class="m-badge"><span class="no">No · recurrence is the definition</span></div>
+      <div class="m-slug">karpathy-llm-wiki-pattern</div>
+    </div>
+
+    <div class="matrix-row">
+      <div class="m-type">decision</div>
+      <div class="m-crit">Options evaluated, rationale recorded, at least one traceable downstream consequence.</div>
+      <div class="m-badge"><span class="yes">Yes</span></div>
+      <div class="m-slug">v4-ingestion-pipeline-decisions</div>
+    </div>
+
+    <div class="matrix-row">
+      <div class="m-type">reference</div>
+      <div class="m-crit">Covers a topic to usable depth; not duplicated elsewhere; unique or comprehensive.</div>
+      <div class="m-badge"><span class="yes">Yes</span></div>
+      <div class="m-slug">semantic-memory-eval-pattern</div>
+    </div>
+
+    <div class="matrix-row">
+      <div class="m-type">incident</div>
+      <div class="m-crit">Root cause identified, fix applied, extractable prevention pattern.</div>
+      <div class="m-badge"><span class="yes">Yes</span></div>
+      <div class="m-slug">sonarr-pipeline-gluetun-incident</div>
+    </div>
+
+    <div class="matrix-row">
+      <div class="m-type">howto</div>
+      <div class="m-crit">Executable by a reader; not duplicated by an existing howto.</div>
+      <div class="m-badge"><span class="yes">Yes</span></div>
+      <div class="m-slug">nas-sudoers-setup</div>
+    </div>
+
+    <div class="matrix-row">
+      <div class="m-type">architecture</div>
+      <div class="m-crit">Named artifact; component boundaries defined; referenced in docs or code.</div>
+      <div class="m-badge"><span class="yes">Yes</span></div>
+      <div class="m-slug">memory-architecture-decisions</div>
+    </div>
+
+    <div class="matrix-row">
+      <div class="m-type">profile</div>
+      <div class="m-crit">Active person, org, or system; current facts; referenced across work.</div>
+      <div class="m-badge"><span class="yes">Yes</span></div>
+      <div class="m-slug">kultursamvirket-org-profile</div>
+    </div>
+  </div>
+
+  <div class="matrix-note">
+    <div class="reveal">
+      <p class="smallcaps">Advisory, permanently</p>
+      <p style="margin-top:0.6rem; color:var(--paper-dim);">The rubric scores entries (<code class="mono">mem_eval_organize: pass | fail_advisory</code>) and annotates frontmatter — it never blocks, never deletes. Enforce-mode design is parked at <code class="mono">memory-architecture/backlog/enforce-mode-trajectory.md</code> with re-open conditions if advisory measurably fails at scale.</p>
+    </div>
+    <div class="reveal d1">
+      <p class="smallcaps">The headline</p>
+      <p style="margin-top:0.6rem; color:var(--paper-dim);"><em>Pattern</em> is the outlier, not the template. Six of the seven types promote cleanly from a single well-formed session. The rubric now accepts the kind of knowledge users actually make.</p>
+    </div>
+  </div>
+</section>
+
+
+<!-- =================== V. TIMELINE =================== -->
+<section class="section" id="s5" aria-labelledby="s5-title" style="border-bottom:0;">
+  <header class="section-head">
+    <p class="numeral reveal" aria-hidden="true">V</p>
+    <p class="section-kicker smallcaps reveal d1">Phase 4·5 · the record</p>
+    <h2 class="section-title reveal d2" id="s5-title">Seven stages to steady state.</h2>
+  </header>
+
+  <div class="grid">
+    <div class="body-col reveal">
+      <p class="lede"><span class="drop">P</span>hase 4.5 is the arc during which the memory-evaluation instrumentation matured — and, at the end, was pointed back at the system it had been measuring. The formal abort in Stage 5 Session 2 is not a failure; it is the moment the tier-1 adversarial panel caught a pre-execution goalpost-shift in real time. The de-escalation the following day shipped the unlock.</p>
+    </div>
+  </div>
+
+  <div class="timeline-wrap">
+    <div class="timeline reveal d1" id="timeline">
+      <svg viewBox="0 0 900 220" preserveAspectRatio="xMidYMid meet">
+        <!-- spine -->
+        <path class="spine" d="M 40 130 L 860 130"/>
+
+        <!-- segments (drawn left to right) -->
+        <path class="seg" d="M 40 130 L 170 130" style="--len:130"/>
+        <path class="seg" d="M 170 130 L 290 130" style="--len:120"/>
+        <path class="seg" d="M 290 130 L 410 130" style="--len:120"/>
+        <path class="seg miss" d="M 410 130 L 530 130" style="--len:120"/>
+        <path class="seg" d="M 530 130 L 650 130" style="--len:120"/>
+        <path class="seg abort" d="M 650 130 L 760 130" />
+        <path class="seg" d="M 760 130 L 860 130" style="--len:100"/>
+
+        <!-- Stage 1 -->
+        <circle class="dot ship" cx="40" cy="130" r="6"/>
+        <text x="40" y="100" text-anchor="middle" class="stage-label">STAGE 1</text>
+        <text x="40" y="82"  text-anchor="middle" class="stage-sub">retrieval</text>
+        <text x="40" y="158" text-anchor="middle" class="date-label">MODE SHIP</text>
+
+        <!-- Stage 2 -->
+        <circle class="dot ship" cx="170" cy="130" r="6"/>
+        <text x="170" y="100" text-anchor="middle" class="stage-label">STAGE 2</text>
+        <text x="170" y="82"  text-anchor="middle" class="stage-sub">B3 synthesis-coupling fix</text>
+        <text x="170" y="158" text-anchor="middle" class="date-label">PATCH</text>
+
+        <!-- Stage 3 -->
+        <circle class="dot ship" cx="290" cy="130" r="6"/>
+        <text x="290" y="100" text-anchor="middle" class="stage-label">STAGE 3</text>
+        <text x="290" y="82"  text-anchor="middle" class="stage-sub">n = 22 v3 baseline</text>
+        <text x="290" y="158" text-anchor="middle" class="date-label">04 · 20</text>
+
+        <!-- Stage 4 -->
+        <circle class="dot miss" cx="410" cy="130" r="6"/>
+        <text x="410" y="100" text-anchor="middle" class="stage-label">STAGE 4</text>
+        <text x="410" y="82"  text-anchor="middle" class="stage-sub">counter-example · Tier 0 MISS</text>
+        <text x="410" y="158" text-anchor="middle" class="date-label">04 · 21</text>
+
+        <!-- Stage 5.1 -->
+        <circle class="dot ship" cx="530" cy="130" r="6"/>
+        <text x="530" y="100" text-anchor="middle" class="stage-label">STAGE 5 · S1</text>
+        <text x="530" y="82"  text-anchor="middle" class="stage-sub">dual-gate v3.1.0</text>
+        <text x="530" y="158" text-anchor="middle" class="date-label">04 · 22</text>
+
+        <!-- Stage 5.2 abort -->
+        <circle class="dot miss" cx="650" cy="130" r="6"/>
+        <text x="650" y="100" text-anchor="middle" class="stage-label">STAGE 5 · S2</text>
+        <text x="650" y="82"  text-anchor="middle" class="stage-sub">formal abort · H-EXT-7</text>
+        <text x="650" y="158" text-anchor="middle" class="date-label">04 · 22</text>
+
+        <!-- DONE -->
+        <circle class="dot done" cx="815" cy="130" r="8"/>
+        <text x="815" y="100" text-anchor="middle" class="stage-label" style="fill:var(--vermillion);">DONE</text>
+        <text x="815" y="82"  text-anchor="middle" class="stage-sub" style="fill:var(--paper);">de-escalation ships · v3.2.0</text>
+        <text x="815" y="158" text-anchor="middle" class="date-label" style="fill:var(--vermillion);">04 · 23</text>
+      </svg>
+    </div>
+
+    <aside class="metrics reveal d2">
+      <h4>At steady state</h4>
+      <dl>
+        <dt>Wiki entries</dt>
+        <dd>70</dd>
+        <div class="breakdown">30 tech · 29 meta · 4 orgs · 3 personal</div>
+
+        <hr class="sep"/>
+
+        <dt>Skills — memory pipeline</dt>
+        <dd>8 <span class="unit">of 8 shipped</span></dd>
+        <div class="breakdown">of 19 skills total</div>
+
+        <hr class="sep"/>
+
+        <dt>Claude-mem observations</dt>
+        <dd>3,847</dd>
+        <div class="breakdown">cross-session, auto-harvested</div>
+
+        <hr class="sep"/>
+
+        <dt>Queue</dt>
+        <dd>7 <span class="unit">captures in raw/session/</span></dd>
+        <div class="breakdown">awaiting /ingest promotion</div>
+
+        <hr class="sep"/>
+
+        <dt>Last wiki commit</dt>
+        <dd style="font-size:1.4rem;">2026 · 04 · 21</dd>
+
+        <hr class="sep"/>
+
+        <dt>Rubric</dt>
+        <dd style="font-size:1.4rem;">v3.1.0 → v3.2.0</dd>
+        <div class="breakdown">PN anchor type-aware · enforce-mode parked</div>
+      </dl>
+    </aside>
+  </div>
+
+  <div class="closing grid">
+    <blockquote style="grid-column:2 / span 8;">
+      Twenty sessions built the instrumentation.<br/>
+      The last one <em>pointed it at reality.</em>
+    </blockquote>
+  </div>
+</section>
+
+<!-- =================== COLOPHON =================== -->
+<footer class="colophon">
+  <div class="left">
+    Set in Fraunces and Newsreader, with JetBrains Mono for machinery. Composed as a single HTML document; no trackers; no framework; one pass of intent.
+  </div>
+  <div>
+    Christian Juul Wendell · 2026
+  </div>
+</footer>
+
+</div><!-- /.page -->
+
+<script>
+/* =========================================================
+   Behavior
+   1. IntersectionObserver-based reveals
+   2. Authority stratum expand/collapse
+   3. SVG flow: draw on scroll
+   4. Skill constellation graph
+   5. Timeline draw on scroll
+   ========================================================= */
+
+const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ----- 1. Reveals ----- */
+const revealEls = document.querySelectorAll('.reveal');
+if (reduceMotion) {
+  revealEls.forEach(el => el.classList.add('in'));
+} else {
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('in');
+        io.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '0px 0px -10% 0px', threshold: 0.08 });
+  revealEls.forEach(el => io.observe(el));
+}
+
+/* ----- 2. Authority strata: click or keyboard to expand ----- */
+document.querySelectorAll('.stratum').forEach(s => {
+  const toggle = () => {
+    const open = s.getAttribute('aria-expanded') === 'true';
+    s.setAttribute('aria-expanded', String(!open));
+  };
+  s.addEventListener('click', toggle);
+  s.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+  });
+  // Desktop hover opens, leave closes (but click toggles persistently)
+  if (window.matchMedia('(hover:hover)').matches) {
+    s.addEventListener('mouseenter', () => s.setAttribute('aria-expanded', 'true'));
+    s.addEventListener('mouseleave', () => s.setAttribute('aria-expanded', 'false'));
+  }
+});
+
+/* ----- 3. Flow SVG: compute stroke-dasharray + play on view ----- */
+const flowSvg = document.getElementById('flow-svg');
+if (flowSvg) {
+  // set lengths dynamically for unmeasured paths
+  flowSvg.querySelectorAll('path').forEach(p => {
+    try {
+      const len = p.getTotalLength();
+      if (!p.style.getPropertyValue('--len')) {
+        p.style.setProperty('--len', len.toFixed(1));
+      }
+      // explicit dasharray/offset in case CSS var isn't applied in some browsers
+      if (p.classList.contains('path') || p.classList.contains('trunk') || p.classList.contains('branch')) {
+        p.setAttribute('stroke-dasharray', len.toFixed(1));
+        p.setAttribute('stroke-dashoffset', len.toFixed(1));
+      }
+    } catch(e) {}
+  });
+  const playObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        flowSvg.classList.add('play');
+        if (reduceMotion) {
+          flowSvg.querySelectorAll('path').forEach(p => p.setAttribute('stroke-dashoffset', 0));
+        }
+        playObs.disconnect();
+      }
+    });
+  }, { threshold: 0.25 });
+  playObs.observe(flowSvg);
+}
+
+/* ----- 4. Skill Constellation ----- */
+(function constellation(){
+  const svgEl = document.getElementById('constellation-svg');
+  if (!svgEl) return;
+  const tip = document.getElementById('c-tip');
+  const tipName = document.getElementById('tip-name');
+  const tipPurpose = document.getElementById('tip-purpose');
+  const tipWrites = document.getElementById('tip-writes');
+  const tipTrigger = document.getElementById('tip-trigger');
+
+  const W = 1000, H = 560;
+  // Hand-placed layout — keeps read order and relationships legible.
+  const nodes = [
+    { id:'reflect',      label:'/reflect',      x:180, y:130, r:30,
+      purpose:'Pre-ship audit: reconcile SPEC.md, detect knowledge, check CLAUDE.md.',
+      writes:'SPEC.md diffs (proposals)', trigger:'End of session' },
+    { id:'knowledge',    label:'/knowledge',    x:350, y:90,  r:26,
+      purpose:'Capture a session insight as a rich raw document.',
+      writes:'raw/session/', trigger:'Called by /reflect, or run manually' },
+    { id:'deep-research',label:'/deep-research',x:180, y:360, r:26,
+      purpose:'Multi-source research with provenance + quality scoring.',
+      writes:'raw/research/', trigger:'User initiates research' },
+    { id:'consolidate',  label:'/consolidate',  x:350, y:440, r:26,
+      purpose:'Cluster claude-mem observations → promote via distill gate.',
+      writes:'raw/consolidation/', trigger:'When observations have accumulated' },
+    { id:'ingest',       label:'/ingest',       x:560, y:280, r:38,
+      purpose:'Batch raw/ → wiki/. Triage, merge, quality gates, self-check.',
+      writes:'wiki/{tech,orgs,personal,meta}/', trigger:'Periodic; drains raw/ queue' },
+    { id:'memory-eval',  label:'/memory-eval',  x:770, y:180, r:28,
+      purpose:'Advisory scoring: retrieval · organize · distill modes.',
+      writes:'benchmark files; frontmatter annotation', trigger:'Called by /ingest + /consolidate' },
+    { id:'vault-lint',   label:'/vault-lint',   x:770, y:400, r:24,
+      purpose:'Validate wiki: frontmatter, tags, links, orphans.',
+      writes:'reports only', trigger:'When you suspect drift' },
+    { id:'ship',         label:'/ship',         x:900, y:290, r:24,
+      purpose:'Commit + push ClaudeHub and vault.',
+      writes:'git (both repos)', trigger:'After /reflect, end of session' },
+  ];
+
+  // edges: type 'writes' (solid) or 'calls' (dashed advisory)
+  const edges = [
+    { from:'reflect', to:'knowledge', type:'calls',  label:'calls' },
+    { from:'knowledge', to:'ingest',  type:'writes', label:'feeds' },
+    { from:'deep-research', to:'ingest', type:'writes', label:'feeds' },
+    { from:'consolidate', to:'ingest', type:'writes', label:'feeds' },
+    { from:'consolidate', to:'memory-eval', type:'calls', label:'distill' },
+    { from:'ingest', to:'memory-eval', type:'calls', label:'organize' },
+    { from:'vault-lint', to:'ingest', type:'calls', label:'audits' },
+    { from:'reflect', to:'ship', type:'writes', label:'handoff' },
+  ];
+
+  const ns = 'http://www.w3.org/2000/svg';
+  svgEl.setAttribute('viewBox', `0 0 ${W} ${H}`);
+
+  // index nodes
+  const idx = Object.fromEntries(nodes.map(n => [n.id, n]));
+
+  // edges layer
+  edges.forEach(e => {
+    const a = idx[e.from], b = idx[e.to];
+    const path = document.createElementNS(ns, 'path');
+    // gentle curve
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const mx = (a.x + b.x)/2, my = (a.y + b.y)/2;
+    // perpendicular offset for curve
+    const nx = -dy, ny = dx;
+    const ln = Math.hypot(nx, ny) || 1;
+    const off = 22;
+    const cx = mx + (nx/ln)*off;
+    const cy = my + (ny/ln)*off;
+    path.setAttribute('d', `M ${a.x} ${a.y} Q ${cx} ${cy} ${b.x} ${b.y}`);
+    path.setAttribute('class', `c-edge ${e.type}`);
+    svgEl.appendChild(path);
+
+    // edge label
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('x', cx); t.setAttribute('y', cy - 4);
+    t.setAttribute('text-anchor', 'middle');
+    t.setAttribute('class', 'c-label');
+    t.setAttribute('style', 'font-size:9px; fill:var(--paper-faint); letter-spacing:0.12em; text-transform:uppercase;');
+    t.textContent = e.label;
+    svgEl.appendChild(t);
+  });
+
+  // nodes layer
+  nodes.forEach((n, i) => {
+    const g = document.createElementNS(ns, 'g');
+    g.setAttribute('class', 'c-node');
+    g.setAttribute('transform', `translate(${n.x},${n.y})`);
+    g.setAttribute('tabindex', '0');
+    g.setAttribute('data-id', n.id);
+
+    const c = document.createElementNS(ns, 'circle');
+    c.setAttribute('r', n.r);
+    // color by role
+    const isIngest = n.id === 'ingest';
+    const isEval = n.id === 'memory-eval';
+    c.setAttribute('fill', isIngest ? 'var(--vermillion)' : 'var(--ink)');
+    c.setAttribute('stroke', isIngest ? 'var(--vermillion-d)' : isEval ? 'var(--tier-1)' : 'var(--tier-2)');
+    c.setAttribute('stroke-width', isIngest ? '2' : '1.5');
+    g.appendChild(c);
+
+    const t = document.createElementNS(ns, 'text');
+    t.setAttribute('class', 'c-label');
+    t.setAttribute('y', 4);
+    t.setAttribute('style', isIngest ? 'fill:var(--paper); font-weight:700;' : '');
+    t.textContent = n.label;
+    g.appendChild(t);
+
+    // subtle breathing animation (pure SVG attr via CSS is limited; skip if reduceMotion)
+    if (!reduceMotion) {
+      const anim = document.createElementNS(ns, 'animate');
+      anim.setAttribute('attributeName', 'r');
+      anim.setAttribute('values', `${n.r};${n.r+1.2};${n.r}`);
+      anim.setAttribute('dur', `${3 + (i % 3) * 0.7}s`);
+      anim.setAttribute('repeatCount', 'indefinite');
+      c.appendChild(anim);
+    }
+
+    const show = () => {
+      g.classList.add('hover');
+      tipName.textContent = n.label;
+      tipPurpose.textContent = n.purpose;
+      tipWrites.textContent = n.writes;
+      tipTrigger.textContent = n.trigger;
+      tip.classList.add('show');
+    };
+    const hide = () => { g.classList.remove('hover'); tip.classList.remove('show'); };
+    g.addEventListener('mouseenter', show);
+    g.addEventListener('mouseleave', hide);
+    g.addEventListener('focus', show);
+    g.addEventListener('blur', hide);
+
+    svgEl.appendChild(g);
+  });
+})();
+
+/* ----- 5. Timeline draw on scroll ----- */
+(function(){
+  const tl = document.getElementById('timeline');
+  if (!tl) return;
+  // compute segment lengths
+  tl.querySelectorAll('path.seg').forEach(p => {
+    try {
+      const len = p.getTotalLength();
+      if (!p.classList.contains('abort')) {
+        p.style.setProperty('--len', len.toFixed(1));
+        p.setAttribute('stroke-dasharray', len.toFixed(1));
+        p.setAttribute('stroke-dashoffset', len.toFixed(1));
+      }
+    } catch(e) {}
+  });
+  const tio = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        tl.classList.add('play');
+        if (reduceMotion) {
+          tl.querySelectorAll('path.seg').forEach(p => p.setAttribute('stroke-dashoffset', 0));
+        }
+        tio.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+  tio.observe(tl);
+})();
+</script>
+</body>
+</html>
