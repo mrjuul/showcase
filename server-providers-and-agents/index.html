@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Server Providers & Agents — An Infrastructure View</title>
+<meta property="og:title" content="Server Providers & Agents">
+<meta property="og:description" content="An infrastructure view: the cloud as-a-service spectrum (bare-metal → IaaS → CaaS → PaaS → FaaS → BaaS) and the emerging 2026 layer of agent infrastructure built to host AI agents.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mrjuul.github.io/showcase/server-providers-and-agents/">
+<meta property="og:image" content="https://mrjuul.github.io/showcase/server-providers-and-agents/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="theme-color" content="#b8862a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#faf8f3; --paper:#fffdf8; --paper-2:#fbf7ee;
+    --ink:#211c16; --ink-soft:#5f5648; --ink-faint:#8a8071;
+    --gold:#b8862a; --gold-deep:#8a6518; --gold-tint:#f1e7cf; --gold-line:#e7dcc4;
+    --line:#e9e2d3; --line-soft:#f0eadd;
+    --sage:#6c7a55; --sage-tint:#edf1e5;
+    --terra:#b06545; --terra-tint:#f5e7df;
+    --amber:#a8842f; --amber-tint:#f4ecd6;
+    --shadow:0 1px 2px rgba(60,44,12,.04), 0 10px 30px rgba(60,44,12,.06);
+    --shadow-lift:0 2px 6px rgba(60,44,12,.06), 0 18px 44px rgba(60,44,12,.10);
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--cream); color:var(--ink);
+    font-family:'DM Sans',system-ui,sans-serif; font-size:17px; line-height:1.62;
+    -webkit-font-smoothing:antialiased; font-optical-sizing:auto;
+  }
+  .wrap{max-width:1140px;margin:0 auto;padding:0 28px}
+  .eyebrow{
+    font-family:'JetBrains Mono',monospace; font-size:11.5px; font-weight:600;
+    letter-spacing:.22em; text-transform:uppercase; color:var(--gold-deep);
+  }
+  h1,h2,h3,.serif{font-family:'DM Serif Display',Georgia,serif; font-weight:400; letter-spacing:-.01em; line-height:1.12}
+  a{color:var(--gold-deep);text-decoration:none;border-bottom:1px solid var(--gold-line)}
+  a:hover{color:var(--ink)}
+  .mono{font-family:'JetBrains Mono',monospace}
+
+  /* ---------- top bar ---------- */
+  nav.top{
+    position:sticky;top:0;z-index:50;background:rgba(250,248,243,.86);
+    backdrop-filter:blur(10px); border-bottom:1px solid var(--line);
+  }
+  nav.top .wrap{display:flex;align-items:center;gap:26px;height:58px}
+  nav.top .brand{font-family:'JetBrains Mono',monospace;font-size:12.5px;font-weight:600;letter-spacing:.12em;color:var(--ink);white-space:nowrap}
+  nav.top .brand b{color:var(--gold-deep)}
+  nav.top .links{display:flex;gap:22px;margin-left:auto;flex-wrap:wrap}
+  nav.top .links a{font-family:'JetBrains Mono',monospace;font-size:12px;letter-spacing:.04em;color:var(--ink-soft);border:0}
+  nav.top .links a:hover{color:var(--gold-deep)}
+  @media(max-width:760px){nav.top .links{display:none}}
+
+  /* ---------- hero ---------- */
+  header.hero{padding:84px 0 56px;border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+  header.hero::before{
+    content:"";position:absolute;inset:0;
+    background:
+      radial-gradient(680px 320px at 88% -8%, rgba(184,134,42,.10), transparent 60%),
+      radial-gradient(520px 300px at 4% 120%, rgba(184,134,42,.06), transparent 60%);
+    pointer-events:none;
+  }
+  header.hero .wrap{position:relative}
+  .hero h1{font-size:clamp(40px,6.2vw,68px);max-width:14ch;margin:18px 0 0}
+  .hero .sub{font-size:clamp(19px,2.4vw,23px);color:var(--ink-soft);max-width:46ch;margin-top:18px;line-height:1.45}
+  .answer{
+    margin-top:34px;background:var(--paper);border:1px solid var(--gold-line);
+    border-left:4px solid var(--gold); border-radius:var(--radius);
+    padding:22px 26px; box-shadow:var(--shadow); max-width:880px;
+  }
+  .answer .q{font-family:'JetBrains Mono',monospace;font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:9px}
+  .answer p{font-size:18.5px;line-height:1.55}
+  .answer b{color:var(--gold-deep);font-weight:600}
+  .hero .meta{margin-top:26px;display:flex;gap:10px 22px;flex-wrap:wrap;font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--ink-faint);letter-spacing:.03em}
+  .hero .meta span{display:inline-flex;align-items:center;gap:7px}
+  .dot{width:6px;height:6px;border-radius:50%;background:var(--gold);display:inline-block}
+
+  /* ---------- section scaffolding ---------- */
+  section{padding:72px 0;border-bottom:1px solid var(--line)}
+  .shead{display:flex;align-items:baseline;gap:16px;margin-bottom:8px}
+  .snum{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold);font-style:italic}
+  h2{font-size:clamp(28px,4vw,40px)}
+  .slead{font-size:18px;color:var(--ink-soft);max-width:68ch;margin-top:14px}
+
+  /* ---------- spectrum bar ---------- */
+  .spectrum{margin-top:40px}
+  .spectrum .track{height:14px;border-radius:9px;background:linear-gradient(90deg,#7a5a16,#b8862a 42%,#d9c79a 72%,#eadfc4);position:relative}
+  .spectrum .ticks{display:flex;justify-content:space-between;margin-top:14px}
+  .spectrum .ticks .t{flex:1;text-align:center;position:relative}
+  .spectrum .ticks .t::before{content:"";position:absolute;top:-22px;left:50%;width:1px;height:10px;background:var(--gold-line)}
+  .spectrum .ticks .t .nm{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;color:var(--ink)}
+  .spectrum .ticks .t .ac{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-faint);display:block;margin-top:2px}
+  .spectrum .ends{display:flex;justify-content:space-between;margin-top:18px;font-size:13.5px;color:var(--ink-soft)}
+  .spectrum .ends b{color:var(--gold-deep);font-weight:600}
+
+  /* ---------- layer stack ---------- */
+  .stack{margin-top:42px;display:flex;flex-direction:column;gap:14px}
+  .layer{
+    background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);
+    box-shadow:var(--shadow);padding:22px 24px;display:grid;
+    grid-template-columns:200px 1fr 230px;gap:24px;transition:.18s ease;position:relative;overflow:hidden;
+  }
+  .layer:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px);border-color:var(--gold-line)}
+  .layer .accent{position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--gold)}
+  .layer .lname{font-family:'DM Serif Display',serif;font-size:23px;line-height:1.1}
+  .layer .laka{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);margin-top:8px;line-height:1.5}
+  .ctrl{display:flex;align-items:center;gap:8px;margin-top:14px}
+  .ctrl .bars{display:flex;gap:3px}
+  .ctrl .bars i{width:7px;height:13px;border-radius:2px;background:var(--gold-line);display:block}
+  .ctrl .bars i.on{background:var(--gold)}
+  .ctrl .lab{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-faint)}
+  .layer .def{font-size:14.5px;color:var(--ink-soft);line-height:1.55}
+  .split{margin-top:14px}
+  .split .row{display:flex;font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px;justify-content:space-between}
+  .split .barwrap{height:9px;border-radius:6px;overflow:hidden;display:flex;border:1px solid var(--line)}
+  .split .you{background:var(--gold)}
+  .split .prov{background:var(--gold-tint)}
+  .split .legend{display:flex;gap:16px;margin-top:8px;font-size:11.5px;color:var(--ink-soft)}
+  .split .legend span{display:inline-flex;align-items:center;gap:6px}
+  .swatch{width:10px;height:10px;border-radius:3px;display:inline-block}
+  .ex{margin-top:14px;display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:'JetBrains Mono',monospace;font-size:11px;background:var(--paper-2);border:1px solid var(--line);color:var(--ink-soft);padding:3px 9px;border-radius:20px}
+  .fit{border-left:1px solid var(--line);padding-left:22px}
+  .fit .pill{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:4px 11px;border-radius:20px;margin-bottom:10px}
+  .fit .pill.strong{background:var(--sage-tint);color:var(--sage);border:1px solid #d6dec5}
+  .fit .pill.good{background:var(--amber-tint);color:var(--amber);border:1px solid #e6dab4}
+  .fit .pill.work{background:var(--gold-tint);color:var(--gold-deep);border:1px solid var(--gold-line)}
+  .fit .pill.poor{background:var(--terra-tint);color:var(--terra);border:1px solid #e9d3c8}
+  .fit .ftext{font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+  .fit .agentlabel{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+  @media(max-width:900px){.layer{grid-template-columns:1fr}.fit{border-left:0;border-top:1px solid var(--line);padding-left:0;padding-top:18px}}
+
+  /* ---------- needs grid ---------- */
+  .needs{margin-top:42px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  @media(max-width:920px){.needs{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:620px){.needs{grid-template-columns:1fr}}
+  .need{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px 20px 18px;box-shadow:var(--shadow);transition:.18s ease}
+  .need:hover{box-shadow:var(--shadow-lift);transform:translateY(-2px);border-color:var(--gold-line)}
+  .need .n{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--gold);font-weight:600}
+  .need h3{font-size:18px;margin:8px 0 9px;line-height:1.2}
+  .need p{font-size:13.5px;color:var(--ink-soft);line-height:1.5}
+  .need .served{margin-top:12px;padding-top:12px;border-top:1px dashed var(--gold-line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-soft);line-height:1.5}
+  .need .served b{color:var(--gold-deep);font-weight:600;display:block;letter-spacing:.08em;font-size:9.5px;text-transform:uppercase;margin-bottom:4px}
+
+  /* ---------- agent infra ---------- */
+  .ai-intro{margin-top:24px;background:var(--paper);border:1px solid var(--gold-line);border-radius:var(--radius);padding:22px 26px;font-size:16px;color:var(--ink-soft);box-shadow:var(--shadow);max-width:920px}
+  .cats{margin-top:34px;display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+  @media(max-width:840px){.cats{grid-template-columns:1fr}}
+  .cat{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden;display:flex;flex-direction:column}
+  .cat .ch{padding:18px 20px 14px;border-bottom:1px solid var(--line-soft);background:linear-gradient(180deg,var(--paper-2),transparent)}
+  .cat .ch .ct{font-family:'DM Serif Display',serif;font-size:20px}
+  .cat .ch .cd{font-size:13px;color:var(--ink-soft);margin-top:6px;line-height:1.5}
+  .cat .new{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.12em;color:var(--sage);background:var(--sage-tint);border:1px solid #d6dec5;padding:2px 7px;border-radius:12px;vertical-align:middle;margin-left:8px}
+  .prod{padding:13px 20px;border-bottom:1px solid var(--line-soft);display:flex;gap:12px;align-items:flex-start}
+  .prod:last-child{border-bottom:0}
+  .prod .pmain{flex:1;min-width:0}
+  .prod .pn{font-weight:600;font-size:14.5px;color:var(--ink)}
+  .prod .pv{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--ink-faint);margin-left:7px}
+  .prod .pc{font-size:12.5px;color:var(--ink-soft);line-height:1.45;margin-top:2px}
+  .host{font-family:'JetBrains Mono',monospace;font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:20px;white-space:nowrap;flex-shrink:0;margin-top:1px}
+  .host.managed{background:var(--gold);color:#fff}
+  .host.self{background:transparent;color:var(--gold-deep);border:1px solid var(--gold)}
+  .host.both{background:var(--gold-tint);color:var(--gold-deep);border:1px solid var(--gold-line)}
+
+  /* ---------- tradeoff quadrant ---------- */
+  .tw{margin-top:40px;display:grid;grid-template-columns:1.05fr .95fr;gap:34px;align-items:center}
+  @media(max-width:880px){.tw{grid-template-columns:1fr}}
+  .quad{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);padding:20px;box-shadow:var(--shadow)}
+  .quad svg{width:100%;height:auto;display:block}
+  .tnar p{font-size:15px;color:var(--ink-soft);margin-bottom:14px;line-height:1.6}
+  .tnar p b{color:var(--ink);font-weight:600}
+  .keepclose{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:520px){.keepclose{grid-template-columns:1fr}}
+  .kc{border:1px solid var(--line);border-radius:12px;padding:16px;background:var(--paper)}
+  .kc.close{border-color:var(--gold-line);background:var(--paper)}
+  .kc .kt{font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;margin-bottom:9px}
+  .kc.close .kt{color:var(--gold-deep)}
+  .kc.rent .kt{color:var(--sage)}
+  .kc ul{list-style:none;font-size:13px;color:var(--ink-soft)}
+  .kc li{padding-left:16px;position:relative;margin-bottom:5px;line-height:1.4}
+  .kc li::before{content:"›";position:absolute;left:0;color:var(--gold);font-weight:700}
+
+  /* ---------- AO v1 callout ---------- */
+  .aov1{margin-top:8px;background:linear-gradient(180deg,var(--paper),var(--paper-2));border:1px solid var(--gold-line);border-radius:var(--radius);padding:30px 30px 26px;box-shadow:var(--shadow)}
+  .aov1 .row1{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+  .aov1 h3{font-size:25px}
+  .aov1 .tag{font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--gold-deep);background:var(--gold-tint);border:1px solid var(--gold-line);padding:4px 10px;border-radius:20px}
+  .aov1 p{font-size:15.5px;color:var(--ink-soft);margin-top:14px;max-width:80ch}
+  .aov1 .map{margin-top:22px;display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+  .aov1 .map .cell{background:var(--paper);padding:14px 15px}
+  .aov1 .map .cell .nd{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-faint);margin-bottom:5px}
+  .aov1 .map .cell .bn{font-weight:600;font-size:13.5px;color:var(--ink)}
+  .aov1 .map .cell .bn small{display:block;font-weight:400;font-size:11.5px;color:var(--ink-soft);font-family:'JetBrains Mono',monospace;margin-top:2px}
+  .aov1 .host-rec{margin-top:22px;font-size:14.5px;color:var(--ink);background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+  .aov1 .host-rec b{color:var(--gold-deep)}
+
+  /* ---------- footer ---------- */
+  footer{padding:54px 0 70px;background:var(--paper-2)}
+  footer .grid{display:grid;grid-template-columns:1.3fr 1fr;gap:34px}
+  @media(max-width:760px){footer .grid{grid-template-columns:1fr}}
+  footer h4{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold-deep);margin-bottom:14px}
+  footer p,footer li{font-size:13.5px;color:var(--ink-soft);line-height:1.6}
+  footer ul{list-style:none}
+  footer li{padding-left:16px;position:relative;margin-bottom:6px}
+  footer li::before{content:"—";position:absolute;left:0;color:var(--gold-line)}
+  footer .fine{margin-top:30px;padding-top:18px;border-top:1px solid var(--line);font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--ink-faint);letter-spacing:.02em;line-height:1.7}
+</style>
+</head>
+<body>
+
+<nav class="top">
+  <div class="wrap">
+    <div class="brand"><b>AO·v1</b> / deployment-options</div>
+    <div class="links">
+      <a href="#name">The name</a>
+      <a href="#stack">The stack</a>
+      <a href="#needs">Agent needs</a>
+      <a href="#agentinfra">Agent infra</a>
+      <a href="#tradeoff">Tradeoff</a>
+      <a href="#aov1">Where AO v1 sits</a>
+    </div>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Infrastructure view · server providers ↔ agents</div>
+    <h1>Where do agents actually run?</h1>
+    <p class="sub">A map of the companies that rent computing — and the new layer being built on top of them specifically to host AI agents.</p>
+
+    <div class="answer">
+      <div class="q">In one sentence — what are these companies called?</div>
+      <p>They're <b>cloud service providers (CSPs)</b> — companies that rent computing capability (compute, storage, networking, and progressively more of the software stack) on demand and pay-as-you-go, so you <b>consume infrastructure as a service</b> instead of owning and operating it. The largest, spanning every layer, are the <b>hyperscalers</b> (AWS, Azure, GCP).</p>
+    </div>
+
+    <div class="meta">
+      <span><i class="dot"></i> Researched 2026-06-06</span>
+      <span><i class="dot"></i> 14 research agents, web-grounded</span>
+      <span><i class="dot"></i> Product inventory adversarially fact-checked</span>
+    </div>
+  </div>
+</header>
+
+<!-- 1 — THE NAME / SPECTRUM -->
+<section id="name">
+  <div class="wrap">
+    <div class="shead"><span class="snum">01</span><h2>The “as-a-service” spectrum</h2></div>
+    <p class="slead">Every cloud offering sits on one axis: <b>where the managed boundary falls in the stack</b>. The lower you go, the more you control and the more you operate yourself; the higher you go, the less you manage — at the cost of flexibility, portability, and the ability to run long-lived processes. Each tier hands one more responsibility layer to the provider. Most real 2026 architectures composite several tiers rather than picking one.</p>
+
+    <div class="spectrum">
+      <div class="track"></div>
+      <div class="ticks">
+        <div class="t"><span class="nm">Bare metal</span><span class="ac">the hardware</span></div>
+        <div class="t"><span class="nm">IaaS</span><span class="ac">the VM</span></div>
+        <div class="t"><span class="nm">CaaS</span><span class="ac">the runtime</span></div>
+        <div class="t"><span class="nm">PaaS</span><span class="ac">build + deploy</span></div>
+        <div class="t"><span class="nm">FaaS</span><span class="ac">the invocation</span></div>
+        <div class="t"><span class="nm">BaaS</span><span class="ac">the whole backend</span></div>
+      </div>
+      <div class="ends">
+        <span><b>← Most control · most to operate</b> (you run the OS, patching, scaling)</span>
+        <span><b>Most managed · least control →</b> (provider abstracts it all away)</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2 — THE STACK -->
+<section id="stack">
+  <div class="wrap">
+    <div class="shead"><span class="snum">02</span><h2>The layered stack — and how each layer fits an agent</h2></div>
+    <p class="slead">A persistent agent is an <em>always-on loop with durable state and arbitrary tool use</em> — not a request-driven website. That makes some layers a natural home and others a poor one. The split bar shows roughly how responsibility divides between <b>you</b> and the <b>provider</b>.</p>
+
+    <div class="stack">
+
+      <!-- bare metal -->
+      <div class="layer">
+        <div class="accent" style="background:linear-gradient(180deg,#7a5a16,#b8862a)"></div>
+        <div>
+          <div class="lname">Bare metal / Colo</div>
+          <div class="laka">Dedicated servers · BMaaS · colocation</div>
+          <div class="ctrl"><div class="bars"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></div><span class="lab">Control: highest</span></div>
+        </div>
+        <div>
+          <p class="def">Physical, single-tenant servers with no hypervisor between you and the hardware. You rent the machine (or rack space) whole.</p>
+          <div class="split">
+            <div class="row"><span>You manage</span><span>Provider</span></div>
+            <div class="barwrap"><div class="you" style="width:88%"></div><div class="prov" style="width:12%"></div></div>
+            <div class="legend"><span><i class="swatch" style="background:var(--gold)"></i>OS↑, virtualization, app, scaling, backups, (colo: hardware)</span></div>
+          </div>
+          <div class="ex"><span class="chip">Equinix Metal</span><span class="chip">Hetzner Dedicated</span><span class="chip">OVHcloud</span><span class="chip">Latitude.sh</span><span class="chip">Oracle BM</span></div>
+        </div>
+        <div class="fit">
+          <div class="agentlabel">Agent fit</div>
+          <span class="pill good">Capable · overkill</span>
+          <p class="ftext">Trivially hosts a long loop + durable local disk with zero idle-timeout, and full GPU control. But pure ops burden and, for a single agent, more machine than warranted.</p>
+        </div>
+      </div>
+
+      <!-- IaaS -->
+      <div class="layer">
+        <div class="accent"></div>
+        <div>
+          <div class="lname">IaaS</div>
+          <div class="laka">Raw virtual machines · cloud instances</div>
+          <div class="ctrl"><div class="bars"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></div><span class="lab">Control: high</span></div>
+        </div>
+        <div>
+          <p class="def">Virtualized compute, storage, and networking rented as building blocks. You get a VM and assemble your own stack on top — “rent the hardware, bring everything else.”</p>
+          <div class="split">
+            <div class="row"><span>You manage</span><span>Provider</span></div>
+            <div class="barwrap"><div class="you" style="width:72%"></div><div class="prov" style="width:28%"></div></div>
+            <div class="legend"><span><i class="swatch" style="background:var(--gold)"></i>OS, runtime, app, DB, firewall, backups</span></div>
+          </div>
+          <div class="ex"><span class="chip">AWS EC2</span><span class="chip">GCE</span><span class="chip">Azure VMs</span><span class="chip">Hetzner Cloud</span><span class="chip">Oracle Compute</span><span class="chip">DigitalOcean</span></div>
+        </div>
+        <div class="fit">
+          <div class="agentlabel">Agent fit</div>
+          <span class="pill strong">Default sweet spot</span>
+          <p class="ftext">Full OS, persistent disk, no execution-time limits, complete runtime control — exactly what an always-on loop with durable state and arbitrary tools needs. You own modest ops (reboot-resilience, monitoring).</p>
+        </div>
+      </div>
+
+      <!-- CaaS -->
+      <div class="layer">
+        <div class="accent"></div>
+        <div>
+          <div class="lname">CaaS</div>
+          <div class="laka">Containers-as-a-Service · managed K8s · serverless containers</div>
+          <div class="ctrl"><div class="bars"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></div><span class="lab">Control: medium</span></div>
+        </div>
+        <div>
+          <p class="def">A managed platform that runs, schedules, scales, and load-balances your containers without you operating the VMs — from managed Kubernetes to push-an-image “serverless containers.”</p>
+          <div class="split">
+            <div class="row"><span>You manage</span><span>Provider</span></div>
+            <div class="barwrap"><div class="you" style="width:48%"></div><div class="prov" style="width:52%"></div></div>
+            <div class="legend"><span><i class="swatch" style="background:var(--gold)"></i>image + config</span><span><i class="swatch" style="background:var(--gold-tint)"></i>VMs, OS, orchestration, restarts</span></div>
+          </div>
+          <div class="ex"><span class="chip">Cloud Run</span><span class="chip">ECS / Fargate</span><span class="chip">Fly.io</span><span class="chip">GKE / AKS</span><span class="chip">Render</span><span class="chip">Railway</span></div>
+        </div>
+        <div class="fit">
+          <div class="agentlabel">Agent fit</div>
+          <span class="pill strong">Best balance</span>
+          <p class="ftext">A long-running container auto-restarts on crash; attach a volume/DB for state — far less ops than IaaS. <em>Caveat:</em> pick the always-allocated / background-worker tier; scale-to-zero HTTP modes spin down an idle loop.</p>
+        </div>
+      </div>
+
+      <!-- PaaS -->
+      <div class="layer">
+        <div class="accent" style="background:linear-gradient(180deg,#b8862a,#d4c08a)"></div>
+        <div>
+          <div class="lname">PaaS</div>
+          <div class="laka">App platforms · git-push-to-deploy</div>
+          <div class="ctrl"><div class="bars"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></div><span class="lab">Control: low</span></div>
+        </div>
+        <div>
+          <p class="def">Push code (often via git); the platform builds, deploys, runs, and scales it. You think in “apps”, “services”, and “add-ons”, not machines.</p>
+          <div class="split">
+            <div class="row"><span>You manage</span><span>Provider</span></div>
+            <div class="barwrap"><div class="you" style="width:30%"></div><div class="prov" style="width:70%"></div></div>
+            <div class="legend"><span><i class="swatch" style="background:var(--gold)"></i>code + config</span><span><i class="swatch" style="background:var(--gold-tint)"></i>build, runtime, scaling, TLS</span></div>
+          </div>
+          <div class="ex"><span class="chip">Heroku</span><span class="chip">Render apps</span><span class="chip">Railway</span><span class="chip">Vercel</span><span class="chip">App Engine</span><span class="chip">Azure App Service</span></div>
+        </div>
+        <div class="fit">
+          <div class="agentlabel">Agent fit</div>
+          <span class="pill work">Workable · constrained</span>
+          <p class="ftext">A worker/background process can host the loop with free restart-on-crash. Frictions: state must live in an attached DB (local FS is ephemeral), some tiers sleep idle instances, less control over system packages.</p>
+        </div>
+      </div>
+
+      <!-- FaaS -->
+      <div class="layer">
+        <div class="accent" style="background:linear-gradient(180deg,#cdac5a,#e2d3a6)"></div>
+        <div>
+          <div class="lname">FaaS / Serverless</div>
+          <div class="laka">Functions · serverless · edge functions</div>
+          <div class="ctrl"><div class="bars"><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="lab">Control: lowest</span></div>
+        </div>
+        <div>
+          <p class="def">Deploy individual functions the provider runs on demand, auto-scaling from zero and billing per invocation. No server or process stays running — code runs only when triggered, then tears down.</p>
+          <div class="split">
+            <div class="row"><span>You manage</span><span>Provider</span></div>
+            <div class="barwrap"><div class="you" style="width:18%"></div><div class="prov" style="width:82%"></div></div>
+            <div class="legend"><span><i class="swatch" style="background:var(--gold)"></i>function body</span><span><i class="swatch" style="background:var(--gold-tint)"></i>everything else</span></div>
+          </div>
+          <div class="ex"><span class="chip">AWS Lambda</span><span class="chip">Cloudflare Workers</span><span class="chip">Cloud Functions</span><span class="chip">Azure Functions</span><span class="chip">Cloudflare Durable Objects</span></div>
+        </div>
+        <div class="fit">
+          <div class="agentlabel">Agent fit</div>
+          <span class="pill poor">Poor · one exception</span>
+          <p class="ftext">Stateless, per-invocation timeouts, cold-starts — a busy loop can’t live here. <em>Exception:</em> the stateful-actor model (Cloudflare Durable Objects, Modal persistent sandboxes) gives each agent a durable identity that hibernates at $0 and <em>wakes on message</em> — strong for event-driven agents.</p>
+        </div>
+      </div>
+
+      <!-- BaaS -->
+      <div class="layer">
+        <div class="accent" style="background:linear-gradient(180deg,#d4be86,#e9ddbf)"></div>
+        <div>
+          <div class="lname">BaaS</div>
+          <div class="laka">Backend-as-a-Service · serverless backend</div>
+          <div class="ctrl"><div class="bars"><i class="on"></i><i></i><i></i><i></i><i></i></div><span class="lab">Control: lowest</span></div>
+        </div>
+        <div>
+          <p class="def">A managed bundle of backend primitives — database, auth, file storage, realtime, plus serverless functions — exposed through SDKs and APIs. You build a backend by configuration, not provisioning.</p>
+          <div class="split">
+            <div class="row"><span>You manage</span><span>Provider</span></div>
+            <div class="barwrap"><div class="you" style="width:16%"></div><div class="prov" style="width:84%"></div></div>
+            <div class="legend"><span><i class="swatch" style="background:var(--gold)"></i>client code + schema rules</span><span><i class="swatch" style="background:var(--gold-tint)"></i>DB, auth, storage, compute</span></div>
+          </div>
+          <div class="ex"><span class="chip">Supabase</span><span class="chip">Firebase</span><span class="chip">Convex</span><span class="chip">Appwrite</span><span class="chip">AWS Amplify</span><span class="chip">Neon</span></div>
+        </div>
+        <div class="fit">
+          <div class="agentlabel">Agent fit</div>
+          <span class="pill poor">Not a host — a complement</span>
+          <p class="ftext">No persistent-process primitive, so it can’t run the loop (its functions are FaaS-shaped). Where it shines: the durable <em>state &amp; tool backend</em> — memory, task queue, logs, auth — beside a loop that lives on IaaS/CaaS. <span class="mono" style="font-size:11px">↳ this is exactly Supabase’s role.</span></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 3 — WHAT AN AGENT NEEDS -->
+<section id="needs">
+  <div class="wrap">
+    <div class="shead"><span class="snum">03</span><h2>What an agent needs that a website doesn’t</h2></div>
+    <p class="slead">A website is request-driven: code runs only when someone calls it, then dies. An agent acts on its own initiative and lives for hours-to-days across crashes and human waits. These nine capabilities are what turn “a server” into “a place an agent can live.”</p>
+
+    <div class="needs">
+      <div class="need"><div class="n">01</div><h3>Always-on / scheduled loop</h3><p>A resident process or durable wake-trigger that runs with no user request in flight. Without it there’s no agency — only an API someone else calls.</p><div class="served"><b>Served by</b>Supervised process (systemd / Docker <span class="mono">restart:unless-stopped</span> / k8s) — <em>not</em> a bare OS boot-task. Or managed worker tiers (Modal, Durable Objects, Inngest).</div></div>
+
+      <div class="need"><div class="n">02</div><h3>Durable execution</h3><p>Exactly-once external side effects across crashes, restarts, and long human waits. A naive retry double-sends the email; a crash loses hours of reasoning. <em>The clearest line between an app and an agent.</em></p><div class="served"><b>Served by</b>Temporal · Restate · DBOS · Inngest — append-only journal + idempotency keys → replay-after-crash, skip committed effects.</div></div>
+
+      <div class="need"><div class="n">03</div><h3>Persistent + semantic memory</h3><p>Structured durable state (what’s pending, what was decided) <em>and</em> embeddings-based recall over an open-ended corpus, so a fresh-context run can reconstruct “what did we do last time.”</p><div class="served"><b>Served by</b>Postgres/SQLite + a vector store — pgvector, Qdrant, Pinecone, Weaviate, LanceDB — behind an embeddings model.</div></div>
+
+      <div class="need"><div class="n">04</div><h3>Sandboxed code execution</h3><p>Agents write and run code and process untrusted input. That code can be wrong, hostile, or prompt-injected — it must run in an isolation boundary that can’t read secrets or persist, and that you can kill cheaply.</p><div class="served"><b>Served by</b>microVM/container sandboxes — E2B (Firecracker), Modal, Daytona, or self-hosted Firecracker/gVisor/Kata.</div></div>
+
+      <div class="need"><div class="n">05</div><h3>Tool / MCP gateway + secrets</h3><p>An agent’s reach into real systems must be brokered, not handed raw: centralized tool discovery, scoping, per-account routing, audit — with OAuth tokens kept out of prompts and code.</p><div class="served"><b>Served by</b>An MCP gateway with identity-based routing + tool-gating; a secrets vault (Vault, cloud Secret Manager, Proton Pass CLI) injected at runtime.</div></div>
+
+      <div class="need"><div class="n">06</div><h3>Human-in-the-loop surface</h3><p>Autonomy without a brake is the dominant failure mode. The agent proposes, <em>freezes the payload durably</em>, and nothing ships until a human accepts/revises/dismisses — even across a multi-day wait.</p><div class="served"><b>Served by</b>A queue + UI bound to the durable engine — a dashboard (accept/revise/dismiss) and/or Slack/Telegram approvals; “accepted” unfreezes the send.</div></div>
+
+      <div class="need"><div class="n">07</div><h3>Durable scheduling / cron</h3><p>Proactive cadence is the agent’s heartbeat. The schedule must survive restarts and be idempotent — a missed tick or a double-fire must not double-act. Cadence is also the cost dial.</p><div class="served"><b>Served by</b>Durable timers inside the engine (Temporal/Restate/Inngest), or a managed scheduler / k8s CronJob with a concurrency guard.</div></div>
+
+      <div class="need"><div class="n">08</div><h3>Observability &amp; tracing</h3><p>Agents are non-deterministic and act unattended — “is it healthy?” can’t be an HTTP 200. You need per-run traces of reasoning, every tool call, latency, retries, and token/cost per step.</p><div class="served"><b>Served by</b>OpenTelemetry → an LLM-obs backend (Arize Phoenix, Langfuse, LangSmith, Helicone) + a cost ledger and spend-cap circuit-breaker.</div></div>
+
+      <div class="need"><div class="n">09</div><h3>Governed egress to model APIs</h3><p>The model is the agent’s cognition; every step is a remote inference call needing retry/backoff, a budget guard, and key governance. For a website this path doesn’t exist; for an agent it’s the critical path.</p><div class="served"><b>Served by</b>Provider SDKs or an LLM gateway (LiteLLM, OpenRouter, Portkey, Cloudflare AI Gateway) for failover, caching, and spend limits.</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 — AGENT INFRASTRUCTURE -->
+<section id="agentinfra">
+  <div class="wrap">
+    <div class="shead"><span class="snum">04</span><h2>The new layer: agent infrastructure</h2></div>
+    <p class="slead">Because agents have demands ordinary apps don’t, a 2026 layer of products has emerged <em>on top of</em> the generic stack — built specifically to host AI agents.</p>
+    <div class="ai-intro">Durable execution has crossed into early-majority adoption (Temporal’s $300M Series&nbsp;D at a $5B valuation; AWS, Cloudflare, and Vercel all shipping workflow primitives), and the big clouds reached GA on managed agent runtimes between Q4&nbsp;2025 and Q1&nbsp;2026. The category has stratified into seven sub-types. <span class="mono" style="font-size:12px;color:var(--ink-faint)">Badge = hosting model.</span></div>
+
+    <div class="cats">
+
+      <!-- durable execution -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Durable-execution engines</div><div class="cd">Crash-safe orchestration: each step journaled so a crashed loop resumes exactly where it stopped, with exactly-once effects, retries, and suspendable approval gates.</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">Temporal</span><span class="pv">Temporal</span><div class="pc">Workflow-as-code; replays an append-only history to survive crashes. Widely used for HITL agent approval steps.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Restate</span><span class="pv">Restate</span><div class="pc">Lightweight journaled runtime; resumable loops + persistent memory + durable approvals, framework-independent. <span class="mono" style="font-size:10px;color:var(--gold-deep)">↳ AO v1’s spine</span></div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Inngest</span><span class="pv">Inngest</span><div class="pc">Event-driven step functions; each tool call is its own retried/recoverable step. Runs for months on serverless/edge.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">DBOS</span><span class="pv">DBOS</span><div class="pc">Stores all workflow state directly in Postgres (no event-replay); lives inside the app process.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Cloudflare Workflows · Hatchet · Trigger.dev</span><span class="pv">+ peers</span><div class="pc">Cloudflare’s edge durable-execution engine; Hatchet (OSS, Temporal-replacement); Trigger.dev (OSS background jobs, no timeouts, HITL waits).</div></div><span class="host both">both</span></div>
+      </div>
+
+      <!-- sandboxes -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Code / agent sandboxes</div><div class="cd">Isolated, ephemeral, fast-booting compute (microVM / container / gVisor) where an agent runs untrusted generated code and tools safely — created in tens of ms, torn down per task.</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">E2B</span><span class="pv">E2B</span><div class="pc">Open-source Firecracker-microVM sandboxes purpose-built for LLM code execution; broad production use.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Modal</span><span class="pv">Modal Labs</span><div class="pc">Serverless containers, 0→tens-of-thousands concurrent in seconds; exposes a gVisor Sandbox primitive.</div></div><span class="host managed">managed</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Daytona</span><span class="pv">Daytona</span><div class="pc">Sub-90ms sandbox creation from pre-built templates (pivoted to agent infra 2025; $24M Series A Feb 2026).</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Cloudflare Sandboxes</span><span class="pv">Cloudflare</span><div class="pc">GA Apr 2026 — isolated Linux containers on Containers + Durable Objects; persistent edge environments.</div></div><span class="host managed">managed</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Fly Machines · Vercel Sandbox · Northflank · Runloop</span><span class="pv">+ peers</span><div class="pc">Firecracker microVMs (Fly); Vercel’s ~45-min code sandbox; Northflank BYOC microVMs; Runloop (built into OpenAI’s SDK).</div></div><span class="host both">both</span></div>
+      </div>
+
+      <!-- runtimes -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Agent runtimes / platforms</div><div class="cd">Managed hosting for the agent’s reasoning loop plus its state, memory, scheduling, and tooling — deciding <em>where</em> an agent runs (vs a framework deciding how it’s structured).</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">LangSmith Deployment</span><span class="pv">LangChain</span><div class="pc">Managed runtime for LangGraph graphs — checkpointing, HITL interrupts. <span class="mono" style="font-size:10px;color:var(--ink-faint)">(formerly “LangGraph Platform”, renamed Oct 2025)</span></div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Cloudflare Agents</span><span class="pv">Cloudflare</span><div class="pc">Each agent <em>is</em> a Durable Object — stateful, with long-running sessions, scheduling, queues, and managed Agent Memory.</div></div><span class="host managed">managed</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Letta Cloud</span><span class="pv">Letta (MemGPT)</span><div class="pc">Stateful agent server built around a tiered self-managed memory hierarchy; managed or self-hosted.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">CrewAI AMP · Vercel AI SDK + Fluid</span><span class="pv">+ peers</span><div class="pc">CrewAI’s platform to deploy/monitor multi-agent crews; Vercel hosts the loop on Fluid Compute (60–800s+ durations, HITL approval).</div></div><span class="host both">both</span></div>
+      </div>
+
+      <!-- memory (NEW) -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Agent memory layer<span class="new">added</span></div><div class="cd">Production memory-as-a-service — durable + semantic recall the agent controls, beyond a raw vector DB. A first-class 2026 concern.</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">Mem0</span><span class="pv">Mem0</span><div class="pc">Production agent-memory layer (managed + OSS self-host + local MCP) with ~21 framework integrations.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Zep</span><span class="pv">Zep</span><div class="pc">Memory server built on a temporal knowledge graph; outperforms peers on long-memory benchmarks.</div></div><span class="host both">both</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Postgres + pgvector · Pinecone</span><span class="pv">DIY / managed</span><div class="pc">The unify-everything baseline (one Postgres) vs a managed vector DB — what AO v1 and most self-hosters use directly.</div></div><span class="host both">both</span></div>
+      </div>
+
+      <!-- browser (NEW) -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Browser infrastructure<span class="new">added</span></div><div class="cd">Headless browser fleets via API — so agents can navigate, fill forms, and scrape the live web safely at scale. A major 2026 category.</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">Browserbase</span><span class="pv">Browserbase</span><div class="pc">Leading managed browser-as-a-service for AI agents — headless browser fleets behind an API.</div></div><span class="host managed">managed</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Steel.dev</span><span class="pv">Steel</span><div class="pc">Open-source headless-browser API / sandbox for agents — the OSS counterpart, self-host or managed.</div></div><span class="host both">both</span></div>
+      </div>
+
+      <!-- hyperscaler -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Hyperscaler agent services</div><div class="cd">The big clouds’ managed, serverless agent runtimes — per-session isolation, long-term memory, tool auth, scaling — tied into each cloud’s identity/data stack.</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">Bedrock AgentCore</span><span class="pv">AWS</span><div class="pc">Framework-agnostic; each session in a dedicated microVM, real-time + long-running up to 8h (GA Oct 2025).</div></div><span class="host managed">managed</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Vertex AI Agent Engine</span><span class="pv">Google Cloud</span><div class="pc">Managed runtime for (notably ADK-built) agents — sessions, Memory Bank, Search grounding. <span class="mono" style="font-size:10px;color:var(--ink-faint)">(under the Gemini Enterprise Agent Platform umbrella)</span></div></div><span class="host managed">managed</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Foundry Agent Service</span><span class="pv">Microsoft</span><div class="pc">GA runtime (10k+ customers), deep M365 + one-click Teams publish; Foundry Memory in preview. <span class="mono" style="font-size:10px;color:var(--ink-faint)">(“Azure AI”→“Microsoft Foundry”)</span></div></div><span class="host managed">managed</span></div>
+      </div>
+
+      <!-- model-vendor SDKs -->
+      <div class="cat">
+        <div class="ch"><div class="ct">Model-vendor agent SDKs</div><div class="cd">The frameworks you write the agent in and self-host on the layers above — the loop, tool/MCP integration, context management, and guardrails — shipped by the model labs.</div></div>
+        <div class="prod"><div class="pmain"><span class="pn">Claude Agent SDK</span><span class="pv">Anthropic</span><div class="pc">The same loop/tools/context that power Claude Code (Python + TS); deep OS/file/shell access, strongest MCP ecosystem. <span class="mono" style="font-size:10px;color:var(--gold-deep)">↳ AO v1 builds on this</span></div></div><span class="host self">self-host</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">OpenAI Agents SDK / AgentKit</span><span class="pv">OpenAI</span><div class="pc">Model-swappable SDK with native sandbox, subagents, three-tier guardrails; ChatKit for embedded UIs.</div></div><span class="host self">self-host</span></div>
+        <div class="prod"><div class="pmain"><span class="pn">Google ADK</span><span class="pv">Google</span><div class="pc">Model-agnostic, graph-workflow SDK (Gemini, Claude, Ollama, vLLM); deploys onto Vertex Agent Engine.</div></div><span class="host both">both</span></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- 5 — TRADEOFF -->
+<section id="tradeoff">
+  <div class="wrap">
+    <div class="shead"><span class="snum">05</span><h2>Control vs convenience vs cost vs lock-in</h2></div>
+    <p class="slead">Choosing where to host an agent is a four-way tension. Self-hosting on IaaS maximises control and residency but you build durable execution, sandboxes, and observability yourself. Managed agent platforms invert it — convenience by SDK call, but your data flows through their plane, costs escalate as agents do real work, and you take on lock-in to proprietary runtimes.</p>
+
+    <div class="tw">
+      <div class="quad">
+        <svg viewBox="0 0 480 360" role="img" aria-label="Positioning chart: control vs convenience">
+          <!-- axes -->
+          <defs>
+            <linearGradient id="qg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#f1e7cf" stop-opacity=".5"/>
+              <stop offset="1" stop-color="#fffdf8" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <rect x="44" y="20" width="412" height="300" fill="url(#qg)" stroke="#e9e2d3"/>
+          <line x1="250" y1="20" x2="250" y2="320" stroke="#e9e2d3" stroke-dasharray="3 4"/>
+          <line x1="44" y1="170" x2="456" y2="170" stroke="#e9e2d3" stroke-dasharray="3 4"/>
+          <!-- axis labels -->
+          <text x="250" y="345" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#8a8071">CONVENIENCE / LESS OPS →</text>
+          <text x="20" y="170" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#8a8071" transform="rotate(-90 20 170)">CONTROL / RESIDENCY ↑</text>
+          <!-- points -->
+          <g font-family="DM Sans" font-size="11.5" fill="#211c16">
+            <circle cx="86" cy="48" r="5" fill="#8a6518"/><text x="96" y="52">Bare metal</text>
+            <circle cx="120" cy="92" r="6" fill="#b8862a"/><text x="130" y="96" font-weight="600">IaaS</text>
+            <circle cx="232" cy="150" r="6" fill="#b8862a"/><text x="170" y="154" font-weight="600">CaaS</text>
+            <circle cx="320" cy="214" r="5" fill="#cdac5a"/><text x="330" y="218">PaaS</text>
+            <circle cx="408" cy="276" r="5" fill="#d4be86"/><text x="346" y="290">FaaS / BaaS</text>
+            <!-- agent infra clusters -->
+            <circle cx="372" cy="120" r="6" fill="#6c7a55"/><text x="300" y="110" fill="#6c7a55" font-weight="600">Managed agent</text><text x="300" y="124" fill="#6c7a55" font-weight="600">platforms</text>
+            <!-- AO v1 -->
+            <circle cx="138" cy="64" r="7" fill="#211c16"/><circle cx="138" cy="64" r="11" fill="none" stroke="#211c16" stroke-dasharray="2 3"/><text x="150" y="68" font-weight="700">AO v1</text>
+          </g>
+        </svg>
+        <div class="mono" style="font-size:11px;color:var(--ink-faint);margin-top:10px;text-align:center">AO v1 sits top-left: self-hosted control, building its own agent-infra layer.</div>
+      </div>
+
+      <div class="tnar">
+        <p>The pragmatic answer is a <b>split stack matched to risk</b>: keep the irreversible and secret-bearing parts close, rent the elastic and undifferentiated parts. Pick durable-execution and gateway layers with portable APIs so the expensive core stays movable — and let <b>cadence (ticks/day)</b> be the cost dial you tune against a hard spend cap.</p>
+        <div class="keepclose">
+          <div class="kc close">
+            <div class="kt">Keep close ⟵ control</div>
+            <ul>
+              <li>Secrets &amp; OAuth tokens</li>
+              <li>The human-approval surface</li>
+              <li>Credential routing / MCP gateway</li>
+              <li>The durable journal of side effects</li>
+            </ul>
+          </div>
+          <div class="kc rent">
+            <div class="kt">Rent ⟶ convenience</div>
+            <ul>
+              <li>Sandbox compute (per-task)</li>
+              <li>Embeddings / vector recall</li>
+              <li>Model egress via a swappable gateway</li>
+              <li>Browser fleets, GPU bursts</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 — WHERE AO V1 SITS -->
+<section id="aov1" style="border-bottom:0">
+  <div class="wrap">
+    <div class="shead"><span class="snum">06</span><h2>Where AgenticOS v1 sits on this map</h2></div>
+
+    <div class="aov1">
+      <div class="row1">
+        <h3>Self-hosted IaaS — and it builds the agent-infra layer itself</h3>
+        <span class="tag">build, don’t buy</span>
+      </div>
+      <p>AO v1 doesn’t rent a managed agent platform. It runs the loop on a self-hosted box (a Synology NAS today, an EU cloud VM next) and <b>assembles the “agent infrastructure” layer from open, portable parts</b> — which is why the build-vs-buy ruling parked an off-the-shelf engine and chose native. That keeps every secret-bearing, irreversible part inside your own boundary while staying movable.</p>
+
+      <div class="map">
+        <div class="cell"><div class="nd">Loop / SDK</div><div class="bn">claude-agent-sdk<small>+ 2-hourly cron tick</small></div></div>
+        <div class="cell"><div class="nd">Durable execution</div><div class="bn">Restate<small>exactly-once send-rail</small></div></div>
+        <div class="cell"><div class="nd">HITL surface</div><div class="bn">FastAPI dashboard<small>accept / revise / dismiss</small></div></div>
+        <div class="cell"><div class="nd">Tool gateway</div><div class="bn">MCP gateway<small>per-account routing</small></div></div>
+        <div class="cell"><div class="nd">Observability</div><div class="bn">Arize Phoenix<small>OTel + cost ledger</small></div></div>
+        <div class="cell"><div class="nd">State</div><div class="bn">SQLite + signed journal<small>Ed25519 audit log</small></div></div>
+      </div>
+
+      <div class="host-rec">
+        <b>The host decision →</b> a small always-on EU Docker box. <b>Oracle Cloud Always Free</b> (4 ARM OCPU / 24 GB, Frankfurt, $0/mo, flip to PAYG) is the pick; <b>Hetzner</b> (~€4–8/mo, no lottery) the fallback. <b>Supabase</b> can’t host the loop — only ever a backing service. <b>Azure’s nonprofit grant is per-org</b> (reserve it for the nonprofit that holds it), and <b>Google nonprofit is ads, not compute</b>.
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="grid">
+      <div>
+        <h4>How this was built</h4>
+        <p>Two web-grounded research workflows (14 agents total) mapped the provider taxonomy and the 2026 agent-infrastructure landscape; an adversarial fact-checker re-verified every product against current vendor sources. Corrections folded in below.</p>
+        <ul style="margin-top:14px">
+          <li><b>LangGraph Platform → LangSmith Deployment</b> (renamed at GA, Oct 2025).</li>
+          <li>Vertex AI Agent Engine now sits under the <b>Gemini Enterprise Agent Platform</b>; “Azure AI” → <b>Microsoft Foundry</b>.</li>
+          <li>Added two omitted categories — <b>agent memory</b> (Mem0, Zep) and <b>browser infra</b> (Browserbase, Steel) — plus Cloudflare Workflows, Hatchet, Trigger.dev, Vercel Sandbox, Northflank, Runloop.</li>
+          <li>Sandbox start-times: Daytona’s sub-90ms is the headline; E2B’s ~90ms is best-case (typical ~150–200ms).</li>
+        </ul>
+      </div>
+      <div>
+        <h4>Reading order</h4>
+        <p><b>This page</b> — the infrastructure landscape (server providers ↔ agents).<br>
+        <b>README.md</b> — the verified head-to-head of Oracle / Supabase / Azure-nonprofit / Google-nonprofit / Hetzner for hosting AO v1, with 2026 prices.</p>
+        <h4 style="margin-top:24px">Key sources</h4>
+        <p class="mono" style="font-size:11.5px;line-height:1.8">temporal.io/solutions/ai · docs.restate.dev · aws.amazon.com/bedrock/agentcore · developers.cloudflare.com/agents · letta.com · e2b.dev · daytona.io · code.claude.com/docs/agent-sdk</p>
+      </div>
+    </div>
+    <div class="fine">
+      AgenticOS v1 · deployment-options · generated 2026-06-06 — light-gold design system · cloud-provider taxonomy &amp; agent-infra inventory, adversarially verified · this is a landscape map, not an endorsement; product terms change — re-check before committing.
+    </div>
+  </div>
+</footer>
+
+<script>
+  // subtle hover-driven control-bar shimmer + smooth anchor offset; minimal, degrades gracefully
+  document.querySelectorAll('a[href^="#"]').forEach(a=>{
+    a.addEventListener('click',e=>{
+      const t=document.querySelector(a.getAttribute('href'));
+      if(t){e.preventDefault();window.scrollTo({top:t.getBoundingClientRect().top+window.scrollY-66,behavior:'smooth'});}
+    });
+  });
+</script>
+</body>
+</html>
